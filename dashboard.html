@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DP Panel - UIDs Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-brand">
+      <h1>DP Control Panel</h1>
+      <span class="nav-subtitle">All UIDs Dashboard</span>
+    </div>
+    <div class="nav-right">
+      <a href="admin.html" class="btn btn-dark btn-sm">User Management</a>
+      <button class="btn btn-dark btn-sm" onclick="sessionStorage.clear();window.location.href='index.html';">Logout</button>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="overview-grid fade-in">
+      <div class="overview-card"><div class="oval" id="statTotalUids">-</div><div class="olabel">Total UIDs</div></div>
+      <div class="overview-card"><div class="oval" style="color:var(--green)" id="statActiveUids">-</div><div class="olabel">Active</div></div>
+      <div class="overview-card"><div class="oval" style="color:var(--orange)" id="statExpiredUids">-</div><div class="olabel">Expired</div></div>
+      <div class="overview-card"><div class="oval" style="color:var(--red)" id="statInactiveUids">-</div><div class="olabel">Inactive</div></div>
+    </div>
+
+    <div class="card fade-in">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+        <div>
+          <h3 class="card-title">All UIDs</h3>
+          <p class="card-subtitle">Live countdown view of all user UIDs</p>
+        </div>
+        <button class="btn btn-dark btn-sm" onclick="refreshDashboard()">Refresh</button>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="data-table" id="uidTable">
+          <thead>
+            <tr>
+              <th>Owner</th>
+              <th>UID</th>
+              <th>Status</th>
+              <th>Expiry</th>
+              <th>Time Left</th>
+            </tr>
+          </thead>
+          <tbody id="uidTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2026 <a href="#">DP</a> - Control Panel</p>
+  </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+  <script>
+    if (sessionStorage.getItem('loggedIn') !== 'admin') {
+      window.location.href = 'index.html';
+    }
+
+    async function refreshDashboard() {
+      const users = await App.getAllUsers();
+      const tbody = document.getElementById('uidTableBody');
+      tbody.innerHTML = '';
+
+      let totalUids = 0, activeUids = 0, expiredUids = 0, inactiveUids = 0;
+
+      users.forEach(user => {
+        let uids = user.uids || [];
+        if (!Array.isArray(uids)) uids = Object.values(uids);
+
+        uids.forEach(uid => {
+          totalUids++;
+          const now = new Date();
+          const expiry = new Date(uid.expiry);
+          let statusClass, statusText;
+
+          if (uid.status !== 'Active') {
+            statusClass = 'status-disabled';
+            statusText = 'Inactive';
+            inactiveUids++;
+          } else if (expiry <= now) {
+            statusClass = 'status-expired';
+            statusText = 'Expired';
+            expiredUids++;
+          } else {
+            statusClass = 'status-active';
+            statusText = 'Active';
+            activeUids++;
+          }
+
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td><strong>${user.username}</strong></td>
+            <td style="font-family:monospace;font-size:0.78rem;">${uid.uid}</td>
+            <td><span class="${statusClass}">${statusText}</span></td>
+            <td style="font-size:0.78rem;">${expiry.toLocaleString()}</td>
+            <td style="font-size:0.78rem;" class="countdown-cell" data-expiry="${uid.expiry}">${App.getTimeLeft(uid.expiry)}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      });
+
+      if (totalUids === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-400);padding:1.5rem;">No UIDs found</td></tr>';
+      }
+
+      document.getElementById('statTotalUids').textContent = totalUids;
+      document.getElementById('statActiveUids').textContent = activeUids;
+      document.getElementById('statExpiredUids').textContent = expiredUids;
+      document.getElementById('statInactiveUids').textContent = inactiveUids;
+    }
+
+    // Countdown timer
+    setInterval(() => {
+      document.querySelectorAll('.countdown-cell').forEach(el => {
+        el.textContent = App.getTimeLeft(el.dataset.expiry);
+      });
+    }, 1000);
+
+    refreshDashboard();
+  </script>
+</body>
+</html>

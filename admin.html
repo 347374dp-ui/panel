@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DP Control Panel — Admin Dashboard" />
+  <title>Admin Panel — DP Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,600;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .user-controls { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .status-active { color: var(--green); font-weight: 600; }
+    .status-disabled { color: var(--red); font-weight: 600; }
+    .uid-sub-table { margin-top: 0.5rem; background: var(--bg-1); border-radius: 8px; padding: 0.75rem; }
+    .uid-sub-table td { font-size: 0.8rem; padding: 0.3rem 0.5rem; }
+    .user-expand-row { cursor: pointer; }
+    .user-expand-row:hover { background: var(--bg-2); }
+    .uid-details { display: none; }
+    .uid-details.open { display: table-row; }
+    .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .overview-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; text-align: center; }
+    .overview-card .oval { font-size: 2rem; font-weight: 700; }
+    .overview-card .olabel { font-size: 0.75rem; color: var(--text-300); text-transform: uppercase; letter-spacing: .08em; margin-top: .25rem; }
+    .maxuid-input { width: 60px; text-align: center; }
+    @media(max-width:600px){ .overview-grid{ grid-template-columns:1fr 1fr; } }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand">
+      <h1>DP Control Panel</h1>
+      <span class="nav-subtitle">Admin Dashboard</span>
+    </div>
+    <div class="nav-right" style="gap: 1rem;">
+      <a href="admin.html" class="btn btn-red btn-sm" style="border-radius:50px;">UID Dashboard</a>
+      <a href="panel_admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Panel Dashboard</a>
+      <a href="silent_aim_admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Silent Aim</a>
+      <a href="feature_builder.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Feature Builder</a>
+      <button class="btn btn-dark btn-sm" id="logoutBtn">Sign out</button>
+    </div>
+  </nav>
+
+  <main class="page-wrapper">
+
+    <!-- ── OVERVIEW STATS ── -->
+    <section class="card fade-in" style="margin-bottom:1.5rem;">
+      <h3 class="card-title" style="margin-bottom:.25rem;">Overview</h3>
+      <p class="card-subtitle" style="margin-bottom:1rem;">Live data from Firebase Database</p>
+
+      <div class="overview-grid">
+        <div class="overview-card">
+          <div class="oval" id="statTotalUsers" style="color:var(--text-100);">—</div>
+          <div class="olabel">Total Users</div>
+        </div>
+        <div class="overview-card">
+          <div class="oval" id="statActiveUsers" style="color:var(--green);">—</div>
+          <div class="olabel">Active Users</div>
+        </div>
+        <div class="overview-card">
+          <div class="oval" id="statDisabledUsers" style="color:var(--red);">—</div>
+          <div class="olabel">Disabled Users</div>
+        </div>
+        <div class="overview-card">
+          <div class="oval" id="statTotalUids" style="color:var(--text-100);">—</div>
+          <div class="olabel">Total UIDs</div>
+        </div>
+        <div class="overview-card">
+          <div class="oval" id="statActiveUids" style="color:var(--green);">—</div>
+          <div class="olabel">Active UIDs</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="admin-grid">
+
+      <!-- Create User -->
+      <section class="card fade-in">
+        <h3 class="card-title">Create User Account</h3>
+        <p class="card-subtitle">Register a new client who can manage their own UIDs</p>
+        <form id="createUserForm" autocomplete="off">
+          <div class="form-group">
+            <label for="newUsername">Username</label>
+            <input type="text" id="newUsername" class="form-input" placeholder="e.g. john" required />
+          </div>
+          <div class="form-group">
+            <label for="newPassword">Password</label>
+            <input type="password" id="newPassword" class="form-input" placeholder="password" required />
+          </div>
+          <div class="form-group">
+            <label for="newMaxUids">Max UIDs Allowed</label>
+            <input type="number" id="newMaxUids" class="form-input" value="10" min="1" max="100" required />
+          </div>
+          <button type="submit" class="btn btn-red" style="margin-top:.5rem;" id="createUserBtn">Add User</button>
+        </form>
+      </section>
+
+      <!-- User List -->
+      <section class="card fade-in">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+          <div>
+            <h3 class="card-title" style="margin-bottom:.25rem;">User Accounts</h3>
+            <p class="card-subtitle">Click a user row to see their UIDs</p>
+          </div>
+          <button class="btn btn-dark btn-sm" id="refreshUsersBtn">↻ Refresh</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="userTable">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Status</th>
+                <th>UIDs</th>
+                <th>Max UIDs</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody">
+              <tr><td colspan="6" style="text-align:center;color:var(--text-300);padding:2rem;">Loading users...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ── PROTO POOL ── -->
+    <section class="card fade-in" style="margin-top:1.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <div>
+          <h3 class="card-title" style="margin-bottom:.25rem;">🛡 Proto Pool</h3>
+          <p class="card-subtitle">Manage MOBILE_PROTO pool — engine picks a random one every 30 min per client</p>
+        </div>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <span id="protoPoolBadge" style="font-size:.8rem;padding:.3rem .8rem;border-radius:50px;background:var(--bg-2);border:1px solid var(--border);color:var(--text-300);">Loading...</span>
+          <button class="btn btn-dark btn-sm" id="refreshProtoBtn">↻ Refresh</button>
+        </div>
+      </div>
+
+      <!-- Upload form -->
+      <div style="background:var(--bg-1);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1rem;">
+        <label style="font-size:.85rem;font-weight:600;color:var(--text-200);display:block;margin-bottom:.5rem;">Paste captured hex proto string below:</label>
+        <textarea id="protoHexInput" rows="4" class="form-input" style="font-family:monospace;font-size:.78rem;resize:vertical;width:100%;box-sizing:border-box;" placeholder="25f16c42b17c8239fcc..."></textarea>
+        <div style="display:flex;align-items:center;gap:1rem;margin-top:.75rem;">
+          <button class="btn btn-red" id="uploadProtoBtn">⬆ Upload to Pool</button>
+          <span id="protoUploadStatus" style="font-size:.85rem;"></span>
+          <span style="margin-left:auto;font-size:.8rem;color:var(--text-300);">Recommended: 3–10 protos in pool</span>
+        </div>
+      </div>
+
+      <!-- Proto list -->
+      <div style="overflow-x:auto;">
+        <table class="data-table" id="protoTable">
+          <thead>
+            <tr>
+              <th style="width:30px;">#</th>
+              <th>Proto Preview</th>
+              <th style="width:180px;">Uploaded</th>
+              <th style="width:90px;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="protoTableBody">
+            <tr><td colspan="4" style="text-align:center;color:var(--text-300);padding:2rem;">Loading proto pool...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── DOWNLOAD URL MANAGER ── -->
+    <section class="card fade-in" style="margin-top:1.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <div>
+          <h3 class="card-title" style="margin-bottom:.25rem;">📦 Download URL Manager</h3>
+          <p class="card-subtitle">Set the ZIP link clients download — paste any Google Drive share link</p>
+        </div>
+      </div>
+
+      <!-- Active URL display -->
+      <div style="background:var(--bg-1);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1rem;">
+        <label style="font-size:.75rem;font-weight:700;color:var(--text-300);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.5rem;">Active Download URL</label>
+        <div id="currentDownloadUrl" style="font-size:.82rem;color:var(--text-200);word-break:break-all;font-family:monospace;">Loading...</div>
+      </div>
+
+      <!-- URL input -->
+      <div style="background:var(--bg-1);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1rem;">
+        <label style="font-size:.75rem;font-weight:700;color:var(--text-300);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.5rem;">Paste Google Drive Link (any format)</label>
+        <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
+          <input type="url" id="driveUrlInput" class="form-input" style="flex:1;min-width:260px;"
+                 placeholder="https://drive.google.com/file/d/... or direct link" />
+          <button class="btn btn-red" id="saveUrlBtn">Save URL</button>
+        </div>
+        <!-- Live preview -->
+        <div style="margin-top:.75rem;">
+          <label style="font-size:.75rem;font-weight:700;color:var(--text-300);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.4rem;">Converted Direct URL Preview</label>
+          <div id="urlPreview" style="font-size:.78rem;font-family:monospace;color:var(--text-300);word-break:break-all;">—</div>
+        </div>
+        <span id="urlSaveStatus" style="display:block;margin-top:.75rem;font-size:.85rem;"></span>
+      </div>
+
+      <!-- Version note -->
+      <div style="background:var(--bg-1);border:1px solid var(--border);border-radius:10px;padding:1rem;">
+        <label style="font-size:.75rem;font-weight:700;color:var(--text-300);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.5rem;">Version Note <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional — shown in launcher)</span></label>
+        <div style="display:flex;gap:.75rem;align-items:center;">
+          <input type="text" id="versionNoteInput" class="form-input" style="flex:1;"
+                 placeholder="e.g. v5.1 — fixed engine crash on other PCs" />
+          <button class="btn btn-dark btn-sm" id="saveVersionBtn">Save Note</button>
+        </div>
+        <span id="versionSaveStatus" style="display:block;margin-top:.5rem;font-size:.85rem;"></span>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>© 2026 <a href="#">DP</a> — Admin Panel</p>
+  </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+  <script>
+    // ── Access control ──
+    if (sessionStorage.getItem('loggedIn') !== 'admin') {
+      window.location.href = 'index.html';
+    }
+
+    // ── Load overview stats ──
+    const loadStats = async () => {
+      const stats = await App.getGlobalStats();
+      document.getElementById('statTotalUsers').textContent = stats.totalUsers;
+      document.getElementById('statActiveUsers').textContent = stats.activeUsers;
+      document.getElementById('statDisabledUsers').textContent = stats.disabledUsers;
+      document.getElementById('statTotalUids').textContent = stats.totalUids;
+      document.getElementById('statActiveUids').textContent = stats.activeUids;
+    };
+
+    // ── Render users table ──
+    let expandedUser = null;
+
+    const renderUsers = async () => {
+      const users = await App.getAllUsers();
+      const tbody = document.getElementById('userTableBody');
+      tbody.innerHTML = '';
+
+      if (users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-300);padding:2rem;">No user accounts yet. Create one above!</td></tr>`;
+        return;
+      }
+
+      users.forEach(user => {
+        let uids = user.uids || [];
+        if (!Array.isArray(uids)) uids = Object.values(uids);
+        const uidCount = uids.length;
+        const statusClass = user.active ? 'status-active' : 'status-disabled';
+        const statusText = user.active ? 'Active' : 'Disabled';
+        const created = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—';
+
+        // Main user row
+        const tr = document.createElement('tr');
+        tr.className = 'user-expand-row';
+        tr.innerHTML = `
+          <td><strong>${user.username}</strong></td>
+          <td class="${statusClass}">${statusText}</td>
+          <td>${uidCount}</td>
+          <td>
+            <input type="number" class="form-input maxuid-input" value="${user.maxUids || 10}" min="1" data-username="${user.username}" />
+          </td>
+          <td>${created}</td>
+          <td class="user-controls">
+            <button class="btn btn-dark btn-sm toggle-active-btn" data-username="${user.username}">${user.active ? 'Disable' : 'Enable'}</button>
+            <button class="btn btn-red btn-sm delete-user-btn" data-username="${user.username}">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+
+        // Expandable UID detail row
+        const detailTr = document.createElement('tr');
+        detailTr.className = `uid-details ${expandedUser === user.username ? 'open' : ''}`;
+        detailTr.id = `detail-${user.username}`;
+
+        let uidHtml = '';
+        if (uids.length > 0) {
+          uidHtml = `<table style="width:100%;"><thead><tr><th>UID</th><th>Name</th><th>Status</th><th>Expiry</th><th>Action</th></tr></thead><tbody>`;
+          uids.forEach(uid => {
+            const isExpired = new Date(uid.expiry) < new Date();
+            const uidStatus = uid.status === 'Inactive' ? 'Inactive' : (isExpired ? 'Expired' : 'Active');
+            const uidStatusClass = uidStatus === 'Active' ? 'status-active' : 'status-disabled';
+            uidHtml += `<tr>
+              <td><strong>${uid.uid}</strong></td>
+              <td>${uid.displayName || '—'}</td>
+              <td class="${uidStatusClass}">${uidStatus}</td>
+              <td>${uid.expiry ? new Date(uid.expiry).toLocaleDateString() : '—'}</td>
+              <td><button class="btn btn-red btn-sm admin-remove-uid-btn" data-username="${user.username}" data-uid="${uid.uid}">Remove</button></td>
+            </tr>`;
+          });
+          uidHtml += '</tbody></table>';
+        } else {
+          uidHtml = '<p style="color:var(--text-300);text-align:center;padding:1rem;">No UIDs added by this user yet.</p>';
+        }
+
+        detailTr.innerHTML = `<td colspan="6"><div class="uid-sub-table">${uidHtml}</div></td>`;
+        tbody.appendChild(detailTr);
+
+        // Click to expand
+        tr.addEventListener('click', (e) => {
+          if (e.target.closest('button') || e.target.closest('input')) return;
+          const detail = document.getElementById(`detail-${user.username}`);
+          if (expandedUser === user.username) {
+            detail.classList.remove('open');
+            expandedUser = null;
+          } else {
+            document.querySelectorAll('.uid-details').forEach(d => d.classList.remove('open'));
+            detail.classList.add('open');
+            expandedUser = user.username;
+          }
+        });
+      });
+
+      // Load stats too
+      loadStats();
+    };
+
+    // ── Max UIDs change ──
+    document.getElementById('userTable').addEventListener('change', async (e) => {
+      if (e.target.classList.contains('maxuid-input')) {
+        const username = e.target.dataset.username;
+        const newMax = e.target.value;
+        await App.updateUserMaxUids(username, newMax);
+        App.toast(`Updated max UIDs for "${username}" to ${newMax}`, 'success');
+      }
+    });
+
+    // ── Button clicks ──
+    document.getElementById('userTable').addEventListener('click', async (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+
+      if (btn.classList.contains('toggle-active-btn')) {
+        const username = btn.dataset.username;
+        const newState = await App.toggleUserActive(username);
+        App.toast(`User "${username}" is now ${newState ? 'Active' : 'Disabled'}`, newState ? 'success' : 'error');
+        renderUsers();
+      }
+
+      if (btn.classList.contains('delete-user-btn')) {
+        const username = btn.dataset.username;
+        if (confirm(`Permanently delete user "${username}" and all their UIDs?`)) {
+          await App.deleteUser(username);
+          App.toast(`Deleted user "${username}"`, 'info');
+          renderUsers();
+        }
+      }
+
+      if (btn.classList.contains('admin-remove-uid-btn')) {
+        const username = btn.dataset.username;
+        const uid = btn.dataset.uid;
+        if (confirm(`Remove UID ${uid} from user "${username}"?`)) {
+          await App.removeUid(username, uid);
+          App.toast(`Removed UID ${uid}`, 'info');
+          renderUsers();
+        }
+      }
+    });
+
+    // ── Create user ──
+    document.getElementById('createUserForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const username = document.getElementById('newUsername').value.trim().toLowerCase();
+      const password = document.getElementById('newPassword').value;
+      const maxUids = parseInt(document.getElementById('newMaxUids').value);
+
+      const btn = document.getElementById('createUserBtn');
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+
+      const result = await App.createUser(username, password, maxUids);
+
+      btn.disabled = false;
+      btn.textContent = 'Add User';
+
+      if (result.success) {
+        App.toast(`User "${username}" created!`, 'success');
+        this.reset();
+        document.getElementById('newMaxUids').value = '10';
+        renderUsers();
+      } else {
+        App.toast(result.msg, 'error');
+      }
+    });
+
+    // ── Refresh ──
+    document.getElementById('refreshUsersBtn').addEventListener('click', renderUsers);
+
+    // ── Logout ──
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      sessionStorage.clear();
+      window.location.href = 'index.html';
+    });
+
+    // ── Proto Pool Logic ──
+    const DEFAULT_PROTO_PREVIEW = '25f16c42b17c8239fccb04095cf57404c3b0bb2...';
+    const DEFAULT_PROTO_KEY     = '__default__';
+
+    const renderProtoPool = async () => {
+      const protos = await getProtoPool();
+      const tbody = document.getElementById('protoTableBody');
+      const badge = document.getElementById('protoPoolBadge');
+      tbody.innerHTML = '';
+
+      const customKeys = Object.keys(protos);
+      const customCount = customKeys.length;
+
+      // Badge reflects CUSTOM protos only
+      if (customCount === 0) {
+        badge.textContent = 'Using Built-in Default';
+        badge.style.color = 'var(--amber)';
+        badge.style.borderColor = 'var(--amber)';
+      } else if (customCount < 3) {
+        badge.textContent = `${customCount} Custom Proto(s)`;
+        badge.style.color = 'var(--amber)';
+        badge.style.borderColor = 'var(--amber)';
+      } else {
+        badge.textContent = `${customCount} Custom Proto(s) ✓`;
+        badge.style.color = 'var(--green)';
+        badge.style.borderColor = 'var(--green)';
+      }
+
+      // Render custom protos first (with delete buttons)
+      customKeys.sort().forEach((key, index) => {
+        const val = protos[key];
+        const preview = typeof val === 'string' ? val.substring(0, 45) + '...' : '(invalid)';
+        let dateStr = key;
+        try {
+          const ts = parseInt(key);
+          if (!isNaN(ts)) dateStr = new Date(ts).toLocaleString();
+        } catch(e) {}
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td><code style="font-size:0.75rem;color:var(--text-100);word-break:break-all;">${preview}</code></td>
+          <td>${dateStr}</td>
+          <td>
+            <button class="btn btn-red btn-sm delete-proto-btn" data-key="${key}">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Always render the built-in default as a LOCKED row at the bottom
+      const defaultTr = document.createElement('tr');
+      defaultTr.style.opacity = customCount > 0 ? '0.45' : '1';
+      defaultTr.innerHTML = `
+        <td style="color:var(--text-300);">—</td>
+        <td>
+          <code style="font-size:0.75rem;color:var(--text-300);word-break:break-all;">${DEFAULT_PROTO_PREVIEW}</code>
+          <span style="margin-left:8px;font-size:0.7rem;background:var(--bg-1);border:1px solid var(--border);border-radius:4px;padding:2px 6px;color:var(--amber);">
+            🔒 Default${customCount > 0 ? ' • Inactive (custom protos active)' : ' • Active (no custom protos)'}
+          </span>
+        </td>
+        <td style="color:var(--text-300);">Built-in</td>
+        <td><span style="font-size:0.75rem;color:var(--text-300);">Protected</span></td>
+      `;
+      tbody.appendChild(defaultTr);
+    };
+
+
+    document.getElementById('uploadProtoBtn').addEventListener('click', async () => {
+      const input = document.getElementById('protoHexInput');
+      const status = document.getElementById('protoUploadStatus');
+      const hex = input.value.trim().replace(/\s+/g, '');
+      if (!hex) {
+        status.textContent = 'Please paste a valid hex string.';
+        status.style.color = 'var(--red)';
+        return;
+      }
+      if (hex.length < 100) {
+        status.textContent = 'Hex string too short.';
+        status.style.color = 'var(--red)';
+        return;
+      }
+      status.textContent = 'Uploading...';
+      status.style.color = 'var(--text-300)';
+
+      const ok = await addProto(hex);
+      if (ok) {
+        status.textContent = 'Uploaded successfully!';
+        status.style.color = 'var(--green)';
+        input.value = '';
+        renderProtoPool();
+      } else {
+        status.textContent = 'Failed to upload.';
+        status.style.color = 'var(--red)';
+      }
+    });
+
+    document.getElementById('protoTable').addEventListener('click', async (e) => {
+      const btn = e.target.closest('.delete-proto-btn');
+      if (!btn) return;
+      const key = btn.dataset.key;
+      if (confirm('Delete this proto from pool?')) {
+        await deleteProto(key);
+        App.toast('Proto deleted from pool', 'info');
+        renderProtoPool();
+      }
+    });
+
+    document.getElementById('refreshProtoBtn').addEventListener('click', renderProtoPool);
+
+    // ══════════════════ DOWNLOAD URL MANAGER ══════════════════
+    const FB = 'https://dipesh-database-default-rtdb.firebaseio.com';
+
+    function gdriveToDirectUrl(url) {
+      if (!url) return '';
+      // Already a direct usercontent link — pass through
+      if (url.includes('drive.usercontent.google.com')) return url;
+      // Extract file ID from any Google Drive URL format
+      const patterns = [
+        /\/file\/d\/([a-zA-Z0-9_-]+)/,
+        /[?&]id=([a-zA-Z0-9_-]+)/,
+        /\/d\/([a-zA-Z0-9_-]+)/,
+      ];
+      for (const pat of patterns) {
+        const m = url.match(pat);
+        if (m) {
+          return `https://drive.usercontent.google.com/download?id=${m[1]}&export=download&authuser=0&confirm=t`;
+        }
+      }
+      return url; // Not a Drive URL — return as-is (direct link)
+    }
+
+    async function loadDownloadConfig() {
+      try {
+        const r = await fetch(`${FB}/config.json`);
+        const cfg = await r.json() || {};
+        const url = cfg.download_url || '(not set)';
+        const ver = cfg.version_note || '';
+        document.getElementById('currentDownloadUrl').textContent = url;
+        if (ver) document.getElementById('versionNoteInput').value = ver;
+      } catch(e) {
+        document.getElementById('currentDownloadUrl').textContent = 'Error loading config';
+      }
+    }
+
+    // Live URL preview as user types
+    document.getElementById('driveUrlInput').addEventListener('input', function() {
+      const raw = this.value.trim();
+      const preview = document.getElementById('urlPreview');
+      if (!raw) { preview.textContent = '—'; preview.style.color = 'var(--text-300)'; return; }
+      const direct = gdriveToDirectUrl(raw);
+      preview.textContent = direct;
+      preview.style.color = direct !== raw ? 'var(--green)' : 'var(--text-200)';
+    });
+
+    document.getElementById('saveUrlBtn').addEventListener('click', async () => {
+      const raw = document.getElementById('driveUrlInput').value.trim();
+      const status = document.getElementById('urlSaveStatus');
+      if (!raw) { status.textContent = '⚠ Paste a URL first'; status.style.color = 'var(--red)'; return; }
+      const direct = gdriveToDirectUrl(raw);
+      status.textContent = 'Saving...'; status.style.color = 'var(--text-300)';
+      try {
+        const r = await fetch(`${FB}/config.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ download_url: direct })
+        });
+        if (r.ok) {
+          document.getElementById('currentDownloadUrl').textContent = direct;
+          document.getElementById('driveUrlInput').value = '';
+          document.getElementById('urlPreview').textContent = '—';
+          status.textContent = '✓ Saved! Clients will now download from this link.';
+          status.style.color = 'var(--green)';
+          App.toast('Download URL updated', 'success');
+        } else throw new Error();
+      } catch {
+        status.textContent = '✗ Firebase error — check connection';
+        status.style.color = 'var(--red)';
+      }
+    });
+
+    document.getElementById('saveVersionBtn').addEventListener('click', async () => {
+      const ver = document.getElementById('versionNoteInput').value.trim();
+      const status = document.getElementById('versionSaveStatus');
+      try {
+        await fetch(`${FB}/config.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ version_note: ver })
+        });
+        status.textContent = '✓ Version note saved';
+        status.style.color = 'var(--green)';
+      } catch {
+        status.textContent = '✗ Error saving';
+        status.style.color = 'var(--red)';
+      }
+    });
+
+    // ── Initial load ──
+    renderUsers();
+    renderProtoPool();
+    loadDownloadConfig();
+
+    // Auto-refresh every 30 seconds
+    setInterval(() => {
+      renderUsers();
+      renderProtoPool();
+    }, 30000);
+  </script>
+</body>
+</html>

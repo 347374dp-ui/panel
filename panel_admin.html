@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DP Panel Admin - Manage Panel Accounts" />
+  <title>Panel Admin — DP Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,600;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .user-controls { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .status-active { color: var(--green); font-weight: 600; }
+    .status-disabled { color: var(--red); font-weight: 600; }
+    
+    /* Feature checkbox list styling */
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--text-200);
+      user-select: none;
+    }
+    .checkbox-item input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--red);
+      cursor: pointer;
+    }
+    .feature-tag {
+      display: inline-block;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin-right: 0.25rem;
+      margin-bottom: 0.25rem;
+    }
+    .feature-tag.enabled {
+      background: var(--green-dim);
+      color: var(--green);
+    }
+    .feature-tag.disabled {
+      background: rgba(255,255,255,0.04);
+      color: var(--text-300);
+    }
+    .cat-section-header {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-300);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 0.75rem;
+      margin-bottom: 0.25rem;
+      padding-bottom: 0.2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .cat-section-header:first-child { margin-top: 0; }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand">
+      <h1>DP Control Panel</h1>
+      <span class="nav-subtitle">Panel Admin</span>
+    </div>
+    <div class="nav-right" style="gap: 1rem;">
+      <a href="admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">UID Dashboard</a>
+      <a href="panel_admin.html" class="btn btn-red btn-sm" style="border-radius:50px;">Panel Dashboard</a>
+      <a href="silent_aim_admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Silent Aim</a>
+      <a href="feature_builder.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Feature Builder</a>
+      <button class="btn btn-dark btn-sm" id="logoutBtn">Sign out</button>
+    </div>
+  </nav>
+
+  <main class="page-wrapper">
+
+    <!-- ── OVERVIEW STATS ── -->
+    <section class="card fade-in" style="margin-bottom:1.5rem;">
+      <h3 class="card-title" style="margin-bottom:.25rem;">Panel Overview</h3>
+      <p class="card-subtitle" style="margin-bottom:1rem;">Live statistics of DP Panel client connections</p>
+
+      <div class="overview-grid" style="display: flex; flex-direction: row; gap: 1.5rem; flex-wrap: wrap;">
+        <div class="overview-card">
+          <div class="oval" id="statTotalUsers" style="color:var(--text-100);">—</div>
+          <div class="olabel">Total Clients</div>
+        </div>
+        <div class="overview-card">
+          <div class="oval" id="statActiveUsers" style="color:var(--green);">—</div>
+          <div class="olabel">Active Clients</div>
+        </div>
+        <div class="overview-card">
+          <div class="oval" id="statDisabledUsers" style="color:var(--red);">—</div>
+          <div class="olabel">Disabled</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="admin-grid" style="grid-template-columns: 350px 1fr;">
+
+      <!-- Create User -->
+      <section class="card fade-in">
+        <h3 class="card-title">Add Panel Account</h3>
+        <p class="card-subtitle">Register a client with customized cheat feature permissions</p>
+        <form id="createUserForm" autocomplete="off">
+          <div class="form-group">
+            <label for="newUsername">USERNAME</label>
+            <input type="text" id="newUsername" class="form-input" placeholder="e.g. john" required />
+          </div>
+          <div class="form-group">
+            <label for="newPassword">PASSWORD</label>
+            <input type="password" id="newPassword" class="form-input" placeholder="password" required />
+          </div>
+          
+          <div class="form-group" style="margin-top:1rem;">
+            <label>ALLOWED FEATURES</label>
+            <div id="featureCheckboxes"><p style="color:var(--text-400);font-size:0.82rem;">Loading features...</p></div>
+          </div>
+          
+          <button type="submit" class="btn btn-red btn-full" style="margin-top:1.5rem;" id="createUserBtn">Create User</button>
+        </form>
+      </section>
+
+      <!-- User List -->
+      <section class="card fade-in">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+          <div>
+            <h3 class="card-title" style="margin-bottom:.25rem;">Panel Client Accounts</h3>
+            <p class="card-subtitle">Manage feature toggles remotely per user</p>
+          </div>
+          <button class="btn btn-dark btn-sm" id="refreshUsersBtn">↻ Refresh</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="userTable">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Status</th>
+                <th>Features</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody">
+              <tr><td colspan="4" style="text-align:center;color:var(--text-300);padding:2rem;">Loading accounts...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <p>© 2026 <a href="#">DP</a> — Panel Control</p>
+  </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+  <script>
+    if (sessionStorage.getItem('loggedIn') !== 'admin') {
+      window.location.href = 'index.html';
+    }
+
+    // ── Store loaded feature list ──
+    let _loadedFeatures = [];
+
+    // ── Render checkbox list (grouped by category) ──
+    const renderCheckboxes = async (containerId, features, idPrefix, checkedMap) => {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      // Group by category
+      const groups = {};
+      features.forEach(f => {
+        const cat = f.category || 'General';
+        if (!groups[cat]) groups[cat] = [];
+        groups[cat].push(f);
+      });
+
+      Object.keys(groups).sort().forEach(cat => {
+        const header = document.createElement('div');
+        header.className = 'cat-section-header';
+        header.textContent = cat;
+        container.appendChild(header);
+
+        const grid = document.createElement('div');
+        grid.className = 'checkbox-grid';
+        
+        groups[cat].forEach(f => {
+          const isChecked = checkedMap ? (checkedMap[f.key] || false) : true;
+          grid.innerHTML += `
+            <label class="checkbox-item">
+              <input type="checkbox" id="${idPrefix}-${f.key}" ${isChecked ? 'checked' : ''} />
+              <span>${f.label.toUpperCase()}</span>
+            </label>
+          `;
+        });
+
+        container.appendChild(grid);
+      });
+    };
+
+    // ── Initialize checkboxes ──
+    const initCheckboxes = async () => {
+      _loadedFeatures = await App.getFeatureList(true);
+      await renderCheckboxes('featureCheckboxes', _loadedFeatures, 'feat', null);
+    };
+
+    const loadStats = async () => {
+      const stats = await App.getGlobalPanelStats();
+      document.getElementById('statTotalUsers').textContent = stats.totalUsers;
+      document.getElementById('statActiveUsers').textContent = stats.activeUsers;
+      document.getElementById('statDisabledUsers').textContent = stats.disabledUsers;
+    };
+
+    const renderUsers = async () => {
+      // Reload features to stay in sync
+      _loadedFeatures = await App.getFeatureList(true);
+
+      const users = await App.getAllPanelUsers();
+      const tbody = document.getElementById('userTableBody');
+      tbody.innerHTML = '';
+
+      if (users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-300);padding:2rem;">No panel accounts yet. Create one!</td></tr>`;
+        return;
+      }
+
+      users.forEach(user => {
+        const statusClass = user.active ? 'status-active' : 'status-disabled';
+        const statusText = user.active ? 'Active' : 'Disabled';
+
+        // Render features using dynamic feature list
+        let featuresHtml = '';
+        _loadedFeatures.forEach(f => {
+          const isEnabled = user.features && user.features[f.key];
+          featuresHtml += `<span class="feature-tag ${isEnabled ? 'enabled' : 'disabled'}">${f.label}</span>`;
+        });
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${user.username}</strong><br><span style="font-size:0.72rem;color:var(--text-400);">Created: ${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}</span></td>
+          <td class="${statusClass}">${statusText}</td>
+          <td style="max-width:350px;white-space:normal;">${featuresHtml}</td>
+          <td class="user-controls">
+            <button class="btn btn-dark btn-sm toggle-active-btn" data-username="${user.username}">${user.active ? 'Disable' : 'Enable'}</button>
+            <button class="btn btn-dark btn-sm edit-features-btn" data-username="${user.username}">Features</button>
+            <button class="btn btn-red btn-sm delete-user-btn" data-username="${user.username}">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      loadStats();
+    };
+
+    // Form submission
+    document.getElementById('createUserForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const username = document.getElementById('newUsername').value.trim().toLowerCase();
+      const password = document.getElementById('newPassword').value;
+
+      const features = {};
+      _loadedFeatures.forEach(f => {
+        const cb = document.getElementById(`feat-${f.key}`);
+        features[f.key] = cb ? cb.checked : false;
+      });
+
+      const btn = document.getElementById('createUserBtn');
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+
+      const result = await App.createPanelUser(username, password, 0, features);
+      btn.disabled = false;
+      btn.textContent = 'Create User';
+
+      if (result.success) {
+        App.toast(`Account "${username}" created!`, 'success');
+        this.reset();
+        // Re-check all checkboxes
+        _loadedFeatures.forEach(f => {
+          const cb = document.getElementById(`feat-${f.key}`);
+          if (cb) cb.checked = true;
+        });
+        renderUsers();
+      } else {
+        App.toast(result.msg, 'error');
+      }
+    });
+
+    // Button clicks
+    document.getElementById('userTable').addEventListener('click', async (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+
+      const username = btn.dataset.username;
+
+      if (btn.classList.contains('toggle-active-btn')) {
+        const newState = await App.togglePanelUserActive(username);
+        App.toast(`Client status -> ${newState ? 'Active' : 'Disabled'}`, newState ? 'success' : 'error');
+        renderUsers();
+      }
+
+      if (btn.classList.contains('delete-user-btn')) {
+        if (confirm(`Delete panel account "${username}"?`)) {
+          await App.deletePanelUser(username);
+          App.toast(`Deleted client account`, 'info');
+          renderUsers();
+        }
+      }
+
+      if (btn.classList.contains('edit-features-btn')) {
+        const user = await App.getPanelUser(username);
+        if (!user) return;
+        const currFeatures = user.features || {};
+
+        // Build modal with dynamic features grouped by category
+        const groups = {};
+        _loadedFeatures.forEach(f => {
+          const cat = f.category || 'General';
+          if (!groups[cat]) groups[cat] = [];
+          groups[cat].push(f);
+        });
+
+        let checkboxHtml = '';
+        Object.keys(groups).sort().forEach(cat => {
+          checkboxHtml += `<div class="cat-section-header">${cat}</div>`;
+          checkboxHtml += `<div class="checkbox-grid">`;
+          groups[cat].forEach(f => {
+            checkboxHtml += `
+              <label class="checkbox-item">
+                <input type="checkbox" id="edit-feat-${f.key}" ${currFeatures[f.key] ? 'checked' : ''} />
+                <span>${f.label.toUpperCase()}</span>
+              </label>
+            `;
+          });
+          checkboxHtml += `</div>`;
+        });
+
+        let modalHtml = `
+          <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9998;display:flex;align-items:center;justify-content:center;" id="featureEditModal">
+            <div class="card" style="width:90%;max-width:450px;max-height:80vh;overflow-y:auto;">
+              <h3 class="card-title">Edit permissions: ${username}</h3>
+              <div style="margin-top:1rem;margin-bottom:1.5rem;">
+                ${checkboxHtml}
+              </div>
+              <div style="display:flex;gap:0.75rem;">
+                <button class="btn btn-red btn-full" id="saveFeaturesBtn">Save</button>
+                <button class="btn btn-dark btn-full" onclick="document.getElementById('featureEditModal').remove()">Cancel</button>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        document.getElementById('saveFeaturesBtn').addEventListener('click', async () => {
+          const updated = {};
+          _loadedFeatures.forEach(f => {
+            const cb = document.getElementById(`edit-feat-${f.key}`);
+            updated[f.key] = cb ? cb.checked : false;
+          });
+          await App.updatePanelUserFeatures(username, updated);
+          App.toast('Features updated successfully', 'success');
+          document.getElementById('featureEditModal').remove();
+          renderUsers();
+        });
+      }
+    });
+
+    document.getElementById('refreshUsersBtn').addEventListener('click', renderUsers);
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      sessionStorage.clear();
+      window.location.href = 'index.html';
+    });
+
+    // ── Initial Load ──
+    App.initFirebase().then(async () => {
+      await initCheckboxes();
+      renderUsers();
+    });
+
+    setInterval(renderUsers, 30000);
+  </script>
+</body>
+</html>

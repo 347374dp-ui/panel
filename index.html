@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DP Panel - Admin Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-brand">
+      <h1>DP Control Panel</h1>
+      <span class="nav-subtitle">Admin Management System</span>
+    </div>
+  </nav>
+
+  <main class="login-page">
+    <div class="card login-card fade-in">
+      <h2 class="card-title">Admin Login</h2>
+      <p class="card-subtitle">Sign in to manage user accounts and features</p>
+
+      <div id="loginError" style="display:none;background:rgba(229,57,53,0.12);border:1px solid rgba(229,57,53,0.3);color:var(--red);padding:0.6rem 0.9rem;border-radius:var(--radius-sm);margin-bottom:1rem;font-size:0.84rem;margin-top:1rem;"></div>
+
+      <form id="loginForm" autocomplete="off" style="margin-top:1.2rem;">
+        <div class="form-group">
+          <label for="loginUser">Username</label>
+          <input type="text" id="loginUser" class="form-input" placeholder="Admin username" required>
+        </div>
+        <div class="form-group">
+          <label for="loginPass">Password</label>
+          <input type="password" id="loginPass" class="form-input" placeholder="Password" required>
+        </div>
+        <button type="submit" class="btn btn-red btn-full" id="loginBtn">Sign In</button>
+      </form>
+
+      <p class="login-footer">DP Panel Admin - Only authorized access.</p>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 <a href="#">DP</a> - Control Panel</p>
+  </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+  <script>
+    App.initFirebase();
+
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const username = document.getElementById('loginUser').value.trim();
+      const password = document.getElementById('loginPass').value;
+      const errorEl = document.getElementById('loginError');
+      const btn = document.getElementById('loginBtn');
+
+      errorEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+
+      const result = await App.loginAdmin(username, password);
+
+      if (result.success) {
+        sessionStorage.setItem('loggedIn', 'admin');
+        sessionStorage.setItem('currentUser', 'admin');
+        App.toast('Signed in as Admin', 'success');
+        setTimeout(() => window.location.href = 'admin.html', 500);
+        return;
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+      errorEl.textContent = 'Invalid username or password.';
+      errorEl.style.display = 'block';
+      App.toast('Login failed', 'error');
+    });
+  </script>
+</body>
+</html>
