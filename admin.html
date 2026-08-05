@@ -36,10 +36,11 @@
       <span class="nav-subtitle">Admin Dashboard</span>
     </div>
     <div class="nav-right" style="gap: 1rem;">
-      <a href="admin.html" class="btn btn-red btn-sm" style="border-radius:50px;">UID Dashboard</a>
+      <a href="admin.html" class="btn btn-primary btn-sm" style="border-radius:50px;">UID Dashboard</a>
       <a href="panel_admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Panel Dashboard</a>
       <a href="silent_aim_admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Silent Aim</a>
       <a href="feature_builder.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Feature Builder</a>
+      <a href="aob_finder.html" class="btn btn-dark btn-sm" style="border-radius:50px;">AOB Safe Finder</a>
       <button class="btn btn-dark btn-sm" id="logoutBtn">Sign out</button>
     </div>
   </nav>
@@ -94,7 +95,7 @@
             <label for="newMaxUids">Max UIDs Allowed</label>
             <input type="number" id="newMaxUids" class="form-input" value="10" min="1" max="100" required />
           </div>
-          <button type="submit" class="btn btn-red" style="margin-top:.5rem;" id="createUserBtn">Add User</button>
+          <button type="submit" class="btn btn-primary" style="margin-top:.5rem;" id="createUserBtn">Add User</button>
         </form>
       </section>
 
@@ -146,7 +147,7 @@
         <label style="font-size:.85rem;font-weight:600;color:var(--text-200);display:block;margin-bottom:.5rem;">Paste captured hex proto string below:</label>
         <textarea id="protoHexInput" rows="4" class="form-input" style="font-family:monospace;font-size:.78rem;resize:vertical;width:100%;box-sizing:border-box;" placeholder="25f16c42b17c8239fcc..."></textarea>
         <div style="display:flex;align-items:center;gap:1rem;margin-top:.75rem;">
-          <button class="btn btn-red" id="uploadProtoBtn">⬆ Upload to Pool</button>
+          <button class="btn btn-primary" id="uploadProtoBtn">⬆ Upload to Pool</button>
           <span id="protoUploadStatus" style="font-size:.85rem;"></span>
           <span style="margin-left:auto;font-size:.8rem;color:var(--text-300);">Recommended: 3–10 protos in pool</span>
         </div>
@@ -191,7 +192,7 @@
         <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
           <input type="url" id="driveUrlInput" class="form-input" style="flex:1;min-width:260px;"
                  placeholder="https://drive.google.com/file/d/... or direct link" />
-          <button class="btn btn-red" id="saveUrlBtn">Save URL</button>
+          <button class="btn btn-primary" id="saveUrlBtn">Save URL</button>
         </div>
         <!-- Live preview -->
         <div style="margin-top:.75rem;">
@@ -221,6 +222,8 @@
 
   <div class="toast-container" id="toastContainer"></div>
 
+  <canvas id="particleCanvas"></canvas>
+  <script src="particles.js"></script>
   <script src="app.js"></script>
   <script>
     // ── Access control ──

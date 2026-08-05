@@ -62,8 +62,9 @@
     <div class="nav-right" style="gap: 1rem;">
       <a href="admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">UID Dashboard</a>
       <a href="panel_admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Panel Dashboard</a>
-      <a href="silent_aim_admin.html" class="btn btn-red btn-sm" style="border-radius:50px;">Silent Aim</a>
+      <a href="silent_aim_admin.html" class="btn btn-primary btn-sm" style="border-radius:50px;">Silent Aim</a>
       <a href="feature_builder.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Feature Builder</a>
+      <a href="aob_finder.html" class="btn btn-dark btn-sm" style="border-radius:50px;">AOB Safe Finder</a>
       <button class="btn btn-dark btn-sm" id="logoutBtn">Sign out</button>
     </div>
   </nav>
@@ -131,7 +132,7 @@
             <input type="datetime-local" id="customExpiryDate" class="form-input" />
           </div>
 
-          <button type="submit" class="btn btn-red btn-full" style="margin-top:1.2rem;" id="createSilentUserBtn">Create Client Account</button>
+          <button type="submit" class="btn btn-primary btn-full" style="margin-top:1.2rem;" id="createSilentUserBtn">Create Client Account</button>
         </form>
       </section>
 
@@ -187,7 +188,7 @@
         </div>
         <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:1.5rem;">
           <button type="button" class="btn btn-dark btn-sm" id="cancelExtendBtn">Cancel</button>
-          <button type="submit" class="btn btn-red btn-sm">Save Expiry</button>
+          <button type="submit" class="btn btn-primary btn-sm">Save Expiry</button>
         </div>
       </form>
     </div>
@@ -199,6 +200,8 @@
 
   <div class="toast-container" id="toastContainer"></div>
 
+  <canvas id="particleCanvas"></canvas>
+  <script src="particles.js"></script>
   <script src="app.js"></script>
   <script>
     if (sessionStorage.getItem('loggedIn') !== 'admin') {

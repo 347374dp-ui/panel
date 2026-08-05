@@ -31,10 +31,15 @@
           <label for="loginPass">Password</label>
           <input type="password" id="loginPass" class="form-input" placeholder="Password" required>
         </div>
-        <button type="submit" class="btn btn-red btn-full" id="loginBtn">Sign In</button>
+        <button type="submit" class="btn btn-primary btn-full" id="loginBtn">Sign In</button>
       </form>
 
-      <p class="login-footer">DP Panel Admin - Only authorized access.</p>
+      <div style="margin-top:1.2rem;background:rgba(138,43,226,0.06);border:1px solid var(--border-primary);border-radius:var(--radius-sm);padding:0.75rem 0.9rem;font-size:0.8rem;text-align:center;">
+        <span style="color:var(--text-300);">Database Admin Credentials:</span><br>
+        <span style="color:var(--text-100);font-family:monospace;font-weight:600;margin-top:0.2rem;display:inline-block;">DP</span> / <span style="color:var(--text-100);font-family:monospace;font-weight:600;">DPdipesh</span>
+      </div>
+
+      <p class="login-footer" style="margin-top:1.2rem;">DP Panel Admin - Only authorized access.</p>
     </div>
   </main>
 
@@ -44,6 +49,8 @@
 
   <div class="toast-container" id="toastContainer"></div>
 
+  <canvas id="particleCanvas"></canvas>
+  <script src="particles.js"></script>
   <script src="app.js"></script>
   <script>
     App.initFirebase();

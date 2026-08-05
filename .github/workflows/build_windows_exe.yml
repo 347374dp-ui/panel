@@ -1,0 +1,74 @@
+name: Build and Package Windows Executable
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  # Job 1: Build natively on Windows (highly recommended, most compatible)
+  build-native-windows:
+    name: Build Native Windows x64 Executable
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          architecture: 'x64'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+
+      - name: Build Standalone EXE
+        run: |
+          cd mobile_proto_generator
+          pyinstaller --onefile --clean --name="mobile_proto_generator" main.py
+
+      - name: Verify build artifact
+        run: |
+          ls mobile_proto_generator/dist/
+
+      - name: Upload Standalone EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile_proto_generator-native-x64
+          path: mobile_proto_generator/dist/mobile_proto_generator.exe
+
+  # Job 2: Cross-compile using Wine on Linux (as requested by user)
+  build-wine-cross:
+    name: Cross-Compile Windows x64 Executable with Wine
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Wine
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y wine64 wine32 cabextract wget
+
+      - name: Cross-compile with Wine
+        run: |
+          cd mobile_proto_generator
+          chmod +x build_windows_with_wine.sh
+          # Run the cross-compilation bash script under Wine
+          ./build_windows_with_wine.sh
+
+      - name: Verify Wine build artifact
+        run: |
+          ls -l mobile_proto_generator/dist/
+
+      - name: Upload Wine EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile_proto_generator-wine-x64
+          path: mobile_proto_generator/dist/mobile_proto_generator.exe

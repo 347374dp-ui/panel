@@ -77,9 +77,10 @@
     </div>
     <div class="nav-right" style="gap: 1rem;">
       <a href="admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">UID Dashboard</a>
-      <a href="panel_admin.html" class="btn btn-red btn-sm" style="border-radius:50px;">Panel Dashboard</a>
+      <a href="panel_admin.html" class="btn btn-primary btn-sm" style="border-radius:50px;">Panel Dashboard</a>
       <a href="silent_aim_admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Silent Aim</a>
       <a href="feature_builder.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Feature Builder</a>
+      <a href="aob_finder.html" class="btn btn-dark btn-sm" style="border-radius:50px;">AOB Safe Finder</a>
       <button class="btn btn-dark btn-sm" id="logoutBtn">Sign out</button>
     </div>
   </nav>
@@ -128,7 +129,7 @@
             <div id="featureCheckboxes"><p style="color:var(--text-400);font-size:0.82rem;">Loading features...</p></div>
           </div>
           
-          <button type="submit" class="btn btn-red btn-full" style="margin-top:1.5rem;" id="createUserBtn">Create User</button>
+          <button type="submit" class="btn btn-primary btn-full" style="margin-top:1.5rem;" id="createUserBtn">Create User</button>
         </form>
       </section>
 
@@ -168,6 +169,8 @@
 
   <div class="toast-container" id="toastContainer"></div>
 
+  <canvas id="particleCanvas"></canvas>
+  <script src="particles.js"></script>
   <script src="app.js"></script>
   <script>
     if (sessionStorage.getItem('loggedIn') !== 'admin') {
@@ -358,7 +361,7 @@
                 ${checkboxHtml}
               </div>
               <div style="display:flex;gap:0.75rem;">
-                <button class="btn btn-red btn-full" id="saveFeaturesBtn">Save</button>
+                <button class="btn btn-primary btn-full" id="saveFeaturesBtn">Save</button>
                 <button class="btn btn-dark btn-full" onclick="document.getElementById('featureEditModal').remove()">Cancel</button>
               </div>
             </div>
