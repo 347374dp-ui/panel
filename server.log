@@ -3,3 +3,8 @@
 127.0.0.1 - - [05/Aug/2026 16:15:16] "GET /particles.js HTTP/1.1" 200 -
 127.0.0.1 - - [05/Aug/2026 16:15:16] "GET /app.js HTTP/1.1" 200 -
 127.0.0.1 - - [05/Aug/2026 16:15:18] "GET /aob_finder.html HTTP/1.1" 200 -
+127.0.0.1 - - [05/Aug/2026 17:12:09] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [05/Aug/2026 17:12:09] "GET /app.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Aug/2026 17:12:09] "GET /style.css HTTP/1.1" 200 -
+127.0.0.1 - - [05/Aug/2026 17:12:09] "GET /particles.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Aug/2026 17:12:11] "GET /aob_finder.html HTTP/1.1" 200 -
