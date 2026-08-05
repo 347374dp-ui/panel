@@ -67,7 +67,6 @@ class AES:
         return word[1:] + word[:1]
 
     def _expand_key(self) -> list:
-        # Block size (Nb) is always 4 words (16 bytes)
         key_words = []
         nk = len(self.key) // 4
         for i in range(nk):
@@ -192,7 +191,6 @@ class AES:
         """Encrypts data in CBC mode with PKCS#7 padding."""
         if len(iv) != 16:
             raise ValueError("IV must be 16 bytes long.")
-        # PKCS#7 Padding
         pad_len = 16 - (len(plaintext) % 16)
         plaintext += bytes([pad_len] * pad_len)
 
@@ -200,7 +198,6 @@ class AES:
         prev_block = iv
         for i in range(0, len(plaintext), 16):
             block = plaintext[i:i+16]
-            # XOR with previous cipher block
             xor_block = bytes(b1 ^ b2 for b1, b2 in zip(block, prev_block))
             encrypted_block = self._encrypt_block(xor_block)
             ciphertext.extend(encrypted_block)
@@ -219,15 +216,12 @@ class AES:
         for i in range(0, len(ciphertext), 16):
             block = ciphertext[i:i+16]
             decrypted_block = self._decrypt_block(block)
-            # XOR with previous cipher block
             plain_block = bytes(b1 ^ b2 for b1, b2 in zip(decrypted_block, prev_block))
             plaintext.extend(plain_block)
             prev_block = block
 
-        # Strip PKCS#7 padding
         pad_len = plaintext[-1]
         if pad_len < 1 or pad_len > 16:
-            # Padding corrupt, return raw plain
             return bytes(plaintext)
         for i in range(len(plaintext) - pad_len, len(plaintext)):
             if plaintext[i] != pad_len:
@@ -243,16 +237,13 @@ def decode_aes_key(encoded_key: str) -> bytes:
     """
     cleaned = encoded_key.strip()
 
-    # 1. Try decoding as hex if it looks like a hex string
     if all(c in string.hexdigits for c in cleaned) and len(cleaned) in (32, 48, 64):
         try:
             return binascii.unhexlify(cleaned)
         except Exception:
             pass
 
-    # 2. Try URL-Safe or Standard Base64 decoding
     try:
-        # Add padding if missing
         missing_padding = len(cleaned) % 4
         if missing_padding:
             cleaned += '=' * (4 - missing_padding)
@@ -260,7 +251,6 @@ def decode_aes_key(encoded_key: str) -> bytes:
     except Exception:
         pass
 
-    # 3. Fallback: string encoding
     return cleaned.encode('utf-8')[:32].ljust(16, b'\x00')
 
 
@@ -340,7 +330,6 @@ def filter_protobuf_fields(proto_bytes: bytes, allowed_field_numbers: set) -> by
         wire_type = key & 0x7
         field_num = key >> 3
 
-        # Skip field or parse it
         if wire_type == 0:  # Varint
             val, pos = decode_varint(proto_bytes, pos)
             if val is None:
@@ -370,14 +359,59 @@ def filter_protobuf_fields(proto_bytes: bytes, allowed_field_numbers: set) -> by
             if field_num in allowed_field_numbers:
                 filtered_bytes.extend(proto_bytes[start_pos:pos])
         else:
-            # Unknown wire types: stop parsing to avoid misalignment
             break
 
     return bytes(filtered_bytes)
 
 
 # =====================================================================
-# 4. RANDOM MOBILE IDENTIFIERS GENERATOR
+# 4. AOB SIGNATURE SCANNING & COMPARE UTILITY
+# =====================================================================
+def find_safe_wildcard_aob(original_hex: str, patched_hex: str) -> dict:
+    """
+    Compares two raw hex string byte sequences (from old and patched builds).
+    Returns a unique wildcard AOB signature to ensure the bypass stays undetected/unpatched.
+    """
+    orig_clean = original_hex.strip().replace(" ", "")
+    patch_clean = patched_hex.strip().replace(" ", "")
+
+    try:
+        orig_bytes = binascii.unhexlify(orig_clean)
+        patch_bytes = binascii.unhexlify(patch_clean)
+    except Exception as e:
+        return {"success": False, "error": f"Invalid hex input bytes: {e}"}
+
+    length = min(len(orig_bytes), len(patch_bytes))
+    if length == 0:
+        return {"success": False, "error": "Input bytes sequence is empty."}
+
+    aob_parts = []
+    wildcards_count = 0
+
+    for i in range(length):
+        b_orig = orig_bytes[i]
+        b_patch = patch_bytes[i]
+        if b_orig == b_patch:
+            aob_parts.append(f"{b_orig:02X}")
+        else:
+            aob_parts.append("??")
+            wildcards_count += 1
+
+    aob_sig = " ".join(aob_parts)
+    wildcard_density = (wildcards_count / length) * 100 if length > 0 else 0
+
+    return {
+        "success": True,
+        "signature": aob_sig,
+        "length": length,
+        "wildcards": wildcards_count,
+        "wildcard_density_percent": round(wildcard_density, 2),
+        "quality_score": round(100 - wildcard_density, 1)
+    }
+
+
+# =====================================================================
+# 5. RANDOM MOBILE IDENTIFIERS GENERATOR
 # =====================================================================
 def random_hex(length: int) -> str:
     return ''.join(random.choice('0123456789abcdef') for _ in range(length))
@@ -405,7 +439,7 @@ def random_imei() -> str:
 
 
 # =====================================================================
-# 5. REALISTIC MOBILE DEVICE TEMPLATES
+# 6. REALISTIC MOBILE DEVICE TEMPLATES
 # =====================================================================
 DEVICE_TEMPLATES = [
     {
@@ -491,7 +525,7 @@ def generate_device_profile() -> dict:
         "model": model_tmpl["model"],
         "product": model_tmpl["product"],
         "device": model_tmpl["device"],
-        "board": model_tmpl["board"],
+        "board": brand_tmpl["board"] if "board" in brand_tmpl else model_tmpl["board"],
         "hardware": model_tmpl["hardware"],
         "sdk_version": sdk,
         "build_id": build_id,

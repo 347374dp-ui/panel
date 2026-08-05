@@ -5,7 +5,6 @@ import zipfile
 import shutil
 import tempfile
 
-FIREBASE_URL = "https://dipesh-database-default-rtdb.firebaseio.com"
 VERSION_FILE = "version.txt"
 
 def get_local_version() -> str:
@@ -35,9 +34,14 @@ def check_and_perform_update() -> bool:
     - True if an update was performed, indicating the application should restart.
     - False if already up to date.
     """
+    firebase_url = os.getenv("FIREBASE_URL")
+    if not firebase_url:
+        print("[Update] FIREBASE_URL env var not set. Skipping update check.")
+        return False
+
     print("[Update] Checking for updates...")
     try:
-        url = f"{FIREBASE_URL}/config.json"
+        url = f"{firebase_url.rstrip('/')}/config.json"
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req) as response:
             if response.status != 200:
@@ -75,7 +79,6 @@ def check_and_perform_update() -> bool:
 
         print("[Update] Extracting update files...")
         with zipfile.ZipFile(tmp_path, 'r') as zip_ref:
-            # Extract to the current working directory, overwriting old files
             zip_ref.extractall(".")
 
         # Clean up temporary file
@@ -108,21 +111,17 @@ def perform_troubleshoot():
     clean_directory_contents(temp_dir)
 
     # 2. Clean common Emulator Temporary Cache and Log Paths
-    # Gameloop, BlueStacks, LDPlayer, Memu often store massive diagnostic files
     user_profile = os.environ.get("USERPROFILE", "")
     app_data = os.environ.get("APPDATA", "")
     local_app_data = os.environ.get("LOCALAPPDATA", "")
 
     paths_to_clean = [
-        # Gameloop / Tencent logs and cache
         os.path.join(local_app_data, "Tencent"),
         os.path.join(app_data, "Tencent"),
         "C:\\ProgramData\\Tencent",
         "C:\\Temp",
         "C:\\Windows\\Prefetch",
-        # Bluestacks caches
         os.path.join(local_app_data, "BlueStacks"),
-        # LDPlayer logs
         os.path.join(local_app_data, "ChangZhi"),
         os.path.join(local_app_data, "ChangZhi2"),
     ]
@@ -158,5 +157,4 @@ def clean_directory_contents(dir_path: str):
             else:
                 os.remove(item_path)
         except Exception:
-            # Some temp files might be locked/in use; ignore them safely
             pass

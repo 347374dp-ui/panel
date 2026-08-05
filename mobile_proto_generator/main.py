@@ -4,7 +4,14 @@ import json
 import os
 import binascii
 
-from generator import generate_device_profile, serialize_profile_to_proto, AES, decode_aes_key, filter_protobuf_fields
+from generator import (
+    generate_device_profile,
+    serialize_profile_to_proto,
+    AES,
+    decode_aes_key,
+    filter_protobuf_fields,
+    find_safe_wildcard_aob
+)
 from firebase_uploader import upload_proto_to_firebase
 from certificate_generator import generate_ca_certificate
 from client_updater import check_and_perform_update, perform_troubleshoot, get_local_version
@@ -104,6 +111,19 @@ def main():
         help="Automatically generate a unique self-signed CA TLS/SSL Certificate and private key."
     )
 
+    # AOB Signature Finder Commands
+    parser.add_argument(
+        "--aob-original",
+        type=str,
+        help="Original build byte sequence in hexadecimal (AOB) to find safe signatures."
+    )
+
+    parser.add_argument(
+        "--aob-patched",
+        type=str,
+        help="Patched/updated build byte sequence in hexadecimal (AOB) to find safe signatures."
+    )
+
     args = parser.parse_args()
 
     # 2. Execute Troubleshoot Command if specified
@@ -114,6 +134,25 @@ def main():
     # 3. Execute Certificate Generation if specified
     if args.generate_cert:
         generate_ca_certificate()
+        sys.exit(0)
+
+    # 4. Execute AOB Signature Scanner if specified
+    if args.aob_original and args.aob_patched:
+        print("[*] Running Safe AOB Signature Finder & Compare System...")
+        res = find_safe_wildcard_aob(args.aob_original, args.aob_patched)
+        if res.get("success"):
+            print("\n==================================================")
+            print("          SAFE WILDCARD SIGNATURE GENERATED       ")
+            print("==================================================")
+            print(f"Signature (Length: {res['length']} bytes):")
+            print(f"{res['signature']}")
+            print("--------------------------------------------------")
+            print(f"Wildcards Replaced : {res['wildcards']} bytes")
+            print(f"Wildcard Density   : {res['wildcard_density_percent']}%")
+            print(f"Signature Quality  : {res['quality_score']}/100")
+            print("==================================================\n")
+        else:
+            print(f"[Error] AOB scanning failed: {res.get('error')}")
         sys.exit(0)
 
     if args.count <= 0:
@@ -166,9 +205,7 @@ def main():
 
         # Apply AES Encryption if requested
         if cipher is not None and iv_bytes is not None:
-            # We encrypt the proto bytes and prepend/prepend the IV or keep it standalone
             encrypted_bytes = cipher.encrypt_cbc(proto_bytes, iv_bytes)
-            # Standard practice: prepend the IV so it can be parsed by the client bypass
             proto_payload = iv_bytes + encrypted_bytes
         else:
             proto_payload = proto_bytes

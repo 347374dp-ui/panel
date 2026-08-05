@@ -4,22 +4,23 @@ import os
 import urllib.request
 import urllib.error
 
-# Default database URL for ease of use
-DEFAULT_FIREBASE_URL = "https://dipesh-database-default-rtdb.firebaseio.com"
-
 def upload_proto_to_firebase(hex_str: str, firebase_url: str = None, auth_token: str = None) -> bool:
     """
     Uploads a mobile proto hex string to the Firebase database under /protos/{timestamp}.json.
 
     Parameters:
     - hex_str: The serialized protobuf hex string.
-    - firebase_url: Optional custom Firebase Realtime Database URL. If not provided, it will
-                    use the FIREBASE_URL environment variable or fallback to the default URL.
-    - auth_token: Optional Firebase Database Secret or Auth ID Token. If not provided, it will
-                  be loaded from the FIREBASE_AUTH environment variable.
+    - firebase_url: Optional custom Firebase Realtime Database URL. Loaded from the FIREBASE_URL
+                    environment variable.
+    - auth_token: Optional Firebase Database Secret or Auth ID Token. Loaded from the
+                  FIREBASE_AUTH environment variable.
     """
-    # 1. Resolve Firebase URL
-    url_base = firebase_url or os.getenv("FIREBASE_URL") or DEFAULT_FIREBASE_URL
+    # 1. Resolve Firebase URL strictly from parameters or environment variables
+    url_base = firebase_url or os.getenv("FIREBASE_URL")
+    if not url_base:
+        print("[Firebase Error] FIREBASE_URL is not set. Please set the environment variable or pass --firebase-url.")
+        return False
+
     url_base = url_base.rstrip('/')
 
     # 2. Resolve Auth Token / Secret
