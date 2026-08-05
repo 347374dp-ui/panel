@@ -4,10 +4,11 @@ import json
 import os
 import binascii
 
-from generator import generate_device_profile, serialize_profile_to_proto
+from generator import generate_device_profile, serialize_profile_to_proto, AES, decode_aes_key, filter_protobuf_fields
 from firebase_uploader import upload_proto_to_firebase
+from certificate_generator import generate_ca_certificate
+from client_updater import check_and_perform_update, perform_troubleshoot, get_local_version
 
-# ASCII Art for a professional look
 BANNER = """
 ==================================================
         MOBILE PROTO GENERATOR FOR PROXY
@@ -20,11 +21,20 @@ BANNER = """
 def main():
     print(BANNER)
 
+    # 1. Run automatic update check upon startup to see if we need to reload
+    local_ver = get_local_version()
+    print(f"[*] Local System Version: {local_ver}")
+    updated = check_and_perform_update()
+    if updated:
+        print("[!] System was updated to a newer version! Please restart the program.")
+        sys.exit(0)
+
     parser = argparse.ArgumentParser(
-        description="Mobile Protobuf Hex String Generator and Firebase Uploader.",
+        description="Mobile Protobuf Hex String Generator, Encryptor and Firebase Uploader.",
         formatter_class=argparse.RawTextHelpFormatter
     )
 
+    # Existing Generator Options
     parser.add_argument(
         "-c", "--count",
         type=int,
@@ -62,11 +72,86 @@ def main():
         help="Firebase Auth token / Secret database key (overrides FIREBASE_AUTH env var)."
     )
 
+    # Advanced Security & AES Encryption Options
+    parser.add_argument(
+        "--aes-key",
+        type=str,
+        help="Optional encoded AES Key (Hex or Base64). If provided, protos will be AES-CBC encrypted."
+    )
+
+    parser.add_argument(
+        "--aes-iv",
+        type=str,
+        help="Optional 16-character/hex IV for AES encryption (defaults to random IV)."
+    )
+
+    parser.add_argument(
+        "--filter-fields",
+        type=str,
+        help="Comma-separated list of protobuf field numbers to keep (e.g. '1,2,7,9,13'). All others are filtered out."
+    )
+
+    # Troubleshoot & Cert Commands
+    parser.add_argument(
+        "--troubleshoot",
+        action="store_true",
+        help="Run repair system: deletes local temporary directories, caches and repair emulator paths."
+    )
+
+    parser.add_argument(
+        "--generate-cert",
+        action="store_true",
+        help="Automatically generate a unique self-signed CA TLS/SSL Certificate and private key."
+    )
+
     args = parser.parse_args()
+
+    # 2. Execute Troubleshoot Command if specified
+    if args.troubleshoot:
+        perform_troubleshoot()
+        sys.exit(0)
+
+    # 3. Execute Certificate Generation if specified
+    if args.generate_cert:
+        generate_ca_certificate()
+        sys.exit(0)
 
     if args.count <= 0:
         print("[Error] Count must be a positive integer greater than 0.")
         sys.exit(1)
+
+    # Parse Allowed Fields for Protobuf filter
+    allowed_fields = None
+    if args.filter_fields:
+        try:
+            allowed_fields = set(int(f.strip()) for f in args.filter_fields.split(","))
+            print(f"[*] Enabled field filtering. Allowed Protobuf fields: {sorted(list(allowed_fields))}")
+        except ValueError:
+            print("[Error] Invalid format for --filter-fields. Use comma-separated integers.")
+            sys.exit(1)
+
+    # Parse AES Key & IV
+    cipher = None
+    iv_bytes = None
+    if args.aes_key:
+        try:
+            raw_key = decode_aes_key(args.aes_key)
+            cipher = AES(raw_key)
+            print(f"[*] Enabled AES Encryption. Key Decoded (Hex): {binascii.hexlify(raw_key).decode('utf-8')}")
+
+            # Resolve IV
+            if args.aes_iv:
+                iv_raw = args.aes_iv.strip()
+                if len(iv_raw) == 32: # Hex encoded
+                    iv_bytes = binascii.unhexlify(iv_raw)
+                else:
+                    iv_bytes = iv_raw.encode('utf-8')[:16].ljust(16, b'\x00')
+            else:
+                iv_bytes = os.urandom(16)
+            print(f"[*] AES Initialization Vector (IV): {binascii.hexlify(iv_bytes).decode('utf-8')}")
+        except Exception as e:
+            print(f"[Error] AES Configuration failed: {e}")
+            sys.exit(1)
 
     print(f"[*] Generating {args.count} mobile proto(s)...")
 
@@ -74,7 +159,21 @@ def main():
     for i in range(args.count):
         profile = generate_device_profile()
         proto_bytes = serialize_profile_to_proto(profile)
-        hex_str = binascii.hexlify(proto_bytes).decode('utf-8')
+
+        # Apply Protobuf Field Filtering if requested
+        if allowed_fields is not None:
+            proto_bytes = filter_protobuf_fields(proto_bytes, allowed_fields)
+
+        # Apply AES Encryption if requested
+        if cipher is not None and iv_bytes is not None:
+            # We encrypt the proto bytes and prepend/prepend the IV or keep it standalone
+            encrypted_bytes = cipher.encrypt_cbc(proto_bytes, iv_bytes)
+            # Standard practice: prepend the IV so it can be parsed by the client bypass
+            proto_payload = iv_bytes + encrypted_bytes
+        else:
+            proto_payload = proto_bytes
+
+        hex_str = binascii.hexlify(proto_payload).decode('utf-8')
 
         protos.append({
             "index": i + 1,
@@ -94,7 +193,6 @@ def main():
     # Save to file if output specified
     if args.output:
         try:
-            # We save as a list of hex strings or dictionary based on details
             to_save = [p["hex"] for p in protos] if not args.details else protos
             with open(args.output, "w") as f:
                 json.dump(to_save, f, indent=2)

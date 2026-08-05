@@ -1,0 +1,19 @@
+# PyInstaller / Build outputs
+_internal/
+dist/
+build/
+*.spec
+
+# Pycache
+__pycache__/
+*.pyc
+
+# Local version and updates
+version.txt
+ca.crt
+ca.key
+client_delivery.zip
+
+# Output files
+*.json
+*.log
