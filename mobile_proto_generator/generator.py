@@ -323,6 +323,7 @@ def parse_protobuf_generic(proto_bytes: bytes) -> dict:
     fields = {}
 
     while pos < len(proto_bytes):
+        start_pos = pos
         key, pos = decode_varint(proto_bytes, pos)
         if key is None:
             break
@@ -350,10 +351,8 @@ def parse_protobuf_generic(proto_bytes: bytes) -> dict:
             sub_bytes = proto_bytes[pos:pos+length]
             pos += length
 
-            # Try to decode as string, fallback to raw bytes
             try:
                 val_str = sub_bytes.decode('utf-8')
-                # If contains non-printable, treat as bytes
                 if any(c not in string.printable for c in val_str):
                     fields[str(field_num)] = {"wire_type": "bytes", "data": sub_bytes}
                 else:
@@ -378,7 +377,6 @@ def rebuild_protobuf_generic(fields: dict) -> bytes:
     Reconstructs a serialized Protobuf byte payload from a generic key-value dictionary.
     """
     out = bytearray()
-    # Sort keys numerically to maintain standard protobuf field ordering
     for k in sorted(fields.keys(), key=int):
         field_num = int(k)
         entry = fields[k]
@@ -635,7 +633,7 @@ SAFEV2_BASE_TEMPLATE = (
     "aaf8a186a5c94b33453a39cc44d8fdef5971fedbd4ddafda01d8705a9c3628ff74c00856c47b11bba56d76991f6e3830d9288e0836d47287dbb3f8d9070889f5ceb65e357973cb498a77f5fda5d3e98821fc5ade51433944f9d78538b8c4236419d8a87f13ee462a1b19fc5962c6521fe56f926173f45f6f299a328d7dfee9c2949ecb4c50e2051427f49c3a65e8b9f1dc2dd8c8dddc8dc8c31793f3846b5832fb0ca1ed3c49bdbcbfcf1b6b828c4bb60d101fcc8e4a3dc78c12bbc06040ac295e1064e568a922f1c374d6d26a0c7d6bafd58b7c1cf3fc4fa0de004756805b927aa6c25a135dccfb58c2e3eef66b3e22a81882be9942cb89cb9511072fb98e7dc76fdfc834f825e09c1447481b4ba6e5c0357aaf93406f46cc342fc3871e8e799a7fa64802664411d6a520a3e024ee59b616fb6888e8971dc8c15e6e3d41139855a7e10d6feeb5a12d0855a00795d10a8c1a2d1396b99c49a5fb6151bdbeb3be7515a67947719c04e1b1aa4b7e77ab5cc465c3d3a1993fb35910b9ce5264fe84ad2fd30b47f9a0514568ce19e62e036921be2be52e22d4f65828248557d83b269f728a618c48a82829a38b4dac90ec71dcaa353ef94312be097a704664603d533feb7a37cf8b6cf87c7c9d0ec4d6f53246dafd025628dcdfcc05b34e6eda532be29dcdfb45c1ab2c8a26ce84859d5006aa06d4c2138a9b8a2a52ec08a2fe68022cae61cd5192d02c4560926c9ef6f6c1033c8136c4dd2daad77657a02a8d7e0383772a85d7cae1a7ae1b08d5cf90afb615e473c3f72ab6155e242692799ce1e54c5355a68f79cb30a1d6b2a4eb6876a3de2173297c461f0d13a09e9745efe996e0080e679a34e828fb0ef04da2a409c4dc4918f515b0eae02bde4e82276c757f7dadfabb649486085ca943cfcc0b7eb10c0df238c6613f6da2dea5a7d18b0817a690de4ebc8f15445a43687433128d657a86d47a6c296ed1a35a092b9a06fe8dc54ba3888e1afab2fa502d443536bc74028df5de33ec4140dea370aa45a5132a8fa33fc3ba2f986cc8578b4d4a2e0e5f4615334329f1f43da573efc8ee8e7d6fb47de991bd7b16b1818484f6d0e489e676acbaf62300ecb1ead8dbc15ed2cdfeb98e7533e1306d5c89a129030650ee86bf0398d651e7cc59b934b871535ef432e3571a52d9cfcbbecb7b180a09bce53063e5449f6b6393c09d7e175aae7c599190bf39ade583251c8922b582e8a91bf261e9d678cac4c4e9aadbaf19aef7ca09edbf79e7884a23b3702c3bc4e3227e2c"
 )
 
-def generate_safev2_encrypted_proto() -> str:
+def generate_safev2_encrypted_proto() -> tuple:
     """
     Implements the exact same logic, steps, and cryptography of safev2:
     1. Decrypts the safev2 baseline template using SAFEV2_KEY and SAFEV2_IV.
@@ -654,7 +652,7 @@ def generate_safev2_encrypted_proto() -> str:
        - Field 25: Device Model
     5. Re-serializes the fields back into standard Protobuf bytes.
     6. Re-encrypts the bytes with SAFEV2_KEY and SAFEV2_IV.
-    7. Returns the final valid hex string.
+    7. Returns a tuple: (final_hex_string, randomized_device_profile)
     """
     # 1. Decrypt original template
     aes = AES(SAFEV2_KEY)
@@ -682,6 +680,12 @@ def generate_safev2_encrypted_proto() -> str:
     height = 3120 if dev["brand"] == "Samsung" else (2400 if dev["brand"] == "Google" else 2160)
     density = "480" if dev["brand"] == "Samsung" or dev["brand"] == "Google" else "320"
 
+    dev["width"] = width
+    dev["height"] = height
+    dev["density"] = density
+    dev["timestamp"] = current_time_str
+    dev["android_build_os"] = android_os_str
+
     fields["12"] = {"wire_type": "varint", "data": width}
     fields["13"] = {"wire_type": "varint", "data": height}
     fields["14"] = {"wire_type": "string", "data": density}
@@ -703,5 +707,5 @@ def generate_safev2_encrypted_proto() -> str:
     # 6. Encrypt bytes
     encrypted_bytes = aes.encrypt_cbc(new_proto_bytes, SAFEV2_IV)
 
-    # 7. Convert to hex string
-    return encrypted_bytes.hex()
+    # 7. Convert to hex string and return alongside the generated profile dictionary
+    return encrypted_bytes.hex(), dev

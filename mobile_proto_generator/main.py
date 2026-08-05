@@ -91,7 +91,7 @@ def main():
     parser.add_argument(
         "--aes-key",
         type=str,
-        help="Optional custom encoded AES Key. Default uses safev2 decryption."
+        help="Optional encoded AES Key. Default uses safev2 decryption."
     )
 
     parser.add_argument(
@@ -206,10 +206,7 @@ def main():
     for i in range(args.count):
         # Default behavior: generate using the exact safev2 template and cryptography logic
         if not args.legacy_proto and not args.aes_key and not args.filter_fields:
-            hex_str = generate_safev2_encrypted_proto()
-            profile = {
-                "Generation Type": "safev2-compliant (encrypted & randomized)"
-            }
+            hex_str, profile = generate_safev2_encrypted_proto()
         else:
             # Legacy generation or custom filtered/encrypted logic
             profile = generate_device_profile()
@@ -236,10 +233,10 @@ def main():
     for p in protos:
         print(f"\n[Proto #{p['index']}]")
         print(f"Hex (length: {len(p['hex'])} chars):\n{p['hex']}")
-        if args.details and "brand" in p["profile"]:
-            print("Device Profile Details:")
+        if args.details:
+            print("\nReadable Randomized Safe Device Details (Inside Encrypted Proto):")
             for k, v in p["profile"].items():
-                print(f"  {k:15}: {v}")
+                print(f"  {k:18}: {v}")
 
     # Save to file if output specified
     if args.output:
