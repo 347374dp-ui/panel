@@ -2,6 +2,7 @@ import random
 import string
 import binascii
 import base64
+import time
 
 # =====================================================================
 # 1. PURE PYTHON AES IMPLEMENTATION (No external libraries required!)
@@ -311,18 +312,17 @@ def encode_int32(field_number: int, val: int) -> bytes:
 
 
 # =====================================================================
-# 3. PROTOBUF FIELD FILTERING SYSTEM
+# 3. PROTOBUF FIELD PARSER AND BUILDER
 # =====================================================================
-def filter_protobuf_fields(proto_bytes: bytes, allowed_field_numbers: set) -> bytes:
+def parse_protobuf_generic(proto_bytes: bytes) -> dict:
     """
-    Parses serialized protobuf bytes and filters out any fields
-    whose field numbers are NOT in the allowed_field_numbers set.
+    Parses any serialized protobuf bytes into a generic key-value dictionary.
+    Structure: {"field_number": {"wire_type": "...", "data": ...}}
     """
     pos = 0
-    filtered_bytes = bytearray()
+    fields = {}
 
     while pos < len(proto_bytes):
-        start_pos = pos
         key, pos = decode_varint(proto_bytes, pos)
         if key is None:
             break
@@ -334,34 +334,83 @@ def filter_protobuf_fields(proto_bytes: bytes, allowed_field_numbers: set) -> by
             val, pos = decode_varint(proto_bytes, pos)
             if val is None:
                 break
-            if field_num in allowed_field_numbers:
-                filtered_bytes.extend(proto_bytes[start_pos:pos])
+            fields[str(field_num)] = {"wire_type": "varint", "data": val}
 
         elif wire_type == 1:  # 64-bit
             if pos + 8 > len(proto_bytes):
                 break
+            val_bytes = proto_bytes[pos:pos+8]
             pos += 8
-            if field_num in allowed_field_numbers:
-                filtered_bytes.extend(proto_bytes[start_pos:pos])
+            fields[str(field_num)] = {"wire_type": "64bit", "data": val_bytes}
 
         elif wire_type == 2:  # Length-delimited
             length, pos = decode_varint(proto_bytes, pos)
             if length is None or pos + length > len(proto_bytes):
                 break
+            sub_bytes = proto_bytes[pos:pos+length]
             pos += length
-            if field_num in allowed_field_numbers:
-                filtered_bytes.extend(proto_bytes[start_pos:pos])
+
+            # Try to decode as string, fallback to raw bytes
+            try:
+                val_str = sub_bytes.decode('utf-8')
+                # If contains non-printable, treat as bytes
+                if any(c not in string.printable for c in val_str):
+                    fields[str(field_num)] = {"wire_type": "bytes", "data": sub_bytes}
+                else:
+                    fields[str(field_num)] = {"wire_type": "string", "data": val_str}
+            except UnicodeDecodeError:
+                fields[str(field_num)] = {"wire_type": "bytes", "data": sub_bytes}
 
         elif wire_type == 5:  # 32-bit
             if pos + 4 > len(proto_bytes):
                 break
+            val_bytes = proto_bytes[pos:pos+4]
             pos += 4
-            if field_num in allowed_field_numbers:
-                filtered_bytes.extend(proto_bytes[start_pos:pos])
+            fields[str(field_num)] = {"wire_type": "32bit", "data": val_bytes}
         else:
             break
 
-    return bytes(filtered_bytes)
+    return fields
+
+
+def rebuild_protobuf_generic(fields: dict) -> bytes:
+    """
+    Reconstructs a serialized Protobuf byte payload from a generic key-value dictionary.
+    """
+    out = bytearray()
+    # Sort keys numerically to maintain standard protobuf field ordering
+    for k in sorted(fields.keys(), key=int):
+        field_num = int(k)
+        entry = fields[k]
+        wire_type = entry.get("wire_type")
+        val = entry.get("data")
+
+        if wire_type == "varint":
+            out.extend(encode_key(field_num, 0))
+            out.extend(encode_varint(int(val)))
+        elif wire_type in ("string", "bytes"):
+            out.extend(encode_key(field_num, 2))
+            if isinstance(val, str):
+                val_bytes = val.encode('utf-8')
+            else:
+                val_bytes = bytes(val)
+            out.extend(encode_varint(len(val_bytes)))
+            out.extend(val_bytes)
+        elif wire_type in ("64bit", "32bit"):
+            wt = 1 if wire_type == "64bit" else 5
+            out.extend(encode_key(field_num, wt))
+            out.extend(bytes(val))
+    return bytes(out)
+
+
+def filter_protobuf_fields(proto_bytes: bytes, allowed_field_numbers: set) -> bytes:
+    """
+    Parses serialized protobuf bytes and filters out any fields
+    whose field numbers are NOT in the allowed_field_numbers set.
+    """
+    fields = parse_protobuf_generic(proto_bytes)
+    filtered = {k: v for k, v in fields.items() if int(k) in allowed_field_numbers}
+    return rebuild_protobuf_generic(filtered)
 
 
 # =====================================================================
@@ -454,7 +503,9 @@ DEVICE_TEMPLATES = [
         ],
         "fingerprint_format": "google/{product}/{device}:{sdk}/{build_id}/{incremental}:user/release-keys",
         "build_id_formats": ["RQ3A.{date}.00{num}", "SQ3A.{date}.00{num}", "TQ3A.{date}.00{num}", "UQ1A.{date}.00{num}", "AP1A.{date}.00{num}"],
-        "incremental_format": "8808{num}"
+        "incremental_format": "8808{num}",
+        "gpu": "Google Tensor GPU",
+        "gles": "OpenGL ES 3.2 Google GPU"
     },
     {
         "brand": "Samsung",
@@ -468,7 +519,9 @@ DEVICE_TEMPLATES = [
         ],
         "fingerprint_format": "samsung/{product}/{device}:{sdk}/{build_id}/{incremental}:user/release-keys",
         "build_id_formats": ["QP1A.{date}.0{num}", "SP1A.{date}.0{num}", "TP1A.{date}.0{num}", "UP1A.{date}.0{num}"],
-        "incremental_format": "G998BXXU5C{num}"
+        "incremental_format": "G998BXXU5C{num}",
+        "gpu": "Adreno (TM) 750",
+        "gles": "OpenGL ES 3.2 V@0615.0 (GIT@777ca53, I5e0e0fb907, 1638827725)"
     },
     {
         "brand": "Xiaomi",
@@ -481,7 +534,9 @@ DEVICE_TEMPLATES = [
         ],
         "fingerprint_format": "xiaomi/{product}/{device}:{sdk}/{build_id}/{incremental}:user/release-keys",
         "build_id_formats": ["RKQ1.{date}.001", "SKQ1.{date}.001", "TKQ1.{date}.001", "UKQ1.{date}.001"],
-        "incremental_format": "V13.0.{num}.0.SKIMIXM"
+        "incremental_format": "V13.0.{num}.0.SKIMIXM",
+        "gpu": "Adreno (TM) 750",
+        "gles": "OpenGL ES 3.2 V@0615.0"
     },
     {
         "brand": "OnePlus",
@@ -493,7 +548,9 @@ DEVICE_TEMPLATES = [
         ],
         "fingerprint_format": "oneplus/{product}/{device}:{sdk}/{build_id}/{incremental}:user/release-keys",
         "build_id_formats": ["RKQ1.{date}.001", "SKQ1.{date}.001", "TKQ1.{date}.001", "UKQ1.{date}.001"],
-        "incremental_format": "A.0{num}_20220{num}"
+        "incremental_format": "A.0{num}_20220{num}",
+        "gpu": "Adreno (TM) 750",
+        "gles": "OpenGL ES 3.2 V@0615.0"
     }
 ]
 
@@ -534,7 +591,9 @@ def generate_device_profile() -> dict:
         "android_id": random_hex(16),
         "mac_address": random_mac(),
         "imei": random_imei(),
-        "serial_number": random_hex(12).upper()
+        "serial_number": random_hex(12).upper(),
+        "gpu": brand_tmpl.get("gpu", "Adreno (TM) 730"),
+        "gles": brand_tmpl.get("gles", "OpenGL ES 3.2")
     }
     return profile
 
@@ -562,3 +621,87 @@ def generate_mobile_proto_hex() -> str:
     profile = generate_device_profile()
     proto_bytes = serialize_profile_to_proto(profile)
     return binascii.hexlify(proto_bytes).decode('utf-8')
+
+
+# =====================================================================
+# 7. SAFEV2 FULL-COMPATIBILITY RECONSTRUCTION LOGIC
+# =====================================================================
+# Matches the Base64 key and IV of safev2 exactly
+SAFEV2_KEY = base64.b64decode("WWcmdGMlREV1aDYlWmNeOA==")
+SAFEV2_IV = base64.b64decode("Nm95WkRyMjJFM3ljaGpNJQ==")
+
+# Standard template payload extracted from safev2
+SAFEV2_BASE_TEMPLATE = (
+    "aaf8a186a5c94b33453a39cc44d8fdef5971fedbd4ddafda01d8705a9c3628ff74c00856c47b11bba56d76991f6e3830d9288e0836d47287dbb3f8d9070889f5ceb65e357973cb498a77f5fda5d3e98821fc5ade51433944f9d78538b8c4236419d8a87f13ee462a1b19fc5962c6521fe56f926173f45f6f299a328d7dfee9c2949ecb4c50e2051427f49c3a65e8b9f1dc2dd8c8dddc8dc8c31793f3846b5832fb0ca1ed3c49bdbcbfcf1b6b828c4bb60d101fcc8e4a3dc78c12bbc06040ac295e1064e568a922f1c374d6d26a0c7d6bafd58b7c1cf3fc4fa0de004756805b927aa6c25a135dccfb58c2e3eef66b3e22a81882be9942cb89cb9511072fb98e7dc76fdfc834f825e09c1447481b4ba6e5c0357aaf93406f46cc342fc3871e8e799a7fa64802664411d6a520a3e024ee59b616fb6888e8971dc8c15e6e3d41139855a7e10d6feeb5a12d0855a00795d10a8c1a2d1396b99c49a5fb6151bdbeb3be7515a67947719c04e1b1aa4b7e77ab5cc465c3d3a1993fb35910b9ce5264fe84ad2fd30b47f9a0514568ce19e62e036921be2be52e22d4f65828248557d83b269f728a618c48a82829a38b4dac90ec71dcaa353ef94312be097a704664603d533feb7a37cf8b6cf87c7c9d0ec4d6f53246dafd025628dcdfcc05b34e6eda532be29dcdfb45c1ab2c8a26ce84859d5006aa06d4c2138a9b8a2a52ec08a2fe68022cae61cd5192d02c4560926c9ef6f6c1033c8136c4dd2daad77657a02a8d7e0383772a85d7cae1a7ae1b08d5cf90afb615e473c3f72ab6155e242692799ce1e54c5355a68f79cb30a1d6b2a4eb6876a3de2173297c461f0d13a09e9745efe996e0080e679a34e828fb0ef04da2a409c4dc4918f515b0eae02bde4e82276c757f7dadfabb649486085ca943cfcc0b7eb10c0df238c6613f6da2dea5a7d18b0817a690de4ebc8f15445a43687433128d657a86d47a6c296ed1a35a092b9a06fe8dc54ba3888e1afab2fa502d443536bc74028df5de33ec4140dea370aa45a5132a8fa33fc3ba2f986cc8578b4d4a2e0e5f4615334329f1f43da573efc8ee8e7d6fb47de991bd7b16b1818484f6d0e489e676acbaf62300ecb1ead8dbc15ed2cdfeb98e7533e1306d5c89a129030650ee86bf0398d651e7cc59b934b871535ef432e3571a52d9cfcbbecb7b180a09bce53063e5449f6b6393c09d7e175aae7c599190bf39ade583251c8922b582e8a91bf261e9d678cac4c4e9aadbaf19aef7ca09edbf79e7884a23b3702c3bc4e3227e2c"
+)
+
+def generate_safev2_encrypted_proto() -> str:
+    """
+    Implements the exact same logic, steps, and cryptography of safev2:
+    1. Decrypts the safev2 baseline template using SAFEV2_KEY and SAFEV2_IV.
+    2. Parses the decrypted bytes into a generic fields dictionary.
+    3. Generates a fully randomized new flagship mobile device profile (Samsung, Pixel, etc.).
+    4. Overwrites the device specifications:
+       - Field 3: Current local Timestamp
+       - Field 8: Android Build/OS Info
+       - Field 10: Manufacturer / Brand
+       - Field 12: Width
+       - Field 13: Height
+       - Field 14: Screen Density
+       - Field 17: GPU Renderer
+       - Field 18: GLES Version info
+       - Field 19: Product model string
+       - Field 25: Device Model
+    5. Re-serializes the fields back into standard Protobuf bytes.
+    6. Re-encrypts the bytes with SAFEV2_KEY and SAFEV2_IV.
+    7. Returns the final valid hex string.
+    """
+    # 1. Decrypt original template
+    aes = AES(SAFEV2_KEY)
+    decrypted_bytes = aes.decrypt_cbc(binascii.unhexlify(SAFEV2_BASE_TEMPLATE), SAFEV2_IV)
+
+    # 2. Parse protobuf fields
+    fields = parse_protobuf_generic(decrypted_bytes)
+
+    # 3. Generate randomized device profile specs
+    dev = generate_device_profile()
+
+    # Current timestamp in exact "YYYY-MM-DD HH:MM:SS" format
+    current_time_str = time.strftime("%Y-%m-%d %H:%M:%S")
+
+    # Android OS string
+    android_os_str = f"Android OS {dev['sdk_version']} / API-{dev['sdk_version']} ({dev['build_id']}/{random_digits(7)})"
+
+    # 4. Map and overwrite fields
+    fields["3"] = {"wire_type": "string", "data": current_time_str}
+    fields["8"] = {"wire_type": "string", "data": android_os_str}
+    fields["10"] = {"wire_type": "string", "data": dev["brand"].lower()}
+
+    # Standard flagship resolutions
+    width = 1440 if dev["brand"] == "Samsung" or dev["brand"] == "Google" else 1080
+    height = 3120 if dev["brand"] == "Samsung" else (2400 if dev["brand"] == "Google" else 2160)
+    density = "480" if dev["brand"] == "Samsung" or dev["brand"] == "Google" else "320"
+
+    fields["12"] = {"wire_type": "varint", "data": width}
+    fields["13"] = {"wire_type": "varint", "data": height}
+    fields["14"] = {"wire_type": "string", "data": density}
+
+    fields["17"] = {"wire_type": "string", "data": dev["gpu"]}
+    fields["18"] = {"wire_type": "string", "data": dev["gles"]}
+
+    # Format of Field 19: "brand|uuid" or "brand|model"
+    fields["19"] = {"wire_type": "string", "data": f"{dev['brand'].lower()}|{dev['model']}"}
+    fields["25"] = {"wire_type": "string", "data": dev["model"]}
+
+    # Randomize other unique identifiers to prevent system-fingerprinting
+    fields["22"] = {"wire_type": "string", "data": random_hex(32)}
+    fields["57"] = {"wire_type": "string", "data": random_hex(32)}
+
+    # 5. Rebuild Protobuf bytes
+    new_proto_bytes = rebuild_protobuf_generic(fields)
+
+    # 6. Encrypt bytes
+    encrypted_bytes = aes.encrypt_cbc(new_proto_bytes, SAFEV2_IV)
+
+    # 7. Convert to hex string
+    return encrypted_bytes.hex()

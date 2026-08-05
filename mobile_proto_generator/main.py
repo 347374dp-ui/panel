@@ -10,7 +10,8 @@ from generator import (
     AES,
     decode_aes_key,
     filter_protobuf_fields,
-    find_safe_wildcard_aob
+    find_safe_wildcard_aob,
+    generate_safev2_encrypted_proto
 )
 from firebase_uploader import upload_proto_to_firebase
 from certificate_generator import generate_ca_certificate
@@ -79,17 +80,24 @@ def main():
         help="Firebase Auth token / Secret database key (overrides FIREBASE_AUTH env var)."
     )
 
+    # Legacy Generation Options (Before safev2)
+    parser.add_argument(
+        "--legacy-proto",
+        action="store_true",
+        help="Generate using older legacy protobuf format (unencrypted)."
+    )
+
     # Advanced Security & AES Encryption Options
     parser.add_argument(
         "--aes-key",
         type=str,
-        help="Optional encoded AES Key (Hex or Base64). If provided, protos will be AES-CBC encrypted."
+        help="Optional custom encoded AES Key. Default uses safev2 decryption."
     )
 
     parser.add_argument(
         "--aes-iv",
         type=str,
-        help="Optional 16-character/hex IV for AES encryption (defaults to random IV)."
+        help="Optional custom 16-character/hex IV for AES encryption."
     )
 
     parser.add_argument(
@@ -126,17 +134,54 @@ def main():
 
     args = parser.parse_args()
 
-    # 2. Execute Troubleshoot Command if specified
+    if args.count <= 0:
+        print("[Error] Count must be a positive integer greater than 0.")
+        sys.exit(1)
+
+    # Parse Allowed Fields for Protobuf filter
+    allowed_fields = None
+    if args.filter_fields:
+        try:
+            allowed_fields = set(int(f.strip()) for f in args.filter_fields.split(","))
+            print(f"[*] Enabled field filtering. Allowed Protobuf fields: {sorted(list(allowed_fields))}")
+        except ValueError:
+            print("[Error] Invalid format for --filter-fields. Use comma-separated integers.")
+            sys.exit(1)
+
+    # Parse Custom AES Key & IV
+    custom_cipher = None
+    custom_iv_bytes = None
+    if args.aes_key:
+        try:
+            raw_key = decode_aes_key(args.aes_key)
+            custom_cipher = AES(raw_key)
+            print(f"[*] Enabled Custom AES Encryption. Key Decoded: {binascii.hexlify(raw_key).decode('utf-8')}")
+
+            # Resolve IV
+            if args.aes_iv:
+                iv_raw = args.aes_iv.strip()
+                if len(iv_raw) == 32:
+                    custom_iv_bytes = binascii.unhexlify(iv_raw)
+                else:
+                    custom_iv_bytes = iv_raw.encode('utf-8')[:16].ljust(16, b'\x00')
+            else:
+                custom_iv_bytes = os.urandom(16)
+            print(f"[*] Custom IV: {binascii.hexlify(custom_iv_bytes).decode('utf-8')}")
+        except Exception as e:
+            print(f"[Error] Custom AES Configuration failed: {e}")
+            sys.exit(1)
+
+    # Execute Troubleshoot Command if specified
     if args.troubleshoot:
         perform_troubleshoot()
         sys.exit(0)
 
-    # 3. Execute Certificate Generation if specified
+    # Execute Certificate Generation if specified
     if args.generate_cert:
         generate_ca_certificate()
         sys.exit(0)
 
-    # 4. Execute AOB Signature Scanner if specified
+    # Execute AOB Signature Scanner if specified
     if args.aob_original and args.aob_patched:
         print("[*] Running Safe AOB Signature Finder & Compare System...")
         res = find_safe_wildcard_aob(args.aob_original, args.aob_patched)
@@ -155,62 +200,31 @@ def main():
             print(f"[Error] AOB scanning failed: {res.get('error')}")
         sys.exit(0)
 
-    if args.count <= 0:
-        print("[Error] Count must be a positive integer greater than 0.")
-        sys.exit(1)
-
-    # Parse Allowed Fields for Protobuf filter
-    allowed_fields = None
-    if args.filter_fields:
-        try:
-            allowed_fields = set(int(f.strip()) for f in args.filter_fields.split(","))
-            print(f"[*] Enabled field filtering. Allowed Protobuf fields: {sorted(list(allowed_fields))}")
-        except ValueError:
-            print("[Error] Invalid format for --filter-fields. Use comma-separated integers.")
-            sys.exit(1)
-
-    # Parse AES Key & IV
-    cipher = None
-    iv_bytes = None
-    if args.aes_key:
-        try:
-            raw_key = decode_aes_key(args.aes_key)
-            cipher = AES(raw_key)
-            print(f"[*] Enabled AES Encryption. Key Decoded (Hex): {binascii.hexlify(raw_key).decode('utf-8')}")
-
-            # Resolve IV
-            if args.aes_iv:
-                iv_raw = args.aes_iv.strip()
-                if len(iv_raw) == 32: # Hex encoded
-                    iv_bytes = binascii.unhexlify(iv_raw)
-                else:
-                    iv_bytes = iv_raw.encode('utf-8')[:16].ljust(16, b'\x00')
-            else:
-                iv_bytes = os.urandom(16)
-            print(f"[*] AES Initialization Vector (IV): {binascii.hexlify(iv_bytes).decode('utf-8')}")
-        except Exception as e:
-            print(f"[Error] AES Configuration failed: {e}")
-            sys.exit(1)
-
     print(f"[*] Generating {args.count} mobile proto(s)...")
 
     protos = []
     for i in range(args.count):
-        profile = generate_device_profile()
-        proto_bytes = serialize_profile_to_proto(profile)
-
-        # Apply Protobuf Field Filtering if requested
-        if allowed_fields is not None:
-            proto_bytes = filter_protobuf_fields(proto_bytes, allowed_fields)
-
-        # Apply AES Encryption if requested
-        if cipher is not None and iv_bytes is not None:
-            encrypted_bytes = cipher.encrypt_cbc(proto_bytes, iv_bytes)
-            proto_payload = iv_bytes + encrypted_bytes
+        # Default behavior: generate using the exact safev2 template and cryptography logic
+        if not args.legacy_proto and not args.aes_key and not args.filter_fields:
+            hex_str = generate_safev2_encrypted_proto()
+            profile = {
+                "Generation Type": "safev2-compliant (encrypted & randomized)"
+            }
         else:
-            proto_payload = proto_bytes
+            # Legacy generation or custom filtered/encrypted logic
+            profile = generate_device_profile()
+            proto_bytes = serialize_profile_to_proto(profile)
 
-        hex_str = binascii.hexlify(proto_payload).decode('utf-8')
+            if allowed_fields is not None:
+                proto_bytes = filter_protobuf_fields(proto_bytes, allowed_fields)
+
+            if custom_cipher is not None and custom_iv_bytes is not None:
+                encrypted_bytes = custom_cipher.encrypt_cbc(proto_bytes, custom_iv_bytes)
+                proto_payload = custom_iv_bytes + encrypted_bytes
+            else:
+                proto_payload = proto_bytes
+
+            hex_str = binascii.hexlify(proto_payload).decode('utf-8')
 
         protos.append({
             "index": i + 1,
@@ -222,7 +236,7 @@ def main():
     for p in protos:
         print(f"\n[Proto #{p['index']}]")
         print(f"Hex (length: {len(p['hex'])} chars):\n{p['hex']}")
-        if args.details:
+        if args.details and "brand" in p["profile"]:
             print("Device Profile Details:")
             for k, v in p["profile"].items():
                 print(f"  {k:15}: {v}")
