@@ -258,6 +258,10 @@
             <span class="analysis-label">AOB Safeness Rating</span>
             <span class="analysis-val" id="safenessText">Checking...</span>
           </div>
+          <div class="analysis-stat" id="aimbotOffsetsRow" style="display:none;">
+            <span class="analysis-label">Aimbot Offsets</span>
+            <span class="analysis-val" style="color:var(--text-100);"><strong style="color:#00ffcc;">Read:</strong> 0xB8 &nbsp;|&nbsp; <strong style="color:var(--red-hover);">Write:</strong> 0xB4</span>
+          </div>
         </div>
 
         <div style="background: rgba(138,43,226,0.06); border: 1px solid var(--border-primary); border-radius: 10px; padding: 1.2rem; margin-top: 1.5rem;">
@@ -361,6 +365,15 @@
 
       const searchLen = searchBytes.length;
       const replaceLen = replaceBytes.length;
+
+      // Update offsets row visibility based on input pattern match
+      const aimbotOffsetsRow = document.getElementById('aimbotOffsetsRow');
+      const isAimbotPattern = searchAobInput.value.includes('A5 43') && searchAobInput.value.includes('FF FF FF FF');
+      if (isAimbotPattern) {
+        aimbotOffsetsRow.style.display = 'flex';
+      } else {
+        aimbotOffsetsRow.style.display = 'none';
+      }
 
       // Update lengths display
       searchLenText.textContent = `${searchLen} byte${searchLen !== 1 ? 's' : ''}`;
@@ -556,15 +569,15 @@ applyAobPatch()`;
 
     // ── Load Aimbot Preset ──
     function loadAimbotPreset() {
-      const AIMBOT_SEARCH = "FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A5 43";
-      const AIMBOT_REPLACE = "FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80 3F 00 00 80 3F 00 00 80 3F 00 00 80 3F 00 00 00 00 00 00 00 00 80 3F 00 00 00 00 00 00 80 3F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A5 43";
+      const AIMBOT_SEARCH = "FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A5 43";
+      const AIMBOT_REPLACE = "FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80 3F 00 00 80 3F 00 00 80 3F 00 00 80 3F 00 00 00 00 00 00 00 00 80 3F 00 00 00 00 00 00 80 3F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A5 43";
 
       searchAobInput.value = AIMBOT_SEARCH;
       replaceAobInput.value = AIMBOT_REPLACE;
       targetLibInput.value = "libil2cpp.so";
 
       analyzeAob();
-      App.toast("Loaded database-grounded Aimbot memory preset!", "success");
+      App.toast("Loaded custom Aimbot memory preset (Read: 0xB8 | Write: 0xB4)!", "success");
     }
 
     // ── Input Listeners ──
