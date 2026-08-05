@@ -162,6 +162,12 @@
                    value="8F C2 F5 3C CD CC CC 3D ?? ?? ?? ?? EC 51 B8 3D"
                    placeholder="e.g. 8F C2 F5 3C ?? ?? ?? ??" required />
             <small style="color:var(--text-300);font-size:0.75rem;margin-top:0.25rem;">Supports wildcards using <strong style="color:var(--primary);">??</strong> for dynamic memory offsets</small>
+
+            <!-- Preset & Sanitizer Controls -->
+            <div style="display:flex;gap:0.5rem;margin-top:0.5rem;flex-wrap:wrap;">
+              <button type="button" class="btn btn-primary btn-sm" id="sanitizeBtn">💡 Auto-Sanitize Signature</button>
+              <button type="button" class="btn btn-dark btn-sm" id="loadAimbotPresetBtn">🎯 Load Aimbot Preset</button>
+            </div>
           </div>
 
           <div class="form-group" style="margin-top:1.25rem;">
@@ -322,6 +328,8 @@
     const searchAobInput = document.getElementById('searchAob');
     const replaceAobInput = document.getElementById('replaceAob');
     const targetLibInput = document.getElementById('targetLib');
+    const sanitizeBtn = document.getElementById('sanitizeBtn');
+    const loadAimbotPresetBtn = document.getElementById('loadAimbotPresetBtn');
 
     const searchLenText = document.getElementById('searchLenText');
     const replaceLenText = document.getElementById('replaceLenText');
@@ -515,10 +523,56 @@ applyAobPatch()`;
       App.toast('Snippet copied to clipboard!', 'success');
     }
 
+    // ── Signature Sanitizer Algorithm ──
+    function sanitizeSignature() {
+      const val = searchAobInput.value.trim();
+      if (!val) return;
+      const bytes = parseAob(val);
+      if (bytes.length === 0) return;
+
+      let sanitized = [];
+      let modifiedCount = 0;
+      for (let i = 0; i < bytes.length; i++) {
+        let b = bytes[i];
+        // If we see 4 consecutive bytes that are not padding (00 or FF) and are not already wildcards,
+        // we convert them to wildcards to stabilize compiler-volatile address offsets.
+        if (i <= bytes.length - 4 &&
+            b !== '??' && b !== '00' && b !== 'FF' &&
+            bytes[i+1] !== '??' && bytes[i+1] !== '00' && bytes[i+1] !== 'FF' &&
+            bytes[i+2] !== '??' && bytes[i+2] !== '00' && bytes[i+2] !== 'FF' &&
+            bytes[i+3] !== '??' && bytes[i+3] !== '00' && bytes[i+3] !== 'FF') {
+          sanitized.push('??', '??', '??', '??');
+          modifiedCount += 4;
+          i += 3; // Skip next 3 bytes
+        } else {
+          sanitized.push(b);
+        }
+      }
+
+      searchAobInput.value = sanitized.join(' ');
+      analyzeAob();
+      App.toast(`Sanitized signature! Converted ${modifiedCount} volatile offset bytes.`, 'success');
+    }
+
+    // ── Load Aimbot Preset ──
+    function loadAimbotPreset() {
+      const AIMBOT_SEARCH = "FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A5 43";
+      const AIMBOT_REPLACE = "FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80 3F 00 00 80 3F 00 00 80 3F 00 00 80 3F 00 00 00 00 00 00 00 00 80 3F 00 00 00 00 00 00 80 3F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A5 43";
+
+      searchAobInput.value = AIMBOT_SEARCH;
+      replaceAobInput.value = AIMBOT_REPLACE;
+      targetLibInput.value = "libil2cpp.so";
+
+      analyzeAob();
+      App.toast("Loaded database-grounded Aimbot memory preset!", "success");
+    }
+
     // ── Input Listeners ──
     searchAobInput.addEventListener('input', analyzeAob);
     replaceAobInput.addEventListener('input', analyzeAob);
     targetLibInput.addEventListener('input', analyzeAob);
+    sanitizeBtn.addEventListener('click', sanitizeSignature);
+    loadAimbotPresetBtn.addEventListener('click', loadAimbotPreset);
 
     // ── Interactive Tabs ──
     document.querySelectorAll('.exporter-tab').forEach(tab => {

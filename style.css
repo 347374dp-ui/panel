@@ -141,6 +141,7 @@ body::after {
 }
 
 /* ═══════════ BUTTONS ═══════════ */
+/* Fully optimized for custom interactive preset & sanitizer buttons */
 .btn {
   display: inline-flex;
   align-items: center;
