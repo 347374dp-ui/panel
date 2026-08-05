@@ -9,11 +9,11 @@ export WINEARCH=win64
 export WINEPREFIX="$HOME/.wine64"
 
 # Check if wine is installed
-if ! command -v wine64 &> /dev/null; then
-    echo "[!] wine64 is not installed. Installing wine and dependencies..."
+if ! command -v wine &> /dev/null; then
+    echo "[!] wine is not installed. Installing wine and dependencies..."
     sudo dpkg --add-architecture i386
     sudo apt-get update
-    sudo apt-get install -y wine64 wine32 cabextract wget
+    sudo apt-get install -y wine wine64 wine32 cabextract wget
 fi
 
 # Download Python 3.10 for Windows (64-bit)
@@ -26,7 +26,7 @@ fi
 
 # Install Python inside Wine
 echo "[*] Installing Python inside Wine (silently)..."
-wine64 "$PYTHON_EXE" /quiet InstallAllUsers=1 PrependPath=1
+wine "$PYTHON_EXE" /quiet InstallAllUsers=1 PrependPath=1
 
 # Locate python.exe inside Wine prefix
 # Standard path for Python in Wine is typically inside "C:\Program Files\Python310" or similar
@@ -35,12 +35,12 @@ sleep 5
 
 # Check standard installation path or use wine python directly
 echo "[*] Upgrading pip inside Wine..."
-wine64 python -m pip install --upgrade pip || wine64 "C:\Program Files\Python310\python.exe" -m pip install --upgrade pip || true
+wine python -m pip install --upgrade pip || wine "C:\Program Files\Python310\python.exe" -m pip install --upgrade pip || true
 
 echo "[*] Installing PyInstaller inside Wine..."
-wine64 pip install pyinstaller || wine64 "C:\Program Files\Python310\python.exe" -m pip install pyinstaller || true
+wine pip install pyinstaller || wine "C:\Program Files\Python310\python.exe" -m pip install pyinstaller || true
 
 echo "[*] Running PyInstaller to cross-compile Windows Executable..."
-wine64 pyinstaller --onefile --clean --name="mobile_proto_generator" main.py || wine64 "C:\Program Files\Python310\Scripts\pyinstaller.exe" --onefile --clean --name="mobile_proto_generator" main.py
+wine pyinstaller --onefile --clean --name="mobile_proto_generator" main.py || wine "C:\Program Files\Python310\Scripts\pyinstaller.exe" --onefile --clean --name="mobile_proto_generator" main.py
 
 echo "[✓] Build complete! Standalone Windows executable is located in 'dist/mobile_proto_generator.exe'"
