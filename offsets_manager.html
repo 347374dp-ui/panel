@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DP Control Panel — Dynamic Offset & Bone Management" />
+  <title>Offset Manager — DP Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .offset-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    .form-group label {
+        color: var(--purple);
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 6px;
+    }
+    .dot-synced { background: var(--green); box-shadow: 0 0 10px var(--green); }
+    .dot-pending { background: #f39c12; box-shadow: 0 0 10px #f39c12; }
+    textarea.code-input {
+      width: 100%;
+      height: 240px;
+      background: rgba(10, 5, 20, 0.8);
+      color: #7cfc00;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 0.85rem;
+      border: 1px solid var(--purple);
+      border-radius: 10px;
+      padding: 0.8rem;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand">
+      <h1>DP Control Panel</h1>
+      <span class="nav-subtitle">Dynamic Offset Manager</span>
+    </div>
+    <div class="nav-right" style="gap: 1rem;">
+      <a href="panel_admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Dashboard</a>
+      <a href="offsets_manager.html" class="btn btn-primary btn-sm" style="border-radius:50px;">Offsets</a>
+      <a href="feature_builder.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Features</a>
+      <button class="btn btn-dark btn-sm" id="logoutBtn">Sign out</button>
+    </div>
+  </nav>
+
+  <main class="page-wrapper">
+
+    <section class="card fade-in" style="margin-bottom:1.5rem;">
+      <h3 class="card-title">⚙️ Remote Game Configuration</h3>
+      <p class="card-subtitle">Paste your C# offsets/bones directly or update fields below. Changes apply instantly to all users without updating the APK!</p>
+    </section>
+
+    <!-- RAW C# CODE IMPORTER CARD -->
+    <section class="card fade-in" style="margin-bottom:1.5rem; border: 1px solid rgba(155,79,255,0.4);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div>
+          <h3 class="card-title">📝 C# Code Importer & Auto-Parser</h3>
+          <p class="card-subtitle">Paste raw <code>enum Bones</code> or <code>class Offsets</code> directly. The parser will extract bone IDs & offset values automatically!</p>
+        </div>
+        <button class="btn btn-dark btn-sm" id="loadPresetBtn">⚡ Load Default FreeFire Preset</button>
+      </div>
+
+      <textarea id="rawCSharpCode" class="code-input" placeholder="Paste your C# code here (e.g. enum Bones { Head = 0x458... } or static class Offsets { InitBase = 0xA9870BC... })"></textarea>
+      
+      <div style="display:flex; gap:1rem; margin-top:1rem;">
+        <button id="parseAndPushBtn" class="btn btn-primary" style="flex:1;">🚀 Parse Code & Push Updates to Firebase</button>
+      </div>
+    </section>
+
+    <div class="offset-grid">
+
+      <!-- BONES / FIELD STRINGS -->
+      <section class="card fade-in">
+        <h3 class="card-title">Bone IDs (Enum / Offsets)</h3>
+        <p class="card-subtitle">Configured bone offset map (e.g. Head:0x458)</p>
+        <form id="boneForm">
+          <div class="form-group">
+            <label>HEAD (0x458)</label>
+            <input type="text" id="bone_Head" class="form-input" value="Head:0x458" />
+          </div>
+          <div class="form-group">
+            <label>ROOT (0x46c)</label>
+            <input type="text" id="bone_Root" class="form-input" value="Root:0x46c" />
+          </div>
+          <div class="form-group">
+            <label>SPINE (0x460)</label>
+            <input type="text" id="bone_Spine" class="form-input" value="Spine:0x460" />
+          </div>
+          <div class="form-group">
+            <label>HIP (0x468)</label>
+            <input type="text" id="bone_Hip" class="form-input" value="Hip:0x468" />
+          </div>
+          <div class="form-group">
+            <label>LEFT WRIST (0x454)</label>
+            <input type="text" id="bone_LeftWrist" class="form-input" value="LeftWrist:0x454" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" style="margin-top:1rem;">Push Bone List</button>
+        </form>
+      </section>
+
+      <!-- METHOD & STATIC OFFSETS -->
+      <section class="card fade-in">
+        <h3 class="card-title">Core Offsets (Hex & Dec)</h3>
+        <p class="card-subtitle">Essential game engine static offsets</p>
+        <form id="offsetForm">
+          <div class="form-group">
+            <label>InitBase (0xA9870BC)</label>
+            <input type="text" id="offset_InitBase" class="form-input" value="0xA9870BC" />
+          </div>
+          <div class="form-group">
+            <label>StaticClass (0x5C)</label>
+            <input type="text" id="offset_StaticClass" class="form-input" value="0x5C" />
+          </div>
+          <div class="form-group">
+            <label>Weapon (0x3F4)</label>
+            <input type="text" id="offset_Weapon" class="form-input" value="0x3F4" />
+          </div>
+          <div class="form-group">
+            <label>FollowCamera (0x450)</label>
+            <input type="text" id="offset_FollowCamera" class="form-input" value="0x450" />
+          </div>
+          <div class="form-group">
+            <label>ViewMatrix (0xE8)</label>
+            <input type="text" id="offset_ViewMatrix" class="form-input" value="0xE8" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" style="margin-top:1rem;">Push Offset List</button>
+        </form>
+      </section>
+
+    </div>
+
+    <section class="card fade-in" style="margin-top:1.5rem;">
+        <h3 class="card-title">Current Live Status</h3>
+        <div id="syncStatus" style="padding:1rem; background:rgba(0,0,0,0.2); border-radius:10px; font-family:monospace; font-size:0.9rem; color:var(--text-200);">
+            Loading live config...
+        </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 <a href="#">DP</a> — Dynamic Patching System</p>
+  </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <canvas id="particleCanvas"></canvas>
+  <script src="particles.js"></script>
+  <script src="app.js"></script>
+  <script>
+    if (sessionStorage.getItem('loggedIn') !== 'admin') {
+      window.location.href = 'index.html';
+    }
+
+    App.initFirebase();
+
+    const DEFAULT_PRESET_CODE = `namespace AotForms
+{
+    internal enum Bones : uint
+    {
+        Head = 0x458,
+        Root = 0x46c,
+        LeftWrist = 0x454,
+        Spine = 0x460,
+        Hip = 0x468,
+        RightCalf = 0x470,
+        LeftCalf = 0x474,
+        RightFoot = 0x478,
+        LeftFoot = 0x47c,
+        RightWrist = 0x0,
+        LeftHand = 0x484,
+        LeftShoulder = 0x48c,
+        RightShoulder = 0x490,
+        RightWristJoint = 0x494,
+        LeftWristJoint = 0x498,
+        LeftElbow = 0x49c,
+        RightElbow = 0x4a0
+    }
+}
+
+namespace AotForms
+{
+    internal static class Offsets
+    {
+        internal static uint InitBase = 0xA9870BC;
+        internal static uint StaticClass = 0x5C;
+        internal static uint Weapon = 0x3F4;
+        internal static uint WeaponData = 0x58;
+        internal static uint IntWeaponType = 0x64;
+        internal static uint WeaponRecoil = 0xc;
+        internal static uint NoReload = 0x99;
+        internal static uint FollowCamera = 0x450;
+        internal static uint AimRotation = 0x400;
+        internal static uint CurrentObserver = 0xb4;
+        internal static uint ObserverPlayer = 0x28;
+        internal static uint LocalPlayerAttributes = 0x4BC;
+        internal static uint CurrentMatch = 0x50;
+        internal static uint MatchStatus = 0x8c;
+        internal static uint LocalPlayer = 0x94;
+        internal static uint Camera = 0x18;
+        internal static uint Player_Data = 0x48;
+        internal static uint Avatar = 0xA8;
+        internal static uint AvatarManager = 0x4C0;
+        internal static uint Player_ShadowBase = 0x18CC;
+        internal static uint UnlimitedAmmo = 0xE0;
+        internal static uint Avatar_Data = 0x14;
+        internal static uint Avatar_Data_IsTeam = 0x59;
+        internal static uint Avatar_IsVisible = 0x95;
+        internal static uint IsFiring = 0x540;
+        internal static uint Player_IsDead = 0x50;
+        internal static uint Player_Name = 0x2DC;
+        internal static uint XPose = 0x78;
+        internal static uint AimbotVisible = 0x4A4;
+        internal static uint PlayerAttributes = 0x4BC;
+        internal static uint MainCameraTransform = 0x24C;
+        internal static uint DictionaryEntities = 0x68;
+        internal static uint ViewMatrix = 0xE8;
+        internal static uint IS_FIRING = 0x540;
+        internal static uint weaponinfo = 0x978;
+        internal static uint guntipposition = 0x38;
+        internal static uint bullet_hit = 0x2C;
+        internal static uint GameTimer = 0x10;
+        internal static uint FixedDeltaTime = 0x24;
+    }
+}`;
+
+    document.getElementById('loadPresetBtn').addEventListener('click', () => {
+      document.getElementById('rawCSharpCode').value = DEFAULT_PRESET_CODE;
+      App.toast('Default FreeFire offset preset loaded into text box!', 'info');
+    });
+
+    function parseCSharpCode(code) {
+      const bones = [];
+      const offsets = [];
+
+      // Extract bone key-values
+      const matches = code.matchAll(/([A-Za-z0-9_]+)\s*=\s*(0x[0-9A-Fa-f]+|\d+)/g);
+      for (const match of matches) {
+        const name = match[1];
+        const hexVal = match[2];
+        if (name && hexVal && name !== 'uint') {
+          bones.push(`${name}:${hexVal}`);
+          // Parse numeric offset into array
+          const num = parseInt(hexVal, 16) || parseInt(hexVal, 10);
+          if (!isNaN(num)) offsets.push(num);
+        }
+      }
+
+      return { bones, offsets };
+    }
+
+    document.getElementById('parseAndPushBtn').addEventListener('click', async () => {
+      const code = document.getElementById('rawCSharpCode').value.trim();
+      if (!code) {
+        App.toast('Please paste C# code or click Load Default Preset first!', 'warning');
+        return;
+      }
+
+      const { bones, offsets } = parseCSharpCode(code);
+      if (offsets.length === 0 && bones.length === 0) {
+        App.toast('Could not find any offsets or bone values in code snippet.', 'error');
+        return;
+      }
+
+      const configData = {
+        code: code,
+        bones: bones,
+        offsets: offsets
+      };
+
+      await App.updateFullGameConfig(configData);
+      App.toast(`Successfully pushed ${offsets.length} offsets & ${bones.length} bones to Firebase!`, 'success');
+      loadLiveConfig();
+    });
+
+    async function loadLiveConfig() {
+      const config = await App.getGameConfig();
+      if (config) {
+        if (config.code) {
+          document.getElementById('rawCSharpCode').value = config.code;
+        } else {
+          document.getElementById('rawCSharpCode').value = DEFAULT_PRESET_CODE;
+        }
+
+        const offsetCount = config.offsets ? (Array.isArray(config.offsets) ? config.offsets.length : Object.keys(config.offsets).length) : 0;
+        const boneCount = config.bones ? (Array.isArray(config.bones) ? config.bones.length : Object.keys(config.bones).length) : 0;
+
+        document.getElementById('syncStatus').innerHTML = `
+            <span class="status-dot dot-synced"></span> Live Database Synced<br/>
+            <strong>Active Offsets Count:</strong> ${offsetCount}<br/>
+            <strong>Active Bones Count:</strong> ${boneCount}<br/>
+            <strong>Last Updated:</strong> ${config.lastUpdate || 'Just Now'}
+        `;
+      } else {
+        document.getElementById('rawCSharpCode').value = DEFAULT_PRESET_CODE;
+      }
+    }
+
+    loadLiveConfig();
+  </script>
+</body>
+</html>

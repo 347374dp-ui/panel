@@ -534,6 +534,11 @@ const App = (() => {
     // Stats
     getGlobalStats,
     getGlobalPanelStats,
+    // Game Config (Offsets/Bones)
+    getGameConfig: () => fbGet('game_config'),
+    updateGameBones: (bones) => fbPatch('game_config', { bones, lastUpdate: new Date().toISOString() }),
+    updateGameOffsets: (offsets) => fbPatch('game_config', { offsets, lastUpdate: new Date().toISOString() }),
+    updateFullGameConfig: (configData) => fbPut('game_config', { ...configData, lastUpdate: new Date().toISOString() }),
     // Proto Pool
     getProtoPool,
     addProto,
