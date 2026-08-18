@@ -66,23 +66,27 @@
 
     <section class="card fade-in" style="margin-bottom:1.5rem;">
       <h3 class="card-title">⚙️ Remote Game Configuration</h3>
-      <p class="card-subtitle">Paste your C# offsets/bones directly or update fields below. Changes apply instantly to all users without updating the APK!</p>
+      <p class="card-subtitle">Paste your C# offsets/bones directly or click Restore Defaults. Changes apply instantly to all users without updating the APK!</p>
     </section>
 
     <!-- RAW C# CODE IMPORTER CARD -->
     <section class="card fade-in" style="margin-bottom:1.5rem; border: 1px solid rgba(155,79,255,0.4);">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
         <div>
           <h3 class="card-title">📝 C# Code Importer & Auto-Parser</h3>
           <p class="card-subtitle">Paste raw <code>enum Bones</code> or <code>class Offsets</code> directly. The parser will extract bone IDs & offset values automatically!</p>
         </div>
-        <button class="btn btn-dark btn-sm" id="loadPresetBtn">⚡ Load Default FreeFire Preset</button>
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn btn-dark btn-sm" id="loadPresetBtn">⚡ Load Preset Code</button>
+          <button class="btn btn-dark btn-sm" id="resetDefaultsBtn" style="border-color:#ff4757; color:#ff4757;">🔄 Restore Default Offsets</button>
+        </div>
       </div>
 
       <textarea id="rawCSharpCode" class="code-input" placeholder="Paste your C# code here (e.g. enum Bones { Head = 0x458... } or static class Offsets { InitBase = 0xA9870BC... })"></textarea>
       
       <div style="display:flex; gap:1rem; margin-top:1rem;">
-        <button id="parseAndPushBtn" class="btn btn-primary" style="flex:1;">🚀 Parse Code & Push Updates to Firebase</button>
+        <button id="parseAndPushBtn" class="btn btn-primary" style="flex:2;">🚀 Parse Code & Push Updates to Firebase</button>
+        <button id="resetDefaultsBtn2" class="btn btn-dark" style="flex:1; border-color:#ff4757; color:#ff4757;">🔄 Reset to Defaults</button>
       </div>
     </section>
 
@@ -248,18 +252,32 @@ namespace AotForms
       App.toast('Default FreeFire offset preset loaded into text box!', 'info');
     });
 
+    async function restoreAllDefaults() {
+      document.getElementById('rawCSharpCode').value = DEFAULT_PRESET_CODE;
+      const { bones, offsets } = parseCSharpCode(DEFAULT_PRESET_CODE);
+      const configData = {
+        code: DEFAULT_PRESET_CODE,
+        bones: bones,
+        offsets: offsets
+      };
+      await App.updateFullGameConfig(configData);
+      App.toast('Restored default game offsets & bones successfully!', 'success');
+      loadLiveConfig();
+    }
+
+    document.getElementById('resetDefaultsBtn').addEventListener('click', restoreAllDefaults);
+    document.getElementById('resetDefaultsBtn2').addEventListener('click', restoreAllDefaults);
+
     function parseCSharpCode(code) {
       const bones = [];
       const offsets = [];
 
-      // Extract bone key-values
       const matches = code.matchAll(/([A-Za-z0-9_]+)\s*=\s*(0x[0-9A-Fa-f]+|\d+)/g);
       for (const match of matches) {
         const name = match[1];
         const hexVal = match[2];
         if (name && hexVal && name !== 'uint') {
           bones.push(`${name}:${hexVal}`);
-          // Parse numeric offset into array
           const num = parseInt(hexVal, 16) || parseInt(hexVal, 10);
           if (!isNaN(num)) offsets.push(num);
         }
@@ -271,7 +289,7 @@ namespace AotForms
     document.getElementById('parseAndPushBtn').addEventListener('click', async () => {
       const code = document.getElementById('rawCSharpCode').value.trim();
       if (!code) {
-        App.toast('Please paste C# code or click Load Default Preset first!', 'warning');
+        App.toast('Please paste C# code or click Load Preset Code first!', 'warning');
         return;
       }
 
