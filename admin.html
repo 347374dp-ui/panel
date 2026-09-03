@@ -86,7 +86,7 @@
             <h3 class="card-title" style="margin:0;">Create User Account</h3>
             <p class="card-subtitle" style="margin:0;">Register a new client who can manage their own UIDs</p>
           </div>
-          <button class="btn btn-dark btn-sm" id="createTestAccountBtn" style="color:var(--amber);border-color:var(--amber);">🧪 Quick Trial Account (24h)</button>
+          <button class="btn btn-dark btn-sm" id="createTestAccountBtn" type="button" style="color:var(--amber);border-color:var(--amber);">🧪 Create Trial (24h)</button>
         </div>
         <form id="createUserForm" autocomplete="off" style="margin-top:1rem;">
           <div class="form-group">
@@ -378,7 +378,7 @@
       }
     });
 
-    // ── Create user ──
+    // ── Create Standard User ──
     document.getElementById('createUserForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const username = document.getElementById('newUsername').value.trim().toLowerCase();
@@ -404,20 +404,28 @@
       }
     });
 
-    // ── Create Trial / Testing Account (24h) ──
+    // ── Create Trial / Testing Account (24h) using set Username and Password ──
     document.getElementById('createTestAccountBtn').addEventListener('click', async () => {
-      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-      const testUsername = `test_user_${randomSuffix}`;
-      const testPassword = `test${randomSuffix}`;
+      const username = document.getElementById('newUsername').value.trim().toLowerCase();
+      const password = document.getElementById('newPassword').value;
+      const maxUids = parseInt(document.getElementById('newMaxUids').value) || 5;
+
+      if (!username || !password) {
+        App.toast('Please enter a Username and Password first!', 'error');
+        return;
+      }
+
       const randomUid = Math.floor(1000000000 + Math.random() * 9000000000).toString();
       const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
-      const result = await App.createUser(testUsername, testPassword, 5);
+      const result = await App.createUser(username, password, maxUids);
       if (result.success) {
-        // Automatically inject 1 test trial UID valid for 24h into the test user
-        await App.addUid(testUsername, randomUid, '[TEST] Trial Account', expiry);
-        App.toast(`Trial Account Created! (${testUsername})`, 'success');
-        alert(`Temporary Trial Account Created!\nUsername: ${testUsername}\nPassword: ${testPassword}\nGenerated UID: ${randomUid}\nValid for: 24 Hours`);
+        // Automatically inject 1 test trial UID valid for 24h into the user account
+        await App.addUid(username, randomUid, '[TEST] Trial Account', expiry);
+        App.toast(`Trial Account Created for "${username}"!`, 'success');
+        
+        document.getElementById('createUserForm').reset();
+        document.getElementById('newMaxUids').value = '10';
         renderUsers();
       } else {
         App.toast(result.msg || 'Failed to create trial account', 'error');
@@ -426,17 +434,16 @@
 
     // ── Clear Testing Data ──
     document.getElementById('clearTestingDataBtn').addEventListener('click', async () => {
-      if (!confirm('Are you sure you want to delete all test/trial user accounts and test UIDs?')) return;
+      if (!confirm('Are you sure you want to delete all trial user accounts and test UIDs?')) return;
       const users = await App.getAllUsers();
       let deletedCount = 0;
 
       for (const user of users) {
-        // Delete accounts that follow trial naming patterns or contain [TEST] flag
         if (user.username.startsWith('test_') || user.isTest) {
           await App.deleteUser(user.username);
           deletedCount++;
         } else {
-          // Check for individual test UIDs within legitimate user accounts
+          // Check for individual test UIDs within user accounts
           let uids = user.uids || [];
           if (!Array.isArray(uids)) uids = Object.values(uids);
           for (const uidItem of uids) {
@@ -527,7 +534,6 @@
       tbody.appendChild(defaultTr);
     };
 
-
     document.getElementById('uploadProtoBtn').addEventListener('click', async () => {
       const input = document.getElementById('protoHexInput');
       const status = document.getElementById('protoUploadStatus');
@@ -575,9 +581,7 @@
 
     function gdriveToDirectUrl(url) {
       if (!url) return '';
-      // Already a direct usercontent link — pass through
       if (url.includes('drive.usercontent.google.com')) return url;
-      // Extract file ID from any Google Drive URL format
       const patterns = [
         /\/file\/d\/([a-zA-Z0-9_-]+)/,
         /[?&]id=([a-zA-Z0-9_-]+)/,
@@ -589,7 +593,7 @@
           return `https://drive.usercontent.google.com/download?id=${m[1]}&export=download&authuser=0&confirm=t`;
         }
       }
-      return url; // Not a Drive URL — return as-is (direct link)
+      return url;
     }
 
     async function loadDownloadConfig() {
@@ -605,7 +609,6 @@
       }
     }
 
-    // Live URL preview as user types
     document.getElementById('driveUrlInput').addEventListener('input', function() {
       const raw = this.value.trim();
       const preview = document.getElementById('urlPreview');
