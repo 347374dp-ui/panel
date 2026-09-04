@@ -24,6 +24,15 @@
     .overview-card .oval { font-size: 2rem; font-weight: 700; }
     .overview-card .olabel { font-size: 0.75rem; color: var(--text-300); text-transform: uppercase; letter-spacing: .08em; margin-top: .25rem; }
     .maxuid-input { width: 60px; text-align: center; }
+    select.form-input, select.form-input option {
+      background-color: #161b22 !important;
+      color: #e6edf3 !important;
+      border: 1px solid #30363d !important;
+    }
+    .expiry-box { background: var(--bg-1); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; margin-top: 0.75rem; }
+    .expiry-box-label { font-size: 0.78rem; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .07em; display: block; margin-bottom: 0.6rem; }
+    .expiry-radio-group { display: flex; gap: 1.2rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+    .expiry-radio-group label { font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; }
     @media(max-width:600px){ .overview-grid{ grid-template-columns:1fr 1fr; } }
   </style>
 </head>
@@ -79,42 +88,158 @@
 
     <div class="admin-grid">
 
-      <!-- Create User -->
+      <!-- Create User / Trial Account -->
       <section class="card fade-in">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;flex-wrap:wrap;gap:.5rem;">
           <div>
             <h3 class="card-title" style="margin:0;">Create User Account</h3>
-            <p class="card-subtitle" style="margin:0;">Register a new client who can manage their own UIDs</p>
+            <p class="card-subtitle" style="margin:0;">Register standard clients or trial accounts with expiry &amp; UID quotas.</p>
           </div>
-          <button class="btn btn-dark btn-sm" id="createTestAccountBtn" type="button" style="color:var(--amber);border-color:var(--amber);">🧪 Create Trial (24h)</button>
+          <button class="btn btn-dark btn-sm" id="createTestAccountBtn" type="button" style="color:var(--amber);border-color:var(--amber);">🧪 Quick Trial (24h)</button>
         </div>
+
         <form id="createUserForm" autocomplete="off" style="margin-top:1rem;">
           <div class="form-group">
             <label for="newUsername">Username</label>
-            <input type="text" id="newUsername" class="form-input" placeholder="e.g. john" required />
+            <input type="text" id="newUsername" class="form-input" placeholder="e.g. supporter_trial" required />
           </div>
           <div class="form-group">
             <label for="newPassword">Password</label>
             <input type="password" id="newPassword" class="form-input" placeholder="password" required />
           </div>
           <div class="form-group">
-            <label for="newMaxUids">Max UIDs Allowed</label>
-            <input type="number" id="newMaxUids" class="form-input" value="10" min="1" max="100" required />
+            <label for="newMaxUids">UID Limit (Per PC / Account)</label>
+            <input type="number" id="newMaxUids" class="form-input" value="2" min="1" max="100" required />
           </div>
-          <button type="submit" class="btn btn-primary" style="margin-top:.5rem;" id="createUserBtn">Add User</button>
+
+          <!-- Account Expiration Options -->
+          <div id="accOptsContainer" class="expiry-box">
+            <span class="expiry-box-label">⏱ Account Expiration &amp; Duration</span>
+
+            <div class="expiry-radio-group">
+              <label>
+                <input type="radio" name="trialExpiryMode" value="days" checked /> Preset Duration
+              </label>
+              <label>
+                <input type="radio" name="trialExpiryMode" value="date" /> Exact Date &amp; Time Picker
+              </label>
+            </div>
+
+            <div id="presetDaysDiv">
+              <label style="font-size:0.8rem;color:var(--text-300);margin-bottom:0.3rem;display:block;">Select Account Duration:</label>
+              <select id="trialDaysSelect" class="form-input">
+                <option value="0">Never Expire (Lifetime Account)</option>
+                <option value="1">1 Day (24 Hours)</option>
+                <option value="3">3 Days</option>
+                <option value="7">7 Days (1 Week)</option>
+                <option value="14">14 Days (2 Weeks)</option>
+                <option value="30" selected>30 Days (1 Month)</option>
+                <option value="60">60 Days (2 Months)</option>
+                <option value="90">90 Days (3 Months)</option>
+                <option value="180">180 Days (6 Months)</option>
+                <option value="365">365 Days (1 Year)</option>
+              </select>
+            </div>
+
+            <div id="directDateDiv" style="display:none;">
+              <label style="font-size:0.8rem;color:var(--text-300);margin-bottom:0.3rem;display:block;">Select Exact Expiration Date &amp; Time:</label>
+              <input type="datetime-local" id="trialDirectDate" class="form-input" />
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:1rem;">
+            <button type="button" class="btn" id="createTrialBtn" style="background:rgba(255,152,0,0.18);border:1px solid var(--amber);color:var(--amber);font-weight:600;">🧪 Create Trial Account</button>
+            <button type="button" class="btn btn-primary" id="createStandardBtn">👤 Create Standard Account</button>
+          </div>
         </form>
+      </section>
+
+      <!-- UID Allowlist (Independent Base) -->
+      <section class="card fade-in" style="margin-top:1.25rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+          <div>
+            <h3 class="card-title" style="margin:0;">🛡️ UID Allowlist (Independent Base)</h3>
+            <p class="card-subtitle" style="margin-top:2px;">Standalone allowlist for UIDs not linked to any user account. Ideal for zero-limit or guest users.</p>
+          </div>
+          <span id="allowlistBadge" style="font-size:.8rem;padding:.3rem .8rem;border-radius:50px;background:var(--bg-1);border:1px solid var(--border);color:var(--green);font-weight:600;">0 Allowed UIDs</span>
+        </div>
+
+        <form id="allowlistForm" autocomplete="off">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+            <div class="form-group">
+              <label for="allowlistUidInput">UID Number</label>
+              <input type="text" id="allowlistUidInput" class="form-input" placeholder="e.g. 1234567890" required />
+            </div>
+            <div class="form-group">
+              <label for="allowlistNameInput">Name / Note</label>
+              <input type="text" id="allowlistNameInput" class="form-input" placeholder="e.g. VIP Player / Supporter" />
+            </div>
+          </div>
+
+          <div style="margin-top:0.75rem;">
+            <div class="form-group">
+              <label for="allowlistDaysSelect">UID Duration</label>
+              <select id="allowlistDaysSelect" class="form-input">
+                <option value="0" selected>Never Expire (Lifetime)</option>
+                <option value="1">1 Day (24 Hours)</option>
+                <option value="3">3 Days</option>
+                <option value="7">7 Days (1 Week)</option>
+                <option value="14">14 Days (2 Weeks)</option>
+                <option value="30">30 Days (1 Month)</option>
+                <option value="60">60 Days (2 Months)</option>
+                <option value="90">90 Days (3 Months)</option>
+                <option value="180">180 Days (6 Months)</option>
+                <option value="365">365 Days (1 Year)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:1rem;">
+            <button type="button" class="btn btn-primary" id="addAllowlistBtn" style="width:100%;font-weight:600;">➕ Add to Allowlist</button>
+          </div>
+        </form>
+
+        <!-- Allowlist Table -->
+        <div style="margin-top:1.25rem;overflow-x:auto;">
+          <table class="data-table" id="allowlistTable">
+            <thead>
+              <tr>
+                <th>UID</th>
+                <th>Name / Note</th>
+                <th>Status</th>
+                <th>Expires</th>
+                <th>Added</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="allowlistTableBody">
+              <tr><td colspan="6" style="text-align:center;color:var(--text-300);padding:1.5rem;">Loading allowlist...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <!-- User List -->
       <section class="card fade-in">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
           <div>
-            <h3 class="card-title" style="margin-bottom:.25rem;">User Accounts</h3>
-            <p class="card-subtitle">Click a user row to see their UIDs</p>
+            <h3 class="card-title" style="margin-bottom:.25rem;">👥 User Accounts</h3>
+            <p class="card-subtitle">Click any user row to view or manage their assigned UIDs</p>
           </div>
-          <div style="display:flex;gap:.5rem;">
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
             <button class="btn btn-dark btn-sm" id="clearTestingDataBtn" style="color:var(--amber);border-color:var(--amber);">🧹 Clear Testing Data</button>
             <button class="btn btn-dark btn-sm" id="refreshUsersBtn">↻ Refresh</button>
+          </div>
+        </div>
+
+        <!-- Search & Filter Bar -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;gap:0.75rem;flex-wrap:wrap;background:var(--bg-1);padding:0.6rem 0.9rem;border-radius:8px;border:1px solid var(--border);">
+          <input type="text" id="userSearchInput" class="form-input" placeholder="🔍 Search username or UID..." style="max-width:240px;font-size:0.8rem;padding:0.45rem 0.75rem;" />
+          <div class="filter-pills" id="userFilterPills">
+            <button class="filter-pill active" data-filter="all">All</button>
+            <button class="filter-pill" data-filter="active">Active</button>
+            <button class="filter-pill" data-filter="trial">Trial</button>
+            <button class="filter-pill" data-filter="disabled">Disabled / Expired</button>
           </div>
         </div>
         <div style="overflow-x:auto;">
@@ -252,14 +377,36 @@
 
     // ── Render users table ──
     let expandedUser = null;
+    let currentFilter = 'all';
+    let searchQuery = '';
 
     const renderUsers = async () => {
-      const users = await App.getAllUsers();
+      let users = await App.getAllUsers();
       const tbody = document.getElementById('userTableBody');
       tbody.innerHTML = '';
 
+      // Filter by category pill
+      if (currentFilter === 'active') {
+        users = users.filter(u => u.active);
+      } else if (currentFilter === 'trial') {
+        users = users.filter(u => u.is_trial);
+      } else if (currentFilter === 'disabled') {
+        users = users.filter(u => !u.active || (u.trial_expiry && new Date(u.trial_expiry) < new Date()));
+      }
+
+      // Search query filter
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        users = users.filter(u => {
+          if (u.username.toLowerCase().includes(q)) return true;
+          let uids = u.uids || [];
+          if (!Array.isArray(uids)) uids = Object.values(uids);
+          return uids.some(uidItem => String(uidItem.uid).toLowerCase().includes(q) || (uidItem.displayName && uidItem.displayName.toLowerCase().includes(q)));
+        });
+      }
+
       if (users.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-300);padding:2rem;">No user accounts yet. Create one above!</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-300);padding:2rem;">No matching accounts found.</td></tr>`;
         return;
       }
 
@@ -275,11 +422,14 @@
         const tr = document.createElement('tr');
         tr.className = 'user-expand-row';
         tr.innerHTML = `
-          <td><strong>${user.username}</strong></td>
+          <td>
+            <strong>${user.username}</strong>
+            ${user.is_trial ? `<span style="margin-left:6px;font-size:0.7rem;background:rgba(255,152,0,0.15);border:1px solid rgba(255,152,0,0.4);color:var(--amber);padding:2px 6px;border-radius:4px;">🧪 Trial</span>` : ''}
+          </td>
           <td class="${statusClass}">${statusText}</td>
           <td>${uidCount}</td>
           <td>
-            <input type="number" class="form-input maxuid-input" value="${user.maxUids || 10}" min="1" data-username="${user.username}" />
+            <input type="number" class="form-input maxuid-input" value="${user.maxUids !== undefined && user.maxUids !== null ? user.maxUids : (user.trial_limit !== undefined && user.trial_limit !== null ? user.trial_limit : 2)}" min="0" data-username="${user.username}" />
           </td>
           <td>${created}</td>
           <td class="user-controls">
@@ -302,7 +452,7 @@
             const uidStatus = uid.status === 'Inactive' ? 'Inactive' : (isExpired ? 'Expired' : 'Active');
             const uidStatusClass = uidStatus === 'Active' ? 'status-active' : 'status-disabled';
             uidHtml += `<tr>
-              <td><strong>${uid.uid}</strong></td>
+              <td><strong>${uid.uid}</strong> <button class="copy-btn copy-uid-btn" data-uid="${uid.uid}" title="Copy UID">📋 Copy</button></td>
               <td>${uid.displayName || '—'}</td>
               <td class="${uidStatusClass}">${uidStatus}</td>
               <td>${uid.expiry ? new Date(uid.expiry).toLocaleDateString() : '—'}</td>
@@ -336,6 +486,138 @@
       loadStats();
     };
 
+    // ── Live Search & Filtering Handlers ──
+    const searchInput = document.getElementById('userSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value.trim();
+        renderUsers();
+      });
+    }
+
+    const filterPills = document.getElementById('userFilterPills');
+    if (filterPills) {
+      filterPills.addEventListener('click', (e) => {
+        const pill = e.target.closest('.filter-pill');
+        if (!pill) return;
+        document.querySelectorAll('#userFilterPills .filter-pill').forEach(b => b.classList.remove('active'));
+        pill.classList.add('active');
+        currentFilter = pill.dataset.filter;
+        renderUsers();
+      });
+    }
+
+    // ── Render Allowlist Table ──
+    const renderAllowlist = async () => {
+      const items = await App.getAllowlist();
+      const tbody = document.getElementById('allowlistTableBody');
+      const badge = document.getElementById('allowlistBadge');
+      if (!tbody) return;
+
+      tbody.innerHTML = '';
+      if (badge) badge.textContent = `${items.length} Allowed UID(s)`;
+
+      if (items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-300);padding:1.5rem;">No UIDs in allowlist yet. Add one above.</td></tr>`;
+        return;
+      }
+
+      const now = new Date();
+      items.forEach((item) => {
+        let isExpired = false;
+        let expDisplay = '<span style="color:var(--green);font-weight:600;">Lifetime</span>';
+        if (item.expiry) {
+          try {
+            const ed = new Date(item.expiry);
+            if (ed < now) {
+              isExpired = true;
+              expDisplay = `<span style="color:var(--red);font-weight:600;">Expired (${ed.toLocaleDateString()})</span>`;
+            } else {
+              const diffDays = Math.ceil((ed - now) / 86400000);
+              expDisplay = `${ed.toLocaleDateString()} <span style="color:var(--amber);font-size:0.78rem;">(${diffDays}d left)</span>`;
+            }
+          } catch(e) { expDisplay = item.expiry; }
+        }
+
+        let addedDate = '—';
+        if (item.addedAt) {
+          try { addedDate = new Date(item.addedAt).toLocaleDateString(); } catch(e) {}
+        }
+
+        const isStatusActive = (item.status === 'Active' || !item.status) && !isExpired;
+        const statusClass = isStatusActive ? 'status-active' : 'status-disabled';
+        const statusText = isExpired ? 'Expired' : (item.status || 'Active');
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <strong>${item.uid}</strong>
+            <button class="copy-btn copy-allowlist-uid-btn" data-uid="${item.uid}" title="Copy UID" style="margin-left:6px;">📋 Copy</button>
+          </td>
+          <td>${item.name || '—'}</td>
+          <td class="${statusClass}">${statusText}</td>
+          <td>${expDisplay}</td>
+          <td style="color:var(--text-300);font-size:0.8rem;">${addedDate}</td>
+          <td>
+            <button class="btn btn-red btn-sm delete-allowlist-btn" data-uid="${item.uid}">Remove</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    };
+
+    // ── Add to Allowlist Handler ──
+    const addAllowlistBtnEl = document.getElementById('addAllowlistBtn');
+    if (addAllowlistBtnEl) {
+      addAllowlistBtnEl.addEventListener('click', async () => {
+        const uid = document.getElementById('allowlistUidInput').value.trim();
+        const name = document.getElementById('allowlistNameInput').value.trim();
+        const days = parseInt(document.getElementById('allowlistDaysSelect').value) || 0;
+
+        if (!uid || !/^\d+$/.test(uid)) {
+          App.toast('Please enter a valid numeric UID!', 'error');
+          return;
+        }
+
+        addAllowlistBtnEl.disabled = true;
+        const res = await App.addAllowlistUid(uid, name, days);
+        addAllowlistBtnEl.disabled = false;
+
+        if (res.success) {
+          App.toast(`Added UID ${uid} to Allowlist!`, 'success');
+          document.getElementById('allowlistUidInput').value = '';
+          document.getElementById('allowlistNameInput').value = '';
+          renderAllowlist();
+        } else {
+          App.toast(res.msg || 'Failed to add UID to allowlist', 'error');
+        }
+      });
+    }
+
+    // ── Allowlist table actions (copy / delete) ──
+    const allowlistTableEl = document.getElementById('allowlistTable');
+    if (allowlistTableEl) {
+      allowlistTableEl.addEventListener('click', async (e) => {
+        const copyBtn = e.target.closest('.copy-allowlist-uid-btn');
+        if (copyBtn) {
+          const uid = copyBtn.dataset.uid;
+          navigator.clipboard.writeText(uid);
+          App.toast(`Copied UID ${uid} to clipboard!`, 'info');
+          return;
+        }
+
+        const delBtn = e.target.closest('.delete-allowlist-btn');
+        if (delBtn) {
+          const uid = delBtn.dataset.uid;
+          if (confirm(`Remove UID ${uid} from the Allowlist?`)) {
+            await App.removeAllowlistUid(uid);
+            App.toast(`Removed UID ${uid} from Allowlist`, 'info');
+            renderAllowlist();
+          }
+        }
+      });
+    }
+
     // ── Max UIDs change ──
     document.getElementById('userTable').addEventListener('change', async (e) => {
       if (e.target.classList.contains('maxuid-input')) {
@@ -348,6 +630,13 @@
 
     // ── Button clicks ──
     document.getElementById('userTable').addEventListener('click', async (e) => {
+      const copyBtn = e.target.closest('.copy-uid-btn');
+      if (copyBtn) {
+        const uid = copyBtn.dataset.uid;
+        navigator.clipboard.writeText(uid);
+        App.toast(`Copied UID ${uid} to clipboard!`, 'info');
+        return;
+      }
       const btn = e.target.closest('button');
       if (!btn) return;
 
@@ -378,59 +667,96 @@
       }
     });
 
-    // ── Create Standard User ──
-    document.getElementById('createUserForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const username = document.getElementById('newUsername').value.trim().toLowerCase();
-      const password = document.getElementById('newPassword').value;
-      const maxUids = parseInt(document.getElementById('newMaxUids').value);
+    const expiryRadios = document.getElementsByName('trialExpiryMode');
+    const presetDaysDiv = document.getElementById('presetDaysDiv');
+    const directDateDiv = document.getElementById('directDateDiv');
 
-      const btn = document.getElementById('createUserBtn');
-      btn.disabled = true;
-      btn.textContent = 'Creating...';
-
-      const result = await App.createUser(username, password, maxUids);
-
-      btn.disabled = false;
-      btn.textContent = 'Add User';
-
-      if (result.success) {
-        App.toast(`User "${username}" created!`, 'success');
-        this.reset();
-        document.getElementById('newMaxUids').value = '10';
-        renderUsers();
-      } else {
-        App.toast(result.msg, 'error');
-      }
+    expiryRadios.forEach(radio => {
+      radio.addEventListener('change', () => {
+        if (radio.value === 'days') {
+          presetDaysDiv.style.display = 'block';
+          directDateDiv.style.display = 'none';
+        } else {
+          presetDaysDiv.style.display = 'none';
+          directDateDiv.style.display = 'block';
+        }
+      });
     });
 
-    // ── Create Trial / Testing Account (24h) using set Username and Password ──
-    document.getElementById('createTestAccountBtn').addEventListener('click', async () => {
+    async function handleCreateAccount(isTrial) {
       const username = document.getElementById('newUsername').value.trim().toLowerCase();
-      const password = document.getElementById('newPassword').value;
-      const maxUids = parseInt(document.getElementById('newMaxUids').value) || 5;
+      const password = document.getElementById('newPassword').value.trim();
+      const rawLimit = document.getElementById('newMaxUids').value.trim();
+      const parsedLimit = parseInt(rawLimit);
+      const limit = isNaN(parsedLimit) ? 2 : parsedLimit;
 
       if (!username || !password) {
-        App.toast('Please enter a Username and Password first!', 'error');
+        App.toast('Please enter both Username and Password!', 'error');
         return;
       }
 
-      const randomUid = Math.floor(1000000000 + Math.random() * 9000000000).toString();
-      const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      let trialDays = 0;
+      let trialExpiry = '';
 
-      const result = await App.createUser(username, password, maxUids);
+      const mode = document.querySelector('input[name="trialExpiryMode"]:checked').value;
+      if (mode === 'days') {
+        trialDays = parseInt(document.getElementById('trialDaysSelect').value) || 0;
+        if (trialDays > 0) {
+          trialExpiry = new Date(Date.now() + trialDays * 86400000).toISOString();
+        }
+      } else {
+        const directVal = document.getElementById('trialDirectDate').value;
+        if (!directVal) {
+          App.toast('Please select an expiration date & time!', 'error');
+          return;
+        }
+        const dt = new Date(directVal);
+        trialExpiry = dt.toISOString();
+        trialDays = Math.max(1, Math.round((dt.getTime() - Date.now()) / 86400000));
+      }
+
+      const trialBtn = document.getElementById('createTrialBtn');
+      const stdBtn = document.getElementById('createStandardBtn');
+      if (trialBtn) trialBtn.disabled = true;
+      if (stdBtn) stdBtn.disabled = true;
+
+      const result = await App.createUser(username, password, limit, isTrial, limit, trialDays, trialExpiry);
+
+      if (trialBtn) trialBtn.disabled = false;
+      if (stdBtn) stdBtn.disabled = false;
+
       if (result.success) {
-        // Automatically inject 1 test trial UID valid for 24h into the user account
-        await App.addUid(username, randomUid, '[TEST] Trial Account', expiry);
-        App.toast(`Trial Account Created for "${username}"!`, 'success');
-        
+        App.toast(`Created ${isTrial ? 'Trial' : 'Standard'} Account for "${username}"!`, 'success');
         document.getElementById('createUserForm').reset();
-        document.getElementById('newMaxUids').value = '10';
+        document.getElementById('newMaxUids').value = '2';
         renderUsers();
       } else {
-        App.toast(result.msg || 'Failed to create trial account', 'error');
+        App.toast(result.msg || 'Failed to create account', 'error');
       }
-    });
+    }
+
+    const createTrialBtnEl = document.getElementById('createTrialBtn');
+    if (createTrialBtnEl) createTrialBtnEl.addEventListener('click', () => handleCreateAccount(true));
+
+    const createStandardBtnEl = document.getElementById('createStandardBtn');
+    if (createStandardBtnEl) createStandardBtnEl.addEventListener('click', () => handleCreateAccount(false));
+
+    // ── Quick Trial 24h Button ──
+    const createTestAccountBtnEl = document.getElementById('createTestAccountBtn');
+    if (createTestAccountBtnEl) {
+      createTestAccountBtnEl.addEventListener('click', () => {
+        const daysRadio = document.querySelector('input[name="trialExpiryMode"][value="days"]');
+        if (daysRadio) { daysRadio.checked = true; presetDaysDiv.style.display = 'block'; directDateDiv.style.display = 'none'; }
+        document.getElementById('trialDaysSelect').value = '1';
+        document.getElementById('newMaxUids').value = '2';
+        const uname = prompt('Enter username for the 24-hour trial account:');
+        if (uname && uname.trim()) {
+          document.getElementById('newUsername').value = uname.trim().toLowerCase();
+          document.getElementById('newPassword').value = 'trial123';
+          App.toast('Filled form with 24h trial settings — click "Create Trial Account" to confirm.', 'info');
+        }
+      });
+    }
 
     // ── Clear Testing Data ──
     document.getElementById('clearTestingDataBtn').addEventListener('click', async () => {
@@ -663,12 +989,14 @@
 
     // ── Initial load ──
     renderUsers();
+    renderAllowlist();
     renderProtoPool();
     loadDownloadConfig();
 
     // Auto-refresh every 30 seconds
     setInterval(() => {
       renderUsers();
+      renderAllowlist();
       renderProtoPool();
     }, 30000);
   </script>

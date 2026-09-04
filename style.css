@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════
-   DP — UID Management System
+   TITAN BYPASS — UID Management System
    Premium Dark-Mode Theme
    ═══════════════════════════════════════════════════ */
 
@@ -22,9 +22,9 @@
   --primary-glow-soft: rgba(138, 43, 226, 0.10);
   --border-primary:    rgba(138, 43, 226, 0.25);
 
-  --red:           #e53935;
-  --red-hover:     #ef5350;
-  --red-dim:       #c62828;
+  --red:           #d500f9;
+  --red-hover:     #dd33fa;
+  --red-dim:       #aa00c7;
   --red-glow:      rgba(229, 57, 53, 0.25);
   --red-glow-soft: rgba(229, 57, 53, 0.10);
 
@@ -671,18 +671,51 @@ select.form-input {
   user-select: none;
 }
 
-/* ═══════════ FOOTER ═══════════ */
-.footer {
-  text-align: center;
-  padding: 1.2rem;
-  font-size: 0.75rem;
-  color: var(--text-400);
-  border-top: 1px solid var(--border);
-  position: relative;
-  z-index: 1;
+/* ── Filter Pills & Search Utilities ── */
+.filter-pills {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-.footer a { color: var(--primary); }
+.filter-pill {
+  font-size: 0.78rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-light);
+  color: var(--text-300);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.filter-pill.active, .filter-pill:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px var(--primary-glow);
+}
+
+.copy-btn {
+  background: transparent;
+  border: 1px solid var(--border-light);
+  color: var(--text-300);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.copy-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-glow-soft);
+}
 
 /* ═══════════ ANIMATIONS ═══════════ */
 .fade-in {

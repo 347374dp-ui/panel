@@ -2,7 +2,7 @@
    DP PANEL - Unified Admin Website JS Engine
    Firebase REST API client for:
      1. UID Bypass Accounts (firebase node: /users/)
-     2. DP Panel Accounts (firebase node: /dp_panel_users/)
+     2. TITAN BYPASS Panel Accounts (firebase node: /dp_panel_users/)
      3. Feature Definitions (firebase node: /feature_definitions/)
    =================================================== */
 
@@ -267,7 +267,7 @@ const App = (() => {
     return await fbGet(`users/${username}`);
   };
 
-  const createUser = async (username, password, maxUids = 10) => {
+  const createUser = async (username, password, maxUids = 10, isTrial = false, trialLimit = 2, trialDays = 1, trialExpiry = '') => {
     const existing = await fbGet(`users/${username}`);
     if (existing) return { success: false, msg: 'Username already exists.' };
     if (username === 'admin') return { success: false, msg: 'Cannot use "admin" as username.' };
@@ -282,7 +282,11 @@ const App = (() => {
       displayName: username,
       secret,
       active: true,
-      maxUids: maxUids || 10,
+      is_trial: isTrial,
+      trial_limit: isTrial ? trialLimit : maxUids,
+      trial_days: trialDays,
+      trial_expiry: trialExpiry,
+      maxUids: isTrial ? trialLimit : maxUids,
       createdAt: new Date().toISOString(),
       uids: []
     };
@@ -315,6 +319,79 @@ const App = (() => {
     if (!Array.isArray(uids)) uids = Object.values(uids);
     uids = uids.filter(u => u.uid !== uidValue);
     await fbPatch(`users/${username}`, { uids });
+  };
+
+  const addUid = async (username, uidValue, displayName, days = 30) => {
+    const user = await fbGet(`users/${username}`);
+    if (!user) return { success: false, msg: `User "${username}" not found.` };
+
+    let uids = user.uids || [];
+    if (!Array.isArray(uids)) uids = Object.values(uids);
+
+    if (uids.some(u => String(u.uid) === String(uidValue))) {
+      return { success: false, msg: `UID ${uidValue} is already added for user "${username}".` };
+    }
+
+    const expiryDate = parseInt(days) > 0 ? new Date(Date.now() + parseInt(days) * 86400000).toISOString() : '';
+    const newUidObj = {
+      uid: String(uidValue),
+      displayName: displayName || uidValue,
+      status: 'Active',
+      addedAt: new Date().toISOString(),
+      expiry: expiryDate
+    };
+
+    uids.push(newUidObj);
+    await fbPatch(`users/${username}`, { uids });
+    return { success: true };
+  };
+
+  // ==========================================
+  // UID ALLOWLIST (GLOBAL / INDEPENDENT BASE)
+  // ==========================================
+  const getAllowlist = async () => {
+    const data = await fbGet('allowlist');
+    if (!data) return [];
+    return Object.keys(data).map(key => {
+      const item = data[key];
+      if (typeof item === 'object' && item !== null) {
+        return { uid: key, ...item };
+      }
+      return { uid: key, name: String(item), status: 'Active' };
+    });
+  };
+
+  const addAllowlistUid = async (uidValue, name, days = 0) => {
+    uidValue = String(uidValue).trim();
+    if (!uidValue || !/^\d+$/.test(uidValue)) return { success: false, msg: 'Please enter a valid numeric UID.' };
+    const existing = await fbGet(`allowlist/${uidValue}`);
+    if (existing) return { success: false, msg: `UID ${uidValue} is already on the Allowlist.` };
+
+    const parsedDays = parseInt(days) || 0;
+    const expiryDate = parsedDays > 0 ? new Date(Date.now() + parsedDays * 86400000).toISOString() : '';
+    const entry = {
+      uid: uidValue,
+      name: name ? name.trim() : uidValue,
+      status: 'Active',
+      addedAt: new Date().toISOString(),
+      expiry: expiryDate
+    };
+
+    await fbPut(`allowlist/${uidValue}`, entry);
+    return { success: true };
+  };
+
+  const removeAllowlistUid = async (uidValue) => {
+    await fbDelete(`allowlist/${String(uidValue).trim()}`);
+    return { success: true };
+  };
+
+  const toggleAllowlistUid = async (uidValue) => {
+    const current = await fbGet(`allowlist/${String(uidValue).trim()}`);
+    if (!current) return false;
+    const newStatus = current.status === 'Active' ? 'Disabled' : 'Active';
+    await fbPatch(`allowlist/${String(uidValue).trim()}`, { status: newStatus });
+    return newStatus;
   };
 
   // ==========================================
@@ -520,6 +597,12 @@ const App = (() => {
     toggleUserActive,
     updateUserMaxUids,
     removeUid,
+    addUid,
+    // Allowlist (Independent / Main Base)
+    getAllowlist,
+    addAllowlistUid,
+    removeAllowlistUid,
+    toggleAllowlistUid,
     // Panel users
     getAllPanelUsers,
     getPanelUser,
