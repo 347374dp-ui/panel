@@ -418,12 +418,13 @@
         const statusText = user.active ? 'Active' : 'Disabled';
         const created = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—';
 
+        const uName = user.username || user._key || 'Unknown';
         // Main user row
         const tr = document.createElement('tr');
         tr.className = 'user-expand-row';
         tr.innerHTML = `
           <td>
-            <strong>${user.username}</strong>
+            <strong>${uName}</strong>
             ${user.is_trial ? `<span style="margin-left:6px;font-size:0.7rem;background:rgba(255,152,0,0.15);border:1px solid rgba(255,152,0,0.4);color:var(--amber);padding:2px 6px;border-radius:4px;">🧪 Trial</span>` : ''}
           </td>
           <td class="${statusClass}">${statusText}</td>

@@ -260,7 +260,11 @@ const App = (() => {
   const getAllUsers = async () => {
     const users = await fbGet('users');
     if (!users) return [];
-    return Object.keys(users).map(key => ({ ...users[key], _key: key }));
+    return Object.keys(users).map(key => ({
+      username: key,
+      ...users[key],
+      _key: key
+    }));
   };
 
   const getUser = async (username) => {
