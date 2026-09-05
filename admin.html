@@ -34,6 +34,12 @@
     .expiry-radio-group { display: flex; gap: 1.2rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
     .expiry-radio-group label { font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; }
     @media(max-width:600px){ .overview-grid{ grid-template-columns:1fr 1fr; } }
+      .card-title {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+      font-style: normal !important;
+      font-weight: 700 !important;
+      letter-spacing: -0.01em !important;
+    }
   </style>
 </head>
 <body>
@@ -86,8 +92,178 @@
       </div>
     </section>
 
+        <!-- ── IN-GAME BLOCK NOTIFICATION CUSTOMIZER ── -->
+    <section class="card fade-in" style="margin-bottom:1.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+        <div>
+          <h3 class="card-title" style="margin-bottom:.25rem;">📢 In-Game Block Notification Customizer</h3>
+          <p class="card-subtitle">Customize the alert popup displayed inside the game when an unauthorized UID attempts to log in</p>
+        </div>
+        <button class="btn btn-primary" id="saveNotifConfigBtn">💾 Save Notification Settings</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:1.5rem;align-items:start;">
+        <!-- Left: Configuration fields -->
+        <div style="background:var(--bg-1);border:1px solid var(--border);border-radius:10px;padding:1.25rem;display:flex;flex-direction:column;gap:1.1rem;">
+          
+                    <!-- Line 1: Project / Header (WYSIWYG Rich Editor) -->
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem;">
+              <label style="font-size:.8rem;font-weight:600;color:var(--text-200);">Line 1: Project / Header</label>
+              <span id="lenLine1" style="font-size:0.75rem;color:var(--text-300);">0/25 chars</span>
+            </div>
+            <!-- Formatting toolbar -->
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:0.35rem;flex-wrap:wrap;background:rgba(255,255,255,0.02);padding:4px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
+              <span style="font-size:0.72rem;color:var(--text-300);margin-right:2px;">🎨 Select text &amp; click color:</span>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifHeaderEditor" data-color="#ff3b30" style="width:20px;height:20px;border-radius:50%;background:#ff3b30;border:2px solid #555;cursor:pointer;" title="Color Red"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifHeaderEditor" data-color="#ffffff" style="width:20px;height:20px;border-radius:50%;background:#ffffff;border:2px solid #555;cursor:pointer;" title="Color White"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifHeaderEditor" data-color="#00e5ff" style="width:20px;height:20px;border-radius:50%;background:#00e5ff;border:2px solid #555;cursor:pointer;" title="Color Cyan"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifHeaderEditor" data-color="#a3e635" style="width:20px;height:20px;border-radius:50%;background:#a3e635;border:2px solid #555;cursor:pointer;" title="Color Green"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifHeaderEditor" data-color="#ffff00" style="width:20px;height:20px;border-radius:50%;background:#ffff00;border:2px solid #555;cursor:pointer;" title="Color Yellow"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifHeaderEditor" data-color="#c084fc" style="width:20px;height:20px;border-radius:50%;background:#c084fc;border:2px solid #555;cursor:pointer;" title="Color Purple"></button>
+              <label style="display:inline-flex;align-items:center;cursor:pointer;margin-left:4px;" title="Custom Color">
+                <input type="color" class="wysiwyg-custom-color" data-target="notifHeaderEditor" value="#ff3b30" style="width:22px;height:22px;padding:0;border:none;border-radius:50%;background:transparent;cursor:pointer;" />
+              </label>
+            </div>
+            <!-- WYSIWYG ContentEditable box -->
+            <div id="notifHeaderEditor" class="form-input" contenteditable="true" style="min-height:38px;height:auto;padding:0.5rem 0.75rem;color:#ff3b30;outline:none;line-height:1.5;white-space:pre-wrap;word-break:break-word;font-weight:700;">DP UID BYPASS</div>
+          </div>
+
+          <!-- Line 2: Dedicated UID Field with Interactive Button & Rich Colors -->
+          <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:0.85rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;">
+              <label style="font-size:.8rem;font-weight:600;color:var(--text-200);">Line 2: UID Display Line</label>
+              <span id="lenUid" style="font-size:0.75rem;color:var(--text-300);">16/25 chars</span>
+            </div>
+
+            <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.4rem;flex-wrap:wrap;">
+              <!-- Insert UID Button -->
+              <button type="button" id="insertUidChipBtn" class="btn btn-dark btn-sm" style="display:inline-flex;align-items:center;gap:5px;background:rgba(0,229,255,0.12);color:var(--cyan);border:1px solid rgba(0,229,255,0.3);font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;">
+                <span>➕</span> <span>Add UID Button</span>
+              </button>
+              <!-- Color toolbar for Line 2 -->
+              <div style="display:inline-flex;align-items:center;gap:5px;margin-left:auto;">
+                <span style="font-size:0.72rem;color:var(--text-300);">🎨 Color:</span>
+                <button type="button" class="wysiwyg-color-btn" data-target="notifLine2Editor" data-color="#ffffff" style="width:18px;height:18px;border-radius:50%;background:#ffffff;border:2px solid #555;cursor:pointer;" title="Color White"></button>
+                <button type="button" class="wysiwyg-color-btn" data-target="notifLine2Editor" data-color="#00e5ff" style="width:18px;height:18px;border-radius:50%;background:#00e5ff;border:2px solid #555;cursor:pointer;" title="Color Cyan"></button>
+                <button type="button" class="wysiwyg-color-btn" data-target="notifLine2Editor" data-color="#a3e635" style="width:18px;height:18px;border-radius:50%;background:#a3e635;border:2px solid #555;cursor:pointer;" title="Color Green"></button>
+                <button type="button" class="wysiwyg-color-btn" data-target="notifLine2Editor" data-color="#ffff00" style="width:18px;height:18px;border-radius:50%;background:#ffff00;border:2px solid #555;cursor:pointer;" title="Color Yellow"></button>
+                <button type="button" class="wysiwyg-color-btn" data-target="notifLine2Editor" data-color="#ff3b30" style="width:18px;height:18px;border-radius:50%;background:#ff3b30;border:2px solid #555;cursor:pointer;" title="Color Red"></button>
+                <label style="display:inline-flex;align-items:center;cursor:pointer;" title="Custom Color">
+                  <input type="color" class="wysiwyg-custom-color" data-target="notifLine2Editor" value="#ffffff" style="width:20px;height:20px;padding:0;border:none;border-radius:50%;background:transparent;cursor:pointer;" />
+                </label>
+              </div>
+            </div>
+
+            <!-- Rich input box supporting interactive chip & rich text colors -->
+            <div id="notifLine2Editor" contenteditable="true" style="min-height:40px;padding:0.5rem 0.75rem;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;color:#fff;font-size:0.9rem;outline:none;line-height:1.6;display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
+              <span>UID:&nbsp;</span><span class="uid-tag-chip" contenteditable="false" style="display:inline-flex;align-items:center;background:linear-gradient(135deg, rgba(0,229,255,0.25), rgba(0,100,255,0.35));border:1px solid rgba(0,229,255,0.5);color:#00e5ff;font-weight:700;padding:1px 7px;border-radius:5px;font-size:0.8rem;user-select:none;margin:0 2px;">👤 UID</span>
+            </div>
+            <div style="font-size:0.75rem;color:var(--text-300);margin-top:0.35rem;">
+              Game will display: <code style="color:var(--cyan);background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:4px;"><span id="uidDisplayPreview">UID: eg.123456789</span></code>
+            </div>
+          </div>
+
+          <!-- Line 3: Notice / Status Message (WYSIWYG Rich Editor) -->
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem;">
+              <label style="font-size:.8rem;font-weight:600;color:var(--text-200);">Line 3: Notice / Status Message</label>
+              <span id="lenStatus" style="font-size:0.75rem;color:var(--text-300);">0/25 chars</span>
+            </div>
+            <!-- Formatting toolbar -->
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:0.35rem;flex-wrap:wrap;background:rgba(255,255,255,0.02);padding:4px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
+              <span style="font-size:0.72rem;color:var(--text-300);margin-right:2px;">🎨 Select text &amp; click color:</span>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifStatusEditor" data-color="#ffffff" style="width:20px;height:20px;border-radius:50%;background:#ffffff;border:2px solid #555;cursor:pointer;" title="Color White"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifStatusEditor" data-color="#00e5ff" style="width:20px;height:20px;border-radius:50%;background:#00e5ff;border:2px solid #555;cursor:pointer;" title="Color Cyan"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifStatusEditor" data-color="#a3e635" style="width:20px;height:20px;border-radius:50%;background:#a3e635;border:2px solid #555;cursor:pointer;" title="Color Green"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifStatusEditor" data-color="#ffff00" style="width:20px;height:20px;border-radius:50%;background:#ffff00;border:2px solid #555;cursor:pointer;" title="Color Yellow"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifStatusEditor" data-color="#ff3b30" style="width:20px;height:20px;border-radius:50%;background:#ff3b30;border:2px solid #555;cursor:pointer;" title="Color Red"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifStatusEditor" data-color="#c084fc" style="width:20px;height:20px;border-radius:50%;background:#c084fc;border:2px solid #555;cursor:pointer;" title="Color Purple"></button>
+              <label style="display:inline-flex;align-items:center;cursor:pointer;margin-left:4px;" title="Custom Color">
+                <input type="color" class="wysiwyg-custom-color" data-target="notifStatusEditor" value="#ffffff" style="width:22px;height:22px;padding:0;border:none;border-radius:50%;background:transparent;cursor:pointer;" />
+              </label>
+            </div>
+            <!-- WYSIWYG ContentEditable box -->
+            <div id="notifStatusEditor" class="form-input" contenteditable="true" style="min-height:38px;height:auto;padding:0.5rem 0.75rem;color:#ffffff;outline:none;line-height:1.5;white-space:pre-wrap;word-break:break-word;">Not in allowlist</div>
+          </div>
+
+          <!-- Line 4: Dedicated Contact / Support (WYSIWYG Rich Editor) -->
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem;">
+              <label style="font-size:.8rem;font-weight:600;color:var(--text-200);">Line 4: Contact / Support</label>
+              <span id="lenContact" style="font-size:0.75rem;color:var(--text-300);">0/25 chars</span>
+            </div>
+            <!-- Formatting toolbar -->
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:0.35rem;flex-wrap:wrap;background:rgba(255,255,255,0.02);padding:4px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
+              <span style="font-size:0.72rem;color:var(--text-300);margin-right:2px;">🎨 Select text &amp; click color:</span>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifContactEditor" data-color="#ffffff" style="width:20px;height:20px;border-radius:50%;background:#ffffff;border:2px solid #555;cursor:pointer;" title="Color White"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifContactEditor" data-color="#00e5ff" style="width:20px;height:20px;border-radius:50%;background:#00e5ff;border:2px solid #555;cursor:pointer;" title="Color Cyan"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifContactEditor" data-color="#a3e635" style="width:20px;height:20px;border-radius:50%;background:#a3e635;border:2px solid #555;cursor:pointer;" title="Color Green"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifContactEditor" data-color="#ffff00" style="width:20px;height:20px;border-radius:50%;background:#ffff00;border:2px solid #555;cursor:pointer;" title="Color Yellow"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifContactEditor" data-color="#ff3b30" style="width:20px;height:20px;border-radius:50%;background:#ff3b30;border:2px solid #555;cursor:pointer;" title="Color Red"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifContactEditor" data-color="#c084fc" style="width:20px;height:20px;border-radius:50%;background:#c084fc;border:2px solid #555;cursor:pointer;" title="Color Purple"></button>
+              <label style="display:inline-flex;align-items:center;cursor:pointer;margin-left:4px;" title="Custom Color">
+                <input type="color" class="wysiwyg-custom-color" data-target="notifContactEditor" value="#00e5ff" style="width:22px;height:22px;padding:0;border:none;border-radius:50%;background:transparent;cursor:pointer;" />
+              </label>
+            </div>
+            <!-- WYSIWYG ContentEditable box -->
+            <div id="notifContactEditor" class="form-input" contenteditable="true" style="min-height:38px;height:auto;padding:0.5rem 0.75rem;color:#00e5ff;outline:none;line-height:1.5;white-space:pre-wrap;word-break:break-word;">Contact: @1anddp</div>
+          </div>
+
+          <!-- Line 5: Optional Extra Note (WYSIWYG Rich Editor) -->
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem;">
+              <label style="font-size:.8rem;font-weight:600;color:var(--text-200);">Line 5: Extra Note <span style="color:var(--text-300);font-weight:normal;">(Optional - leave empty to omit)</span></label>
+              <span id="lenLine4" style="font-size:0.75rem;color:var(--text-300);">0/25 chars</span>
+            </div>
+            <!-- Formatting toolbar -->
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:0.35rem;flex-wrap:wrap;background:rgba(255,255,255,0.02);padding:4px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
+              <span style="font-size:0.72rem;color:var(--text-300);margin-right:2px;">🎨 Select text &amp; click color:</span>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifLine4Editor" data-color="#ffffff" style="width:20px;height:20px;border-radius:50%;background:#ffffff;border:2px solid #555;cursor:pointer;" title="Color White"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifLine4Editor" data-color="#00e5ff" style="width:20px;height:20px;border-radius:50%;background:#00e5ff;border:2px solid #555;cursor:pointer;" title="Color Cyan"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifLine4Editor" data-color="#a3e635" style="width:20px;height:20px;border-radius:50%;background:#a3e635;border:2px solid #555;cursor:pointer;" title="Color Green"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifLine4Editor" data-color="#ffff00" style="width:20px;height:20px;border-radius:50%;background:#ffff00;border:2px solid #555;cursor:pointer;" title="Color Yellow"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifLine4Editor" data-color="#ff3b30" style="width:20px;height:20px;border-radius:50%;background:#ff3b30;border:2px solid #555;cursor:pointer;" title="Color Red"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifLine4Editor" data-color="#c084fc" style="width:20px;height:20px;border-radius:50%;background:#c084fc;border:2px solid #555;cursor:pointer;" title="Color Purple"></button>
+              <label style="display:inline-flex;align-items:center;cursor:pointer;margin-left:4px;" title="Custom Color">
+                <input type="color" class="wysiwyg-custom-color" data-target="notifLine4Editor" value="#ffff00" style="width:22px;height:22px;padding:0;border:none;border-radius:50%;background:transparent;cursor:pointer;" />
+              </label>
+            </div>
+            <!-- WYSIWYG ContentEditable box -->
+            <div id="notifLine4Editor" class="form-input" contenteditable="true" style="min-height:38px;height:auto;padding:0.5rem 0.75rem;color:#ffff00;outline:none;line-height:1.5;white-space:pre-wrap;word-break:break-word;"></div>
+          </div>
+
+        </div>
+
+        <!-- Right: Real-time In-Game Preview -->
+        <div style="background:var(--bg-1);border:1px solid var(--border);border-radius:10px;padding:1.25rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+            <label style="font-size:.8rem;font-weight:600;color:var(--text-200);">🎮 Free Fire Box Preview (Exact Game Width)</label>
+            <span style="font-size:0.72rem;color:var(--amber);background:rgba(255,170,0,0.1);padding:2px 8px;border-radius:4px;border:1px solid rgba(255,170,0,0.2);">Max ~25 chars / line</span>
+          </div>
+          <div style="background:#090910;border-radius:10px;padding:2.5rem 1rem;display:flex;align-items:center;justify-content:center;min-height:260px;position:relative;background-image:radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);background-size:16px 16px;">
+            <!-- Free Fire in-game style alert box with exact narrow width matching game UI -->
+            <div id="notifPreviewBox" style="position:relative;background:rgba(10,10,14,0.95);padding:1.2rem 1.25rem;text-align:center;width:240px;max-width:240px;box-shadow:0 8px 32px rgba(0,0,0,0.6);border:1px solid rgba(255,170,0,0.25);word-wrap:break-word;overflow:hidden;">
+              <!-- Corner brackets like in Free Fire screenshot -->
+              <div style="position:absolute;top:0;left:0;width:10px;height:10px;border-top:2px solid #ffaa00;border-left:2px solid #ffaa00;"></div>
+              <div style="position:absolute;top:0;right:0;width:10px;height:10px;border-top:2px solid #ffaa00;border-right:2px solid #ffaa00;"></div>
+              <div style="position:absolute;bottom:0;left:0;width:10px;height:10px;border-bottom:2px solid #ffaa00;border-left:2px solid #ffaa00;"></div>
+              <div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-bottom:2px solid #ffaa00;border-right:2px solid #ffaa00;"></div>
+
+              <div id="previewHeader" style="font-size:0.95rem;font-weight:800;letter-spacing:0.5px;margin-bottom:0.75rem;text-transform:uppercase;color:#ff3b30;line-height:1.2;">DP UID BYPASS</div>
+              <div id="previewUid" style="font-size:0.92rem;font-weight:700;margin-bottom:0.6rem;color:#ffffff;line-height:1.2;">UID: ###</div>
+              <div id="previewStatus" style="font-size:0.88rem;font-weight:600;margin-bottom:0.6rem;color:#ffffff;line-height:1.2;">Not in allowlist</div>
+              <div id="previewContact" style="font-size:0.85rem;font-weight:600;margin-bottom:0.25rem;color:#00e5ff;line-height:1.2;">Contact: @1anddp</div>
+              <div id="previewLine4" style="font-size:0.8rem;font-weight:500;display:none;margin-top:0.5rem;color:#ffff00;line-height:1.2;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <div class="admin-grid">
 
+      <div class="admin-left-col" style="display:flex;flex-direction:column;gap:1.5rem;">
       <!-- Create User / Trial Account -->
       <section class="card fade-in">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;flex-wrap:wrap;gap:.5rem;">
@@ -219,8 +395,10 @@
         </div>
       </section>
 
-      <!-- User List -->
-      <section class="card fade-in">
+      </div>
+
+      <!-- User List (Right Column) -->
+      <section class="card fade-in" style="min-width:0;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
           <div>
             <h3 class="card-title" style="margin-bottom:.25rem;">👥 User Accounts</h3>
@@ -449,14 +627,16 @@
         if (uids.length > 0) {
           uidHtml = `<table style="width:100%;"><thead><tr><th>UID</th><th>Name</th><th>Status</th><th>Expiry</th><th>Action</th></tr></thead><tbody>`;
           uids.forEach(uid => {
-            const isExpired = new Date(uid.expiry) < new Date();
+            const isLifetime = !uid.expiry || String(uid.expiry).toLowerCase() === 'lifetime';
+            const isExpired = !isLifetime && (new Date(uid.expiry) < new Date());
             const uidStatus = uid.status === 'Inactive' ? 'Inactive' : (isExpired ? 'Expired' : 'Active');
             const uidStatusClass = uidStatus === 'Active' ? 'status-active' : 'status-disabled';
+            const expDisplay = isLifetime ? '<span style="color:var(--green);font-weight:600;">Lifetime</span>' : (uid.expiry ? new Date(uid.expiry).toLocaleDateString() : '—');
             uidHtml += `<tr>
               <td><strong>${uid.uid}</strong> <button class="copy-btn copy-uid-btn" data-uid="${uid.uid}" title="Copy UID">📋 Copy</button></td>
               <td>${uid.displayName || '—'}</td>
               <td class="${uidStatusClass}">${uidStatus}</td>
-              <td>${uid.expiry ? new Date(uid.expiry).toLocaleDateString() : '—'}</td>
+              <td>${expDisplay}</td>
               <td><button class="btn btn-red btn-sm admin-remove-uid-btn" data-username="${user.username}" data-uid="${uid.uid}">Remove</button></td>
             </tr>`;
           });
@@ -988,11 +1168,479 @@
       }
     });
 
+    // ── In-Game Notification Customizer Logic ──
+    const updateCharBadge = (badgeId, length, maxAllowed = 25) => {
+      const badge = document.getElementById(badgeId);
+      if (!badge) return;
+      badge.textContent = `${length}/${maxAllowed} chars`;
+      if (length > maxAllowed) {
+        badge.style.color = 'var(--red)';
+        badge.style.fontWeight = '700';
+      } else {
+        badge.style.color = 'var(--text-300)';
+        badge.style.fontWeight = 'normal';
+      }
+    };
+
+    // Helper to extract text from contenteditable while turning UID chip into placeholder or preview
+    const getEditorContent = (forPreview = false) => {
+      const editor = document.getElementById('notifLine2Editor');
+      if (!editor) return '';
+      let text = '';
+      editor.childNodes.forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          text += node.textContent;
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          if (node.classList && node.classList.contains('uid-tag-chip')) {
+            text += forPreview ? '###' : '{uid}';
+          } else {
+            text += node.textContent;
+          }
+        }
+      });
+      return text.replace(/\u00a0/g, ' '); // normalize non-breaking spaces
+    };
+
+    // Helper to set contenteditable content from saved string (containing {uid})
+    const setEditorContent = (savedStr) => {
+      const editor = document.getElementById('notifLine2Editor');
+      if (!editor) return;
+      editor.innerHTML = '';
+      if (!savedStr) {
+        savedStr = 'UID: {uid} Not in allowlist';
+      }
+      const parts = savedStr.split('{uid}');
+      for (let i = 0; i < parts.length; i++) {
+        if (parts[i]) {
+          const span = document.createElement('span');
+          span.textContent = parts[i];
+          editor.appendChild(span);
+        }
+        if (i < parts.length - 1) {
+          const chip = document.createElement('span');
+          chip.className = 'uid-tag-chip';
+          chip.contentEditable = 'false';
+          chip.style.cssText = 'display:inline-flex;align-items:center;background:linear-gradient(135deg, rgba(0,229,255,0.25), rgba(0,100,255,0.35));border:1px solid rgba(0,229,255,0.5);color:#00e5ff;font-weight:700;padding:1px 7px;border-radius:5px;font-size:0.8rem;user-select:none;margin:0 2px;cursor:default;';
+          chip.textContent = '👤 UID';
+          editor.appendChild(chip);
+        }
+      }
+    };
+
+    const sizeMap = {
+      default: { font: '0.9rem', unity: null },
+      small:   { font: '0.78rem', unity: '22' },
+      xsmall:  { font: '0.68rem', unity: '18' }
+    };
+
+                    // ── WYSIWYG Free Fire Rich Text Engine ──
+    const rgbToHex = (col) => {
+      if (!col) return '';
+      if (col.startsWith('#')) return col.toLowerCase();
+      const rgb = col.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+      if (!rgb) return '';
+      const hex = (x) => ('0' + parseInt(x).toString(16)).slice(-2);
+      return '#' + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
+    };
+
+    // Convert Free Fire tags (e.g. "[ffffff]Contact: [00e5ff]@1anddp") into visual colored HTML spans
+    const ffTagsToHtml = (ffStr, defaultColor = '#ffffff') => {
+      if (!ffStr) return '';
+      const regex = /\[([0-9a-fA-F]{6})\]/g;
+      let html = '';
+      let lastIdx = 0;
+      let curCol = defaultColor;
+      let match;
+      while ((match = regex.exec(ffStr)) !== null) {
+        const textBefore = ffStr.substring(lastIdx, match.index);
+        if (textBefore) {
+          const esc = textBefore.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          html += `<span style="color:${curCol}">${esc}</span>`;
+        }
+        curCol = '#' + match[1].toLowerCase();
+        lastIdx = regex.lastIndex;
+      }
+      const textAfter = ffStr.substring(lastIdx);
+      if (textAfter) {
+        const esc = textAfter.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        html += `<span style="color:${curCol}">${esc}</span>`;
+      }
+      return html;
+    };
+
+    // Convert WYSIWYG editor DOM tree back to Free Fire tags
+    const htmlToFfTags = (editorEl, fallbackColor = '#ffffff') => {
+      if (!editorEl) return '';
+      let res = '';
+      let lastCol = '';
+
+      const walk = (node, activeColor) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const txt = node.textContent;
+          if (txt) {
+            const col = (activeColor || fallbackColor).replace('#', '').toLowerCase();
+            if (col !== lastCol) {
+              res += `[${col}]`;
+              lastCol = col;
+            }
+            res += txt;
+          }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          if (node.classList && node.classList.contains('uid-tag-chip')) {
+            const col = (activeColor || fallbackColor).replace('#', '').toLowerCase();
+            if (col !== lastCol) {
+              res += `[${col}]`;
+              lastCol = col;
+            }
+            res += '{uid}';
+            return;
+          }
+          let nodeColor = activeColor;
+          if (node.style && node.style.color) {
+            nodeColor = rgbToHex(node.style.color) || activeColor;
+          }
+          node.childNodes.forEach(child => walk(child, nodeColor));
+        }
+      };
+
+      walk(editorEl, fallbackColor);
+      return res.replace(/\u00a0/g, ' ').trim();
+    };
+
+    // Apply color to selected text in contenteditable
+    const applyColorToSelection = (editorId, colorHex) => {
+      const editor = document.getElementById(editorId);
+      if (!editor) return;
+      editor.focus();
+
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+
+      const range = sel.getRangeAt(0);
+      if (range.collapsed) {
+        editor.style.color = colorHex;
+        updateNotifPreview();
+        return;
+      }
+
+      const span = document.createElement('span');
+      span.style.color = colorHex;
+      try {
+        const frag = range.extractContents();
+        const cleanNode = (n) => {
+          if (n.nodeType === Node.ELEMENT_NODE && n.tagName === 'SPAN') {
+            n.removeAttribute('style');
+          }
+          n.childNodes.forEach(cleanNode);
+        };
+        cleanNode(frag);
+        span.appendChild(frag);
+        range.insertNode(span);
+        sel.removeAllRanges();
+      } catch (e) {
+        document.execCommand('foreColor', false, colorHex);
+      }
+      updateNotifPreview();
+    };
+
+    // Render inline Free Fire [xxxxxx] color tags into rich HTML for in-game preview
+    const renderColorTags = (text, defaultColor = '#ffffff') => {
+      if (!text) return '';
+      let escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const regex = /\[([0-9a-fA-F]{6})\]/g;
+      let match;
+      let lastIndex = 0;
+      let currentColor = defaultColor;
+      let html = '';
+
+      while ((match = regex.exec(escaped)) !== null) {
+        const textBefore = escaped.substring(lastIndex, match.index);
+        if (textBefore) {
+          html += `<span style="color:${currentColor}">${textBefore}</span>`;
+        }
+        currentColor = '#' + match[1];
+        lastIndex = regex.lastIndex;
+      }
+      const textAfter = escaped.substring(lastIndex);
+      if (textAfter) {
+        html += `<span style="color:${currentColor}">${textAfter}</span>`;
+      }
+      return html;
+    };
+
+    // Helper to set contenteditable content for Line 2 from saved string (containing {uid} and color tags)
+    const setLine2EditorContent = (savedStr, defaultColor = '#ffffff') => {
+      const editor = document.getElementById('notifLine2Editor');
+      if (!editor) return;
+      editor.innerHTML = '';
+      if (!savedStr) {
+        savedStr = 'UID: {uid}';
+      }
+      // Parse into segments of [color], text, and {uid}
+      const regex = /(\[[0-9a-fA-F]{6}\]|\{uid\})/g;
+      let lastIdx = 0;
+      let curCol = defaultColor;
+      let match;
+      while ((match = regex.exec(savedStr)) !== null) {
+        const textBefore = savedStr.substring(lastIdx, match.index);
+        if (textBefore) {
+          const span = document.createElement('span');
+          span.style.color = curCol;
+          span.textContent = textBefore;
+          editor.appendChild(span);
+        }
+        const token = match[0];
+        if (token === '{uid}') {
+          const chip = document.createElement('span');
+          chip.className = 'uid-tag-chip';
+          chip.contentEditable = 'false';
+          chip.style.cssText = 'display:inline-flex;align-items:center;background:linear-gradient(135deg, rgba(0,229,255,0.25), rgba(0,100,255,0.35));border:1px solid rgba(0,229,255,0.5);color:#00e5ff;font-weight:700;padding:1px 7px;border-radius:5px;font-size:0.8rem;user-select:none;margin:0 2px;cursor:default;';
+          chip.textContent = '👤 UID';
+          editor.appendChild(chip);
+        } else {
+          // [color] tag
+          curCol = '#' + token.slice(1, -1).toLowerCase();
+        }
+        lastIdx = regex.lastIndex;
+      }
+      const textAfter = savedStr.substring(lastIdx);
+      if (textAfter) {
+        const span = document.createElement('span');
+        span.style.color = curCol;
+        span.textContent = textAfter;
+        editor.appendChild(span);
+      }
+    };
+
+    const updateNotifPreview = () => {
+      const headerEditor  = document.getElementById('notifHeaderEditor');
+      const headerFfText  = htmlToFfTags(headerEditor, rgbToHex(headerEditor?.style.color) || '#ff3b30');
+
+      const line2Editor   = document.getElementById('notifLine2Editor');
+      const line2FfText   = htmlToFfTags(line2Editor, rgbToHex(line2Editor?.style.color) || '#ffffff');
+      const line2Preview  = line2FfText.replace(/\{uid\}/g, '###');
+
+      const statusEditor  = document.getElementById('notifStatusEditor');
+      const statusFfText  = htmlToFfTags(statusEditor, rgbToHex(statusEditor?.style.color) || '#ffffff');
+
+      const contactEditor = document.getElementById('notifContactEditor');
+      const contactFfText = htmlToFfTags(contactEditor, rgbToHex(contactEditor?.style.color) || '#00e5ff');
+
+      const line4Editor   = document.getElementById('notifLine4Editor');
+      const line4FfText   = htmlToFfTags(line4Editor, rgbToHex(line4Editor?.style.color) || '#ffff00');
+
+      // Character count indicators
+      updateCharBadge('lenLine1', (headerEditor?.textContent || '').length, 25);
+      updateCharBadge('lenUid', (line2Editor?.textContent || '').replace('👤 UID', '17739362239').length, 25);
+      updateCharBadge('lenStatus', (statusEditor?.textContent || '').length, 25);
+      updateCharBadge('lenContact', (contactEditor?.textContent || '').length, 25);
+      updateCharBadge('lenLine4', (line4Editor?.textContent || '').length, 25);
+
+      // Hint under UID editor
+      const hint = document.getElementById('uidDisplayPreview');
+      if (hint) hint.textContent = (line2Editor?.textContent || '').replace('👤 UID', 'eg.123456789');
+
+      // Update in-game preview elements
+      const pHdr  = document.getElementById('previewHeader');
+      const pUid  = document.getElementById('previewUid');
+      const pStat = document.getElementById('previewStatus');
+      const pCont = document.getElementById('previewContact');
+      const p4    = document.getElementById('previewLine4');
+
+      if (pHdr) {
+        pHdr.innerHTML = renderColorTags(headerFfText, '#ff3b30');
+      }
+      if (pUid) {
+        pUid.innerHTML = renderColorTags(line2Preview, '#ffffff');
+      }
+      if (pStat) {
+        pStat.innerHTML = renderColorTags(statusFfText, '#ffffff');
+      }
+      if (pCont) {
+        pCont.innerHTML = renderColorTags(contactFfText, '#00e5ff');
+      }
+      if (p4) {
+        if (line4Editor && line4Editor.textContent.trim()) {
+          p4.innerHTML = renderColorTags(line4FfText, '#ffff00');
+          p4.style.display = 'block';
+        } else {
+          p4.style.display = 'none';
+        }
+      }
+    };
+    // Insert UID Chip Button Click
+    const insertUidBtn = document.getElementById('insertUidChipBtn');
+    if (insertUidBtn) {
+      insertUidBtn.addEventListener('click', () => {
+        const editor = document.getElementById('notifLine2Editor');
+        if (!editor) return;
+        
+        editor.focus();
+        const chip = document.createElement('span');
+        chip.className = 'uid-tag-chip';
+        chip.contentEditable = 'false';
+        chip.style.cssText = 'display:inline-flex;align-items:center;background:linear-gradient(135deg, rgba(0,229,255,0.25), rgba(0,100,255,0.35));border:1px solid rgba(0,229,255,0.5);color:#00e5ff;font-weight:700;padding:1px 7px;border-radius:5px;font-size:0.8rem;user-select:none;margin:0 2px;cursor:default;';
+        chip.textContent = '👤 UID';
+
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          if (editor.contains(range.commonAncestorContainer)) {
+            range.deleteContents();
+            range.insertNode(chip);
+            range.setStartAfter(chip);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          } else {
+            editor.appendChild(chip);
+          }
+        } else {
+          editor.appendChild(chip);
+        }
+        updateNotifPreview();
+      });
+    }
+
+    const editorEl = document.getElementById('notifLine2Editor');
+    if (editorEl) {
+      editorEl.addEventListener('input', updateNotifPreview);
+      editorEl.addEventListener('blur', updateNotifPreview);
+    }
+
+    ['notifHeader', 'notifHeaderColor', 'notifUidColor', 'notifStatus', 'notifStatusColor', 'notifContact', 'notifContactColor', 'notifLine4', 'notifLine4Color'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', updateNotifPreview);
+        el.addEventListener('change', updateNotifPreview);
+      }
+    });
+
+        const loadNotifConfig = async () => {
+      const cfg = await App.getNotifConfig();
+      if (cfg) {
+        // Line 1 Header WYSIWYG
+        const headerEditor = document.getElementById('notifHeaderEditor');
+        if (headerEditor) {
+          const rawHdr = cfg.header_text || cfg.line1_text || 'DP UID BYPASS';
+          headerEditor.innerHTML = ffTagsToHtml(rawHdr, cfg.header_color || '#ff3b30');
+          if (cfg.header_color) headerEditor.style.color = cfg.header_color;
+        }
+
+        // Line 2 UID WYSIWYG
+        const line2Editor = document.getElementById('notifLine2Editor');
+        if (line2Editor) {
+          let uidLineVal = cfg.uid_line_text || (cfg.uid_prefix ? `${cfg.uid_prefix}{uid}` : 'UID: {uid}');
+          setLine2EditorContent(uidLineVal, cfg.uid_color || '#ffffff');
+          if (cfg.uid_color) line2Editor.style.color = cfg.uid_color;
+        }
+
+        // Line 3 Status WYSIWYG
+        const statusEditor = document.getElementById('notifStatusEditor');
+        if (statusEditor) {
+          const rawStat = cfg.status_text || 'Not in allowlist';
+          statusEditor.innerHTML = ffTagsToHtml(rawStat, cfg.status_color || '#ffffff');
+          if (cfg.status_color) statusEditor.style.color = cfg.status_color;
+        }
+
+        // Line 4 Contact WYSIWYG
+        const contactEditor = document.getElementById('notifContactEditor');
+        if (contactEditor) {
+          const rawCont = cfg.contact_text || cfg.line3_text || 'Contact: @1anddp';
+          contactEditor.innerHTML = ffTagsToHtml(rawCont, cfg.contact_color || '#00e5ff');
+          if (cfg.contact_color) contactEditor.style.color = cfg.contact_color;
+        }
+
+        // Line 5 Note WYSIWYG
+        const line4Editor = document.getElementById('notifLine4Editor');
+        if (line4Editor) {
+          const rawL4 = cfg.line4_text || '';
+          line4Editor.innerHTML = ffTagsToHtml(rawL4, cfg.line4_color || '#ffff00');
+          if (cfg.line4_color) line4Editor.style.color = cfg.line4_color;
+        }
+
+        updateNotifPreview();
+      }
+    };
+
+        const saveNotifBtn = document.getElementById('saveNotifConfigBtn');
+    if (saveNotifBtn) {
+      saveNotifBtn.addEventListener('click', async () => {
+        saveNotifBtn.disabled = true;
+        saveNotifBtn.textContent = 'Saving...';
+
+        const formatEndToken = (str) => {
+          const t = str.trim();
+          if (!t) return '';
+          return /[!?:;.,)\]}>]$/.test(t) ? t : t + '!';
+        };
+
+        const headerEditor = document.getElementById('notifHeaderEditor');
+        const headerFfRaw = htmlToFfTags(headerEditor, rgbToHex(headerEditor?.style.color) || '#ff3b30');
+
+        const line2Editor = document.getElementById('notifLine2Editor');
+        const line2FfRaw = htmlToFfTags(line2Editor, rgbToHex(line2Editor?.style.color) || '#ffffff');
+
+        const statusEditor = document.getElementById('notifStatusEditor');
+        const statusFfRaw = htmlToFfTags(statusEditor, rgbToHex(statusEditor?.style.color) || '#ffffff');
+
+        const contactEditor = document.getElementById('notifContactEditor');
+        const contactFfRaw = htmlToFfTags(contactEditor, rgbToHex(contactEditor?.style.color) || '#00e5ff');
+
+        const line4Editor = document.getElementById('notifLine4Editor');
+        const line4FfRaw = htmlToFfTags(line4Editor, rgbToHex(line4Editor?.style.color) || '#ffff00');
+
+        const cfg = {
+          header_text: headerFfRaw,
+          header_color: rgbToHex(headerEditor?.style.color) || '#ff3b30',
+          uid_line_text: line2FfRaw,
+          uid_color: rgbToHex(line2Editor?.style.color) || '#ffffff',
+          status_text: statusFfRaw,
+          status_color: rgbToHex(statusEditor?.style.color) || '#ffffff',
+          contact_text: formatEndToken(contactFfRaw),
+          contact_color: rgbToHex(contactEditor?.style.color) || '#00e5ff',
+          line4_text: line4Editor && line4Editor.textContent.trim() ? formatEndToken(line4FfRaw) : '',
+          line4_color: rgbToHex(line4Editor?.style.color) || '#ffff00',
+          updatedAt: new Date().toISOString()
+        };
+        await App.saveNotifConfig(cfg);
+        saveNotifBtn.disabled = false;
+        saveNotifBtn.textContent = '💾 Save Notification Settings';
+        App.toast('In-game notification settings saved successfully!', 'success');
+      });
+    }
+
+        // ── WYSIWYG Editor Listeners for All Lines ──
+    ['notifHeaderEditor', 'notifLine2Editor', 'notifStatusEditor', 'notifContactEditor', 'notifLine4Editor'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', updateNotifPreview);
+        el.addEventListener('blur', updateNotifPreview);
+      }
+    });
+
+    document.querySelectorAll('.wysiwyg-color-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = btn.getAttribute('data-target');
+        const color = btn.getAttribute('data-color');
+        applyColorToSelection(targetId, color);
+      });
+    });
+
+    document.querySelectorAll('.wysiwyg-custom-color').forEach(inp => {
+      inp.addEventListener('input', (e) => {
+        const targetId = inp.getAttribute('data-target');
+        applyColorToSelection(targetId, e.target.value);
+      });
+    });
+
     // ── Initial load ──
     renderUsers();
     renderAllowlist();
     renderProtoPool();
     loadDownloadConfig();
+    loadNotifConfig();
 
     // Auto-refresh every 30 seconds
     setInterval(() => {

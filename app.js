@@ -630,6 +630,9 @@ const App = (() => {
     getProtoPool,
     addProto,
     deleteProto,
+    // Notification Config
+    getNotifConfig: () => fbGet('config/notification'),
+    saveNotifConfig: (cfg) => fbPut('config/notification', cfg),
     // Utils
     toast,
     getTimeLeft
