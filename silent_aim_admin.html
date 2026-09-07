@@ -7,91 +7,56 @@
   <title>Silent Aim Admin — DP Control</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,600;1,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <style>
-    .status-active { color: var(--green); font-weight: 600; }
-    .status-expired { color: #f39c12; font-weight: 600; }
-    .status-disabled { color: var(--red); font-weight: 600; }
-
-    .expiry-badge {
-      display: inline-block;
-      padding: 0.2rem 0.6rem;
-      border-radius: 50px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-    .badge-active { background: rgba(0, 200, 83, 0.15); color: #00c853; border: 1px solid rgba(0, 200, 83, 0.3); }
-    .badge-expired { background: rgba(243, 156, 18, 0.15); color: #f39c12; border: 1px solid rgba(243, 156, 18, 0.3); }
-    .badge-disabled { background: rgba(229, 57, 53, 0.15); color: #e53935; border: 1px solid rgba(229, 57, 53, 0.3); }
-    .badge-lifetime { background: rgba(123, 47, 255, 0.15); color: #9b4fff; border: 1px solid rgba(123, 47, 255, 0.3); }
-
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(4px);
-      z-index: 9998;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .action-btn-group {
-      display: flex;
-      gap: 0.35rem;
-      flex-wrap: wrap;
-    }
-
-    .time-left-tag {
-      font-family: monospace;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #00e5ff;
-    }
-  </style>
 </head>
 <body>
 
   <!-- NAVBAR -->
   <nav class="navbar" id="navbar">
     <div class="nav-brand">
-      <h1>DP Control Panel</h1>
-      <span class="nav-subtitle">Silent Aim Admin</span>
+      <div class="nav-logo">DP</div>
+      <div class="nav-titles">
+        <h1>DP Control Panel</h1>
+        <span class="nav-subtitle">Silent Aim Admin</span>
+      </div>
     </div>
-    <div class="nav-right" style="gap: 1rem;">
-      <a href="admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">UID Dashboard</a>
-      <a href="panel_admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Panel Dashboard</a>
-      <a href="offsets_manager.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Offsets</a>
-      <a href="silent_aim_admin.html" class="btn btn-primary btn-sm" style="border-radius:50px;">Silent Aim</a>
-      <a href="feature_builder.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Feature Builder</a>
-      <a href="aob_finder.html" class="btn btn-dark btn-sm" style="border-radius:50px;">AOB Safe Finder</a>
+    <div class="nav-right">
+      <a href="admin.html" class="nav-link">UID Dashboard</a>
+      <a href="panel_admin.html" class="nav-link">Panel Dashboard</a>
+      <a href="offsets_manager.html" class="nav-link">Offsets</a>
+      <a href="silent_aim_admin.html" class="nav-link active">Silent Aim</a>
+      <a href="feature_builder.html" class="nav-link">Feature Builder</a>
+      <a href="aob_finder.html" class="nav-link">AOB Safe Finder</a>
       <button class="btn btn-dark btn-sm" id="logoutBtn">Sign out</button>
     </div>
   </nav>
 
   <main class="page-wrapper">
 
-    <!-- ── OVERVIEW STATS ── -->
-    <section class="card fade-in" style="margin-bottom:1.5rem;">
-      <h3 class="card-title" style="margin-bottom:.25rem;">🎯 Silent Aim Overview</h3>
-      <p class="card-subtitle" style="margin-bottom:1rem;">Live client accounts & time-lock expiry tracking (Time manipulation protected)</p>
+    <!-- ── PAGE HEADER ── -->
+    <div class="page-header fade-in">
+      <h2>🎯 Silent Aim Admin</h2>
+      <p>Client accounts & time-lock subscription expiry (protected against clock manipulation)</p>
+    </div>
 
-      <div class="overview-grid" style="display: flex; flex-direction: row; gap: 1.5rem; flex-wrap: wrap;">
-        <div class="overview-card">
-          <div class="oval" id="statTotalUsers" style="color:var(--text-100);">—</div>
+    <!-- ── OVERVIEW STATS ── -->
+    <section class="card fade-in card-hover-glow" style="margin-bottom:1.5rem;">
+      <div class="overview-grid" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="overview-card float-in" style="animation-delay: 0.05s;">
+          <div class="oval stat-count" id="statTotalUsers" style="color:var(--text-100);">—</div>
           <div class="olabel">Total Accounts</div>
         </div>
-        <div class="overview-card">
-          <div class="oval" id="statActiveUsers" style="color:var(--green);">—</div>
+        <div class="overview-card float-in" style="animation-delay: 0.1s;">
+          <div class="oval stat-count" id="statActiveUsers" style="color:var(--green);">—</div>
           <div class="olabel">Active Subscriptions</div>
         </div>
-        <div class="overview-card">
-          <div class="oval" id="statExpiredUsers" style="color:#f39c12;">—</div>
+        <div class="overview-card float-in" style="animation-delay: 0.15s;">
+          <div class="oval stat-count" id="statExpiredUsers" style="color:var(--orange);">—</div>
           <div class="olabel">Expired Accounts</div>
         </div>
-        <div class="overview-card">
-          <div class="oval" id="statDisabledUsers" style="color:var(--red);">—</div>
+        <div class="overview-card float-in" style="animation-delay: 0.2s;">
+          <div class="oval stat-count" id="statDisabledUsers" style="color:var(--red);">—</div>
           <div class="olabel">Disabled Accounts</div>
         </div>
       </div>
@@ -100,21 +65,21 @@
     <div class="admin-grid" style="grid-template-columns: 360px 1fr;">
 
       <!-- Create Account -->
-      <section class="card fade-in">
-        <h3 class="card-title">Add Silent Aim Account</h3>
-        <p class="card-subtitle">Create account with server-validated subscription time duration</p>
+      <section class="card fade-in card-hover-glow" style="position: sticky; top: 90px;">
+        <h3 class="card-title">➕ Add Silent Aim Account</h3>
+        <p class="card-subtitle">Create account with server-validated subscription time</p>
         <form id="createSilentUserForm" autocomplete="off">
           <div class="form-group">
-            <label for="newUsername">USERNAME</label>
+            <label for="newUsername">👤 USERNAME</label>
             <input type="text" id="newUsername" class="form-input" placeholder="e.g. player1" required />
           </div>
           <div class="form-group">
-            <label for="newPassword">PASSWORD</label>
-            <input type="text" id="newPassword" class="form-input" placeholder="Password" required />
+            <label for="newPassword">🔐 PASSWORD</label>
+            <input type="text" id="newPassword" class="form-input" placeholder="Secure password" required />
           </div>
 
           <div class="form-group">
-            <label for="durationSelect">SUBSCRIPTION TIME</label>
+            <label for="durationSelect">⏱️ SUBSCRIPTION TIME</label>
             <select id="durationSelect" class="form-input">
               <option value="1">1 Hour</option>
               <option value="12">12 Hours</option>
@@ -129,38 +94,44 @@
           </div>
 
           <div class="form-group" id="customDateGroup" style="display:none;">
-            <label for="customExpiryDate">EXPIRES AT (UTC)</label>
+            <label for="customExpiryDate">📅 EXPIRES AT (UTC)</label>
             <input type="datetime-local" id="customExpiryDate" class="form-input" />
           </div>
 
-          <button type="submit" class="btn btn-primary btn-full" style="margin-top:1.2rem;" id="createSilentUserBtn">Create Client Account</button>
+          <button type="submit" class="btn btn-primary btn-full" style="margin-top:1.2rem;" id="createSilentUserBtn">✨ Create Account</button>
         </form>
       </section>
 
       <!-- Accounts List -->
       <section class="card fade-in">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:1rem;">
           <div>
-            <h3 class="card-title" style="margin-bottom:.25rem;">Client Subscription Accounts</h3>
+            <h3 class="card-title" style="margin-bottom:.25rem;">👥 Client Subscription Accounts</h3>
             <p class="card-subtitle">Manage duration & expiry times (Protected against PC clock manipulation)</p>
           </div>
-          <button class="btn btn-dark btn-sm" id="refreshUsersBtn">↻ Refresh</button>
+          <button class="btn btn-dark btn-sm" id="refreshUsersBtn" style="display:flex;align-items:center;gap:0.4rem;">
+            <span>↻</span> <span>Refresh</span>
+          </button>
         </div>
-        <div style="overflow-x:auto;">
+        <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--border);">
           <table class="data-table" id="userTable">
             <thead>
-              <tr>
-                <th>Username</th>
-                <th>Status</th>
-                <th>Expires At</th>
-                <th>Time Left</th>
-                <th>Actions</th>
+              <tr style="background:rgba(79,140,255,0.05);">
+                <th style="text-align:left;">Username</th>
+                <th style="text-align:center;">Status</th>
+                <th style="text-align:center;">Expires At</th>
+                <th style="text-align:center;">Time Left</th>
+                <th style="text-align:right;">Actions</th>
               </tr>
             </thead>
             <tbody id="userTableBody">
               <tr><td colspan="5" style="text-align:center;color:var(--text-300);padding:2rem;">Loading accounts...</td></tr>
             </tbody>
           </table>
+        </div>
+
+        <div style="margin-top:1rem;padding:0.8rem;background:rgba(34,211,238,0.05);border-radius:10px;border-left:3px solid var(--cyan);font-size:0.82rem;color:var(--text-200);">
+          🔒 <strong>Secure:</strong> All expiry times are server-validated and protected against PC clock manipulation attacks.
         </div>
       </section>
 
@@ -285,8 +256,8 @@
           }
         }
 
-        const formattedExpiry = user.expiresAt 
-          ? new Date(user.expiresAt).toLocaleString() 
+        const formattedExpiry = user.expiresAt
+          ? new Date(user.expiresAt).toLocaleString()
           : '<span style="color:#9b4fff;">Never</span>';
 
         tr.innerHTML = `

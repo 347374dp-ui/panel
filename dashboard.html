@@ -3,37 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DP Control Panel — All UIDs Dashboard" />
   <title>DP Panel - UIDs Dashboard</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
+  <!-- NAVBAR -->
   <nav class="navbar">
     <div class="nav-brand">
-      <h1>DP Control Panel</h1>
-      <span class="nav-subtitle">All UIDs Dashboard</span>
+      <div class="nav-logo">DP</div>
+      <div class="nav-titles">
+        <h1>DP Control Panel</h1>
+        <span class="nav-subtitle">All UIDs Dashboard</span>
+      </div>
     </div>
     <div class="nav-right">
-      <a href="admin.html" class="btn btn-dark btn-sm">User Management</a>
-      <button class="btn btn-dark btn-sm" onclick="sessionStorage.clear();window.location.href='index.html';">Logout</button>
+      <a href="admin.html" class="nav-link">UID Dashboard</a>
+      <a href="dashboard.html" class="nav-link active">All UIDs</a>
+      <a href="panel_admin.html" class="nav-link">Panel Dashboard</a>
+      <a href="offsets_manager.html" class="nav-link">Offsets</a>
+      <a href="silent_aim_admin.html" class="nav-link">Silent Aim</a>
+      <a href="feature_builder.html" class="nav-link">Feature Builder</a>
+      <a href="aob_finder.html" class="nav-link">AOB Safe Finder</a>
+      <button class="btn btn-dark btn-sm" onclick="sessionStorage.clear();window.location.href='index.html';">Sign out</button>
     </div>
   </nav>
 
-  <div class="page-wrapper">
-    <div class="overview-grid fade-in">
-      <div class="overview-card"><div class="oval" id="statTotalUids">-</div><div class="olabel">Total UIDs</div></div>
-      <div class="overview-card"><div class="oval" style="color:var(--green)" id="statActiveUids">-</div><div class="olabel">Active</div></div>
-      <div class="overview-card"><div class="oval" style="color:var(--orange)" id="statExpiredUids">-</div><div class="olabel">Expired</div></div>
-      <div class="overview-card"><div class="oval" style="color:var(--red)" id="statInactiveUids">-</div><div class="olabel">Inactive</div></div>
+  <main class="page-wrapper">
+
+    <!-- ── PAGE HEADER ── -->
+    <div class="page-header fade-in">
+      <h2>🛰 All UIDs Dashboard</h2>
+      <p>Live countdown of every user UID with expiry status</p>
     </div>
 
-    <div class="card fade-in">
+    <!-- ── OVERVIEW STATS ── -->
+    <section class="card fade-in card-hover-glow" style="margin-bottom:1.5rem;">
+      <div class="overview-grid">
+        <div class="overview-card float-in" style="animation-delay: 0.05s;">
+          <div class="oval stat-count" id="statTotalUids" style="color:var(--text-100);">-</div>
+          <div class="olabel">Total UIDs</div>
+        </div>
+        <div class="overview-card float-in" style="animation-delay: 0.1s;">
+          <div class="oval stat-count" id="statActiveUids" style="color:var(--green);">-</div>
+          <div class="olabel">Active</div>
+        </div>
+        <div class="overview-card float-in" style="animation-delay: 0.15s;">
+          <div class="oval stat-count" id="statExpiredUids" style="color:var(--orange);">-</div>
+          <div class="olabel">Expired</div>
+        </div>
+        <div class="overview-card float-in" style="animation-delay: 0.2s;">
+          <div class="oval stat-count" id="statInactiveUids" style="color:var(--red);">-</div>
+          <div class="olabel">Inactive</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── UID TABLE ── -->
+    <section class="card fade-in">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
         <div>
           <h3 class="card-title">All UIDs</h3>
           <p class="card-subtitle">Live countdown view of all user UIDs</p>
         </div>
-        <button class="btn btn-dark btn-sm" onclick="refreshDashboard()">Refresh</button>
+        <button class="btn btn-dark btn-sm" onclick="refreshDashboard()">↻ Refresh</button>
       </div>
 
       <div style="overflow-x:auto;">
@@ -50,8 +87,9 @@
           <tbody id="uidTableBody"></tbody>
         </table>
       </div>
-    </div>
-  </div>
+    </section>
+
+  </main>
 
   <footer class="footer">
     <p>&copy; 2026 <a href="#">DP</a> - Control Panel</p>
@@ -59,6 +97,8 @@
 
   <div class="toast-container" id="toastContainer"></div>
 
+  <canvas id="particleCanvas"></canvas>
+  <script src="particles.js"></script>
   <script src="app.js"></script>
   <script>
     if (sessionStorage.getItem('loggedIn') !== 'admin') {

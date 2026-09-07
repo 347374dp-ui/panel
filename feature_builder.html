@@ -7,200 +7,54 @@
   <title>Feature Builder — DP Control</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,600;1,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <style>
-    .builder-grid {
-      display: grid;
-      grid-template-columns: 380px 1fr;
-      gap: 1.5rem;
-      align-items: start;
-    }
-
-    /* Feature Form Card */
-    .feature-form-card {
-      position: sticky;
-      top: 80px;
-    }
-
-    /* Feature Table */
-    .feature-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    .feature-table thead th {
-      padding: 0.65rem 0.8rem;
-      text-align: left;
-      font-weight: 600;
-      font-size: 0.78rem;
-      color: var(--text-200);
-      border-bottom: 1px solid var(--border-light);
-      white-space: nowrap;
-    }
-    .feature-table tbody td {
-      padding: 0.65rem 0.8rem;
-      color: var(--text-200);
-      border-bottom: 1px solid var(--border);
-      vertical-align: middle;
-    }
-    .feature-table tbody tr:hover td { background: var(--bg-hover); }
-    .feature-table .actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-
-    /* Category Badge */
-    .cat-badge {
-      display: inline-block;
-      padding: 0.18rem 0.6rem;
-      border-radius: 50px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      background: var(--red-glow-soft);
-      color: var(--red);
-      border: 1px solid var(--border-red);
-    }
-
-    /* Key badge */
-    .key-badge {
-      display: inline-block;
-      padding: 0.18rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-family: 'Courier New', monospace;
-      background: rgba(255,255,255,0.04);
-      color: var(--text-200);
-      border: 1px solid var(--border);
-    }
-
-    /* Preview Section */
-    .preview-section {
-      margin-top: 1.5rem;
-    }
-
-    .preview-card {
-      background: var(--bg-card-alt);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.2rem;
-    }
-
-    .preview-checkbox-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-      margin-top: 0.75rem;
-    }
-
-    .preview-checkbox-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: default;
-      font-size: 0.85rem;
-      color: var(--text-200);
-    }
-
-    .preview-checkbox-item input {
-      width: 16px;
-      height: 16px;
-      accent-color: var(--red);
-      pointer-events: none;
-    }
-
-    .preview-cat-header {
-      font-size: 0.72rem;
-      font-weight: 600;
-      color: var(--text-300);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 0.4rem;
-      margin-top: 0.75rem;
-      padding-bottom: 0.3rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .preview-cat-header:first-child { margin-top: 0; }
-
-    /* Edit modal */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.6);
-      z-index: 9998;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-card {
-      width: 90%;
-      max-width: 420px;
-    }
-
-    /* Stats strip */
-    .stats-strip {
-      display: flex;
-      gap: 1.5rem;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-    }
-
-    .stats-strip .stat-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .stats-strip .stat-number {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: var(--text-100);
-    }
-
-    .stats-strip .stat-label {
-      font-size: 0.75rem;
-      color: var(--text-300);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    @media(max-width:768px) {
-      .builder-grid { grid-template-columns: 1fr; }
-      .feature-form-card { position: static; }
-    }
-  </style>
 </head>
 <body>
 
   <!-- NAVBAR -->
   <nav class="navbar" id="navbar">
     <div class="nav-brand">
-      <h1>DP Control Panel</h1>
-      <span class="nav-subtitle">Feature Builder</span>
+      <div class="nav-logo">DP</div>
+      <div class="nav-titles">
+        <h1>DP Control Panel</h1>
+        <span class="nav-subtitle">Feature Builder</span>
+      </div>
     </div>
-    <div class="nav-right" style="gap: 1rem;">
-      <a href="admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">UID Dashboard</a>
-      <a href="panel_admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Panel Dashboard</a>
-      <a href="offsets_manager.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Offsets</a>
-      <a href="silent_aim_admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Silent Aim</a>
-      <a href="feature_builder.html" class="btn btn-primary btn-sm" style="border-radius:50px;">Feature Builder</a>
-      <a href="aob_finder.html" class="btn btn-dark btn-sm" style="border-radius:50px;">AOB Safe Finder</a>
+    <div class="nav-right">
+      <a href="admin.html" class="nav-link">UID Dashboard</a>
+      <a href="panel_admin.html" class="nav-link">Panel Dashboard</a>
+      <a href="offsets_manager.html" class="nav-link">Offsets</a>
+      <a href="silent_aim_admin.html" class="nav-link">Silent Aim</a>
+      <a href="feature_builder.html" class="nav-link active">Feature Builder</a>
+      <a href="aob_finder.html" class="nav-link">AOB Safe Finder</a>
       <button class="btn btn-dark btn-sm" id="logoutBtn">Sign out</button>
     </div>
   </nav>
 
   <main class="page-wrapper">
 
+    <!-- ── PAGE HEADER ── -->
+    <div class="page-header fade-in">
+      <h2>🧩 Feature Builder</h2>
+      <p>Define & manage cheat features assignable to panel client accounts</p>
+    </div>
+
     <!-- Stats -->
-    <section class="card fade-in" style="margin-bottom:1.5rem;">
+    <section class="card fade-in card-hover-glow" style="margin-bottom:1.5rem;">
       <h3 class="card-title" style="margin-bottom:.25rem;">Feature Definitions</h3>
       <p class="card-subtitle" style="margin-bottom:1rem;">Manage available features that can be assigned to panel client accounts</p>
       <div class="stats-strip">
-        <div class="stat-item">
-          <span class="stat-number" id="statTotalFeatures">—</span>
+        <div class="stat-item float-in" style="animation-delay: 0.05s;">
+          <span class="stat-number stat-count" id="statTotalFeatures">—</span>
           <span class="stat-label">Total<br>Features</span>
         </div>
-        <div class="stat-item">
-          <span class="stat-number" id="statTotalCategories" style="color:var(--red);">—</span>
+        <div class="stat-item float-in" style="animation-delay: 0.1s;">
+          <span class="stat-number stat-count" id="statTotalCategories" style="color:var(--red);">—</span>
           <span class="stat-label">Total<br>Categories</span>
         </div>
-        <div class="stat-item">
-          <span class="stat-number" id="statTotalClients" style="color:var(--green);">—</span>
+        <div class="stat-item float-in" style="animation-delay: 0.15s;">
+          <span class="stat-number stat-count" id="statTotalClients" style="color:var(--green);">—</span>
           <span class="stat-label">Panel<br>Clients</span>
         </div>
       </div>
@@ -226,7 +80,7 @@
             <input type="text" id="featCategory" class="form-input" list="categoryList" placeholder="e.g. Movement" required />
             <datalist id="categoryList"></datalist>
           </div>
-          
+
           <div style="margin-top: 1rem; margin-bottom: 0.5rem; display: flex; gap: 1rem;">
             <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.85rem; color:var(--text-200); user-select:none;">
               <input type="checkbox" id="isMemoryPatch" style="width:16px;height:16px;accent-color:var(--red);" />
@@ -237,7 +91,7 @@
               <strong>IS AIMBOT PATCH?</strong>
             </label>
           </div>
-          
+
           <div id="aobInputs" style="display: none; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 6px; margin-bottom: 1rem; border: 1px solid var(--border);">
             <div class="form-group">
               <label for="featScan">SCAN PATTERN (HEX)</label>
@@ -254,7 +108,7 @@
               <label for="featAimScan">MAIN SCAN PATTERN (HEX)</label>
               <input type="text" id="featAimScan" class="form-input" placeholder="e.g. FF FF FF FF ..." />
             </div>
-            
+
             <div style="margin-top: 1rem;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
                 <label>OFFSET SWAPS</label>
@@ -351,7 +205,7 @@
         let typeBadge = '<span style="color:var(--text-400);font-size:0.8rem;">Toggle</span>';
         if (f.isAimbot) typeBadge = '<span style="color:var(--green);font-size:0.8rem;font-weight:bold;">⊕ Aimbot</span>';
         else if (f.scanHex && f.replaceHex) typeBadge = '<span style="color:var(--red);font-size:0.8rem;font-weight:bold;">⚙ Mem Patch</span>';
-        
+
         tr.innerHTML = `
           <td><span class="key-badge">${f.key}</span></td>
           <td><strong>${f.label}</strong></td>
@@ -383,7 +237,7 @@
     // ── Render Preview ──
     const renderPreview = (features) => {
       const container = document.getElementById('previewContainer');
-      
+
       // Group by category
       const groups = {};
       features.forEach(f => {
@@ -427,7 +281,7 @@
       const key = document.getElementById('featKey').value.trim();
       const label = document.getElementById('featLabel').value.trim();
       const category = document.getElementById('featCategory').value.trim();
-      
+
       let scanHex = '';
       let replaceHex = '';
       let isAimbot = false;
@@ -447,7 +301,7 @@
           App.toast('Please provide main scan pattern for aimbot.', 'error');
           return;
         }
-        
+
         // Collect offsets
         const offsetRows = document.querySelectorAll('.offset-row');
         offsetRows.forEach(row => {
@@ -494,7 +348,7 @@
 
     document.getElementById('restoreDefaultAimbotBtn').addEventListener('click', () => {
       document.getElementById('featAimScan').value = 'FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A5 43';
-      
+
       const list = document.getElementById('offsetList');
       list.innerHTML = `
         <div class="offset-row" style="display:flex; gap:0.5rem;">
@@ -572,7 +426,7 @@
                 <label>CATEGORY</label>
                 <input type="text" id="editCategory" class="form-input" list="categoryList" value="${feat.category}" />
               </div>
-              
+
               <div style="margin-top: 1rem; margin-bottom: 0.5rem; display: flex; gap: 1rem;">
                 <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.85rem; color:var(--text-200); user-select:none;">
                   <input type="checkbox" id="editIsPatch" style="width:16px;height:16px;accent-color:var(--red);" ${isPatch ? 'checked' : ''} />
@@ -583,7 +437,7 @@
                   <strong>IS AIMBOT PATCH?</strong>
                 </label>
               </div>
-              
+
               <div id="editAobInputs" style="display: ${isPatch ? 'block' : 'none'}; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 6px; margin-bottom: 1rem; border: 1px solid var(--border);">
                 <div class="form-group">
                   <label>SCAN PATTERN (HEX)</label>
@@ -600,7 +454,7 @@
                   <label>MAIN SCAN PATTERN (HEX)</label>
                   <input type="text" id="editAimScan" class="form-input" value="${isAimbot ? (feat.scanHex || '') : ''}" />
                 </div>
-                
+
                 <div style="margin-top: 1rem;">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
                     <label>OFFSET SWAPS</label>
@@ -623,7 +477,7 @@
           </div>
         `;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
-        
+
         document.getElementById('editIsPatch').addEventListener('change', (e) => {
           if (e.target.checked) document.getElementById('editIsAimbot').checked = false;
           document.getElementById('editAobInputs').style.display = e.target.checked ? 'block' : 'none';
@@ -638,7 +492,7 @@
 
         document.getElementById('editRestoreDefaultAimbotBtn').addEventListener('click', () => {
           document.getElementById('editAimScan').value = 'FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A5 43';
-          
+
           const list = document.getElementById('editOffsetList');
           list.innerHTML = `
             <div class="offset-row" style="display:flex; gap:0.5rem;">
@@ -667,7 +521,7 @@
         document.getElementById('saveEditBtn').addEventListener('click', async () => {
           const newLabel = document.getElementById('editLabel').value.trim();
           const newCategory = document.getElementById('editCategory').value.trim();
-          
+
           let scanHex = '';
           let replaceHex = '';
           let finalIsAimbot = false;

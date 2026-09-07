@@ -7,92 +7,66 @@
   <title>Admin Panel — DP Control</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,600;1,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <style>
-    .user-controls { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-    .status-active { color: var(--green); font-weight: 600; }
-    .status-disabled { color: var(--red); font-weight: 600; }
-    .uid-sub-table { margin-top: 0.5rem; background: var(--bg-1); border-radius: 8px; padding: 0.75rem; }
-    .uid-sub-table td { font-size: 0.8rem; padding: 0.3rem 0.5rem; }
-    .user-expand-row { cursor: pointer; }
-    .user-expand-row:hover { background: var(--bg-2); }
-    .uid-details { display: none; }
-    .uid-details.open { display: table-row; }
-    .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-    .overview-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; text-align: center; }
-    .overview-card .oval { font-size: 2rem; font-weight: 700; }
-    .overview-card .olabel { font-size: 0.75rem; color: var(--text-300); text-transform: uppercase; letter-spacing: .08em; margin-top: .25rem; }
-    .maxuid-input { width: 60px; text-align: center; }
-    select.form-input, select.form-input option {
-      background-color: #161b22 !important;
-      color: #e6edf3 !important;
-      border: 1px solid #30363d !important;
-    }
-    .expiry-box { background: var(--bg-1); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; margin-top: 0.75rem; }
-    .expiry-box-label { font-size: 0.78rem; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .07em; display: block; margin-bottom: 0.6rem; }
-    .expiry-radio-group { display: flex; gap: 1.2rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
-    .expiry-radio-group label { font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; }
-    @media(max-width:600px){ .overview-grid{ grid-template-columns:1fr 1fr; } }
-      .card-title {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-      font-style: normal !important;
-      font-weight: 700 !important;
-      letter-spacing: -0.01em !important;
-    }
-  </style>
 </head>
 <body>
 
   <!-- NAVBAR -->
   <nav class="navbar" id="navbar">
     <div class="nav-brand">
-      <h1>DP Control Panel</h1>
-      <span class="nav-subtitle">Admin Dashboard</span>
+      <div class="nav-logo">DP</div>
+      <div class="nav-titles">
+        <h1>DP Control Panel</h1>
+        <span class="nav-subtitle">UID Dashboard</span>
+      </div>
     </div>
-    <div class="nav-right" style="gap: 1rem;">
-      <a href="admin.html" class="btn btn-primary btn-sm" style="border-radius:50px;">UID Dashboard</a>
-      <a href="panel_admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Panel Dashboard</a>
-      <a href="offsets_manager.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Offsets</a>
-      <a href="silent_aim_admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Silent Aim</a>
-      <a href="feature_builder.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Feature Builder</a>
-      <a href="aob_finder.html" class="btn btn-dark btn-sm" style="border-radius:50px;">AOB Safe Finder</a>
+    <div class="nav-right">
+      <a href="admin.html" class="nav-link active">UID Dashboard</a>
+      <a href="panel_admin.html" class="nav-link">Panel Dashboard</a>
+      <a href="offsets_manager.html" class="nav-link">Offsets</a>
+      <a href="silent_aim_admin.html" class="nav-link">Silent Aim</a>
+      <a href="feature_builder.html" class="nav-link">Feature Builder</a>
+      <a href="aob_finder.html" class="nav-link">AOB Safe Finder</a>
       <button class="btn btn-dark btn-sm" id="logoutBtn">Sign out</button>
     </div>
   </nav>
 
   <main class="page-wrapper">
 
-    <!-- ── OVERVIEW STATS ── -->
-    <section class="card fade-in" style="margin-bottom:1.5rem;">
-      <h3 class="card-title" style="margin-bottom:.25rem;">Overview</h3>
-      <p class="card-subtitle" style="margin-bottom:1rem;">Live data from Firebase Database</p>
+    <!-- ── PAGE HEADER ── -->
+    <div class="page-header fade-in">
+      <h2>⚡ UID Dashboard</h2>
+      <p>Manage client accounts, UID allowlists & live in-game block notifications</p>
+    </div>
 
+    <!-- ── OVERVIEW STATS ── -->
+    <section class="card fade-in card-hover-glow" style="margin-bottom:1.5rem;">
       <div class="overview-grid">
-        <div class="overview-card">
-          <div class="oval" id="statTotalUsers" style="color:var(--text-100);">—</div>
+        <div class="overview-card float-in" style="animation-delay: 0.05s;">
+          <div class="oval stat-count" id="statTotalUsers" style="color:var(--text-100);">—</div>
           <div class="olabel">Total Users</div>
         </div>
-        <div class="overview-card">
-          <div class="oval" id="statActiveUsers" style="color:var(--green);">—</div>
+        <div class="overview-card float-in" style="animation-delay: 0.1s;">
+          <div class="oval stat-count" id="statActiveUsers" style="color:var(--green);">—</div>
           <div class="olabel">Active Users</div>
         </div>
-        <div class="overview-card">
-          <div class="oval" id="statDisabledUsers" style="color:var(--red);">—</div>
+        <div class="overview-card float-in" style="animation-delay: 0.15s;">
+          <div class="oval stat-count" id="statDisabledUsers" style="color:var(--red);">—</div>
           <div class="olabel">Disabled Users</div>
         </div>
-        <div class="overview-card">
-          <div class="oval" id="statTotalUids" style="color:var(--text-100);">—</div>
+        <div class="overview-card float-in" style="animation-delay: 0.2s;">
+          <div class="oval stat-count" id="statTotalUids" style="color:var(--text-100);">—</div>
           <div class="olabel">Total UIDs</div>
         </div>
-        <div class="overview-card">
-          <div class="oval" id="statActiveUids" style="color:var(--green);">—</div>
+        <div class="overview-card float-in" style="animation-delay: 0.25s;">
+          <div class="oval stat-count" id="statActiveUids" style="color:var(--green);">—</div>
           <div class="olabel">Active UIDs</div>
         </div>
       </div>
     </section>
 
-        <!-- ── IN-GAME BLOCK NOTIFICATION CUSTOMIZER ── -->
+    <!-- ── IN-GAME BLOCK NOTIFICATION CUSTOMIZER ── -->
     <section class="card fade-in" style="margin-bottom:1.5rem;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
         <div>
@@ -105,8 +79,8 @@
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:1.5rem;align-items:start;">
         <!-- Left: Configuration fields -->
         <div style="background:var(--bg-1);border:1px solid var(--border);border-radius:10px;padding:1.25rem;display:flex;flex-direction:column;gap:1.1rem;">
-          
-                    <!-- Line 1: Project / Header (WYSIWYG Rich Editor) -->
+
+          <!-- Line 1: Project / Header (WYSIWYG Rich Editor) -->
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem;">
               <label style="font-size:.8rem;font-weight:600;color:var(--text-200);">Line 1: Project / Header</label>
@@ -207,7 +181,7 @@
               </label>
             </div>
             <!-- WYSIWYG ContentEditable box -->
-            <div id="notifContactEditor" class="form-input" contenteditable="true" style="min-height:38px;height:auto;padding:0.5rem 0.75rem;color:#00e5ff;outline:none;line-height:1.5;white-space:pre-wrap;word-break:break-word;">Contact: @1anddp</div>
+            <div id="notifContactEditor" class="form-input" contenteditable="true" style="min-height:38px;height:auto;padding:0.5rem 0.75rem;color:#00e5ff;outline:none;line-height:1.5;white-space:pre-wrap;word-break:break-word;"><span style="color:#004cff">Contact : </span><span style="color:#c084fc">@1naddp</span> <span style="color:#004cff">ON </span><span style="color:#00e5ff">DISCORD !</span></div>
           </div>
 
           <!-- Line 5: Optional Extra Note (WYSIWYG Rich Editor) -->
@@ -230,7 +204,7 @@
               </label>
             </div>
             <!-- WYSIWYG ContentEditable box -->
-            <div id="notifLine4Editor" class="form-input" contenteditable="true" style="min-height:38px;height:auto;padding:0.5rem 0.75rem;color:#ffff00;outline:none;line-height:1.5;white-space:pre-wrap;word-break:break-word;"></div>
+            <div id="notifLine4Editor" class="form-input" contenteditable="true" style="min-height:38px;height:auto;padding:0.5rem 0.75rem;color:#ffff00;outline:none;line-height:1.5;white-space:pre-wrap;word-break:break-word;"><span style="color:#a6ff00">( ADD IT TO </span><span style="color:#ff3b30">• UID MANAGER </span><span style="color:#a6ff00">IF </span><span style="color:#ffff00">VIP </span><span style="color:#a6ff00">) !</span></div>
           </div>
 
         </div>
@@ -253,17 +227,17 @@
               <div id="previewHeader" style="font-size:0.95rem;font-weight:800;letter-spacing:0.5px;margin-bottom:0.75rem;text-transform:uppercase;color:#ff3b30;line-height:1.2;">DP UID BYPASS</div>
               <div id="previewUid" style="font-size:0.92rem;font-weight:700;margin-bottom:0.6rem;color:#ffffff;line-height:1.2;">UID: ###</div>
               <div id="previewStatus" style="font-size:0.88rem;font-weight:600;margin-bottom:0.6rem;color:#ffffff;line-height:1.2;">Not in allowlist</div>
-              <div id="previewContact" style="font-size:0.85rem;font-weight:600;margin-bottom:0.25rem;color:#00e5ff;line-height:1.2;">Contact: @1anddp</div>
-              <div id="previewLine4" style="font-size:0.8rem;font-weight:500;display:none;margin-top:0.5rem;color:#ffff00;line-height:1.2;"></div>
+              <div id="previewContact" style="font-size:0.85rem;font-weight:600;margin-bottom:0.25rem;color:#00e5ff;line-height:1.2;"><span style="color:#004cff">Contact : </span><span style="color:#c084fc">@1naddp</span> <span style="color:#004cff">ON </span><span style="color:#00e5ff">DISCORD !</span></div>
+              <div id="previewLine4" style="font-size:0.8rem;font-weight:500;display:block;margin-top:0.5rem;color:#ffff00;line-height:1.2;"><span style="color:#a6ff00">( ADD IT TO </span><span style="color:#ff3b30">• UID MANAGER </span><span style="color:#a6ff00">IF </span><span style="color:#ffff00">VIP </span><span style="color:#a6ff00">) !</span></div>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <div class="admin-grid">
+    <!-- ── USER CREATION + UID ALLOWLIST (side by side) ── -->
+    <div class="admin-grid" style="grid-template-columns: 1fr 1.25fr;">
 
-      <div class="admin-left-col" style="display:flex;flex-direction:column;gap:1.5rem;">
       <!-- Create User / Trial Account -->
       <section class="card fade-in">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;flex-wrap:wrap;gap:.5rem;">
@@ -323,15 +297,15 @@
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:1rem;">
-            <button type="button" class="btn" id="createTrialBtn" style="background:rgba(255,152,0,0.18);border:1px solid var(--amber);color:var(--amber);font-weight:600;">🧪 Create Trial Account</button>
-            <button type="button" class="btn btn-primary" id="createStandardBtn">👤 Create Standard Account</button>
+          <div class="account-action-grid">
+            <button type="button" class="btn btn-full" id="createTrialBtn" style="background:rgba(255,152,0,0.18);border:1px solid var(--amber);color:var(--amber);font-weight:600;">🧪 Create Trial Account</button>
+            <button type="button" class="btn btn-primary btn-full" id="createStandardBtn">👤 Create Standard Account</button>
           </div>
         </form>
       </section>
 
       <!-- UID Allowlist (Independent Base) -->
-      <section class="card fade-in" style="margin-top:1.25rem;">
+      <section class="card fade-in">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
           <div>
             <h3 class="card-title" style="margin:0;">🛡️ UID Allowlist (Independent Base)</h3>
@@ -395,51 +369,53 @@
         </div>
       </section>
 
+    </div>
+
+    <!-- ── USER ACCOUNTS (full width below) ── -->
+    <section class="card fade-in" style="margin-top:1.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+        <div>
+          <h3 class="card-title" style="margin-bottom:.25rem;">👥 User Accounts</h3>
+          <p class="card-subtitle">Click any user row to view or manage their assigned UIDs</p>
+        </div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+          <button class="btn btn-dark btn-sm" id="clearTestingDataBtn" style="color:var(--amber);border-color:var(--amber);">🧹 Clear Testing Data</button>
+          <button class="btn btn-dark btn-sm" id="refreshUsersBtn">↻ Refresh</button>
+        </div>
       </div>
 
-      <!-- User List (Right Column) -->
-      <section class="card fade-in" style="min-width:0;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
-          <div>
-            <h3 class="card-title" style="margin-bottom:.25rem;">👥 User Accounts</h3>
-            <p class="card-subtitle">Click any user row to view or manage their assigned UIDs</p>
-          </div>
-          <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-            <button class="btn btn-dark btn-sm" id="clearTestingDataBtn" style="color:var(--amber);border-color:var(--amber);">🧹 Clear Testing Data</button>
-            <button class="btn btn-dark btn-sm" id="refreshUsersBtn">↻ Refresh</button>
-          </div>
+      <!-- Search & Filter Bar -->
+      <div class="user-search-toolbar">
+        <div class="user-search-field">
+          <span class="user-search-icon" aria-hidden="true">⌕</span>
+          <input type="text" id="userSearchInput" class="form-input" placeholder="Search username or UID..." />
+          <button type="button" class="user-search-button" aria-label="Search user accounts" onclick="const input=document.getElementById('userSearchInput');input.dispatchEvent(new Event('input',{bubbles:true}));input.focus();">Search</button>
         </div>
-
-        <!-- Search & Filter Bar -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;gap:0.75rem;flex-wrap:wrap;background:var(--bg-1);padding:0.6rem 0.9rem;border-radius:8px;border:1px solid var(--border);">
-          <input type="text" id="userSearchInput" class="form-input" placeholder="🔍 Search username or UID..." style="max-width:240px;font-size:0.8rem;padding:0.45rem 0.75rem;" />
-          <div class="filter-pills" id="userFilterPills">
-            <button class="filter-pill active" data-filter="all">All</button>
-            <button class="filter-pill" data-filter="active">Active</button>
-            <button class="filter-pill" data-filter="trial">Trial</button>
-            <button class="filter-pill" data-filter="disabled">Disabled / Expired</button>
-          </div>
+        <div class="filter-pills" id="userFilterPills">
+          <button class="filter-pill active" data-filter="all">All</button>
+          <button class="filter-pill" data-filter="active">Active</button>
+          <button class="filter-pill" data-filter="trial">Trial</button>
+          <button class="filter-pill" data-filter="disabled">Disabled / Expired</button>
         </div>
-        <div style="overflow-x:auto;">
-          <table class="data-table" id="userTable">
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Status</th>
-                <th>UIDs</th>
-                <th>Max UIDs</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="userTableBody">
-              <tr><td colspan="6" style="text-align:center;color:var(--text-300);padding:2rem;">Loading users...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-    </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="data-table" id="userTable">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Status</th>
+              <th>UIDs</th>
+              <th>Max UIDs</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody">
+            <tr><td colspan="6" style="text-align:center;color:var(--text-300);padding:2rem;">Loading users...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
     <!-- ── PROTO POOL ── -->
     <section class="card fade-in" style="margin-top:1.5rem;">
@@ -543,14 +519,35 @@
       window.location.href = 'index.html';
     }
 
-    // ── Load overview stats ──
+    // ── Load overview stats with count-up animation ──
     const loadStats = async () => {
       const stats = await App.getGlobalStats();
-      document.getElementById('statTotalUsers').textContent = stats.totalUsers;
-      document.getElementById('statActiveUsers').textContent = stats.activeUsers;
-      document.getElementById('statDisabledUsers').textContent = stats.disabledUsers;
-      document.getElementById('statTotalUids').textContent = stats.totalUids;
-      document.getElementById('statActiveUids').textContent = stats.activeUids;
+
+      // Count-up animation function
+      const countUp = (element, target, duration = 600) => {
+        if (!element) return;
+        const start = 0;
+        const increment = target / (duration / 16);
+        let current = 0;
+
+        const timer = setInterval(() => {
+          current += increment;
+          if (current >= target) {
+            element.textContent = target;
+            element.classList.add('success-pulse');
+            clearInterval(timer);
+          } else {
+            element.textContent = Math.floor(current);
+          }
+        }, 16);
+      };
+
+      // Animate stat updates
+      countUp(document.getElementById('statTotalUsers'), stats.totalUsers);
+      countUp(document.getElementById('statActiveUsers'), stats.activeUsers);
+      countUp(document.getElementById('statDisabledUsers'), stats.disabledUsers);
+      countUp(document.getElementById('statTotalUids'), stats.totalUids);
+      countUp(document.getElementById('statActiveUids'), stats.activeUids);
     };
 
     // ── Render users table ──
@@ -1198,7 +1195,7 @@
           }
         }
       });
-      return text.replace(/\u00a0/g, ' '); // normalize non-breaking spaces
+      return text.replace(/ /g, ' '); // normalize non-breaking spaces
     };
 
     // Helper to set contenteditable content from saved string (containing {uid})
@@ -1304,7 +1301,7 @@
       };
 
       walk(editorEl, fallbackColor);
-      return res.replace(/\u00a0/g, ' ').trim();
+      return res.replace(/ /g, ' ').trim();
     };
 
     // Apply color to selected text in contenteditable
@@ -1474,7 +1471,7 @@
       insertUidBtn.addEventListener('click', () => {
         const editor = document.getElementById('notifLine2Editor');
         if (!editor) return;
-        
+
         editor.focus();
         const chip = document.createElement('span');
         chip.className = 'uid-tag-chip';
@@ -1546,7 +1543,7 @@
         // Line 4 Contact WYSIWYG
         const contactEditor = document.getElementById('notifContactEditor');
         if (contactEditor) {
-          const rawCont = cfg.contact_text || cfg.line3_text || 'Contact: @1anddp';
+          const rawCont = cfg.contact_text || cfg.line3_text || '[004cff]Contact : [c084fc]@1naddp [004cff]ON [00e5ff]DISCORD !';
           contactEditor.innerHTML = ffTagsToHtml(rawCont, cfg.contact_color || '#00e5ff');
           if (cfg.contact_color) contactEditor.style.color = cfg.contact_color;
         }
@@ -1554,7 +1551,7 @@
         // Line 5 Note WYSIWYG
         const line4Editor = document.getElementById('notifLine4Editor');
         if (line4Editor) {
-          const rawL4 = cfg.line4_text || '';
+          const rawL4 = cfg.line4_text !== undefined && cfg.line4_text !== '' ? cfg.line4_text : '[a6ff00]( ADD IT TO [ff3b30]• UID MANAGER [a6ff00]IF [ffff00]VIP [a6ff00]) !';
           line4Editor.innerHTML = ffTagsToHtml(rawL4, cfg.line4_color || '#ffff00');
           if (cfg.line4_color) line4Editor.style.color = cfg.line4_color;
         }

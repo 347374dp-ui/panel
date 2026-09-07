@@ -7,114 +7,63 @@
   <title>Panel Admin — DP Control</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,600;1,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <style>
-    .user-controls { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-    .status-active { color: var(--green); font-weight: 600; }
-    .status-disabled { color: var(--red); font-weight: 600; }
-    
-    /* Feature checkbox list styling */
-    .checkbox-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-      margin-top: 0.5rem;
-    }
-    .checkbox-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      font-size: 0.85rem;
-      color: var(--text-200);
-      user-select: none;
-    }
-    .checkbox-item input {
-      width: 16px;
-      height: 16px;
-      accent-color: var(--red);
-      cursor: pointer;
-    }
-    .feature-tag {
-      display: inline-block;
-      padding: 0.15rem 0.45rem;
-      border-radius: 4px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      margin-right: 0.25rem;
-      margin-bottom: 0.25rem;
-    }
-    .feature-tag.enabled {
-      background: var(--green-dim);
-      color: var(--green);
-    }
-    .feature-tag.disabled {
-      background: rgba(255,255,255,0.04);
-      color: var(--text-300);
-    }
-    .cat-section-header {
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: var(--text-300);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-top: 0.75rem;
-      margin-bottom: 0.25rem;
-      padding-bottom: 0.2rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .cat-section-header:first-child { margin-top: 0; }
-  </style>
 </head>
 <body>
 
   <!-- NAVBAR -->
   <nav class="navbar" id="navbar">
     <div class="nav-brand">
-      <h1>DP Control Panel</h1>
-      <span class="nav-subtitle">Panel Admin</span>
+      <div class="nav-logo">DP</div>
+      <div class="nav-titles">
+        <h1>DP Control Panel</h1>
+        <span class="nav-subtitle">Panel Admin</span>
+      </div>
     </div>
-    <div class="nav-right" style="gap: 1rem;">
-      <a href="admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">UID Dashboard</a>
-      <a href="panel_admin.html" class="btn btn-primary btn-sm" style="border-radius:50px;">Panel Dashboard</a>
-      <a href="offsets_manager.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Offsets</a>
-      <a href="silent_aim_admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Silent Aim</a>
-      <a href="feature_builder.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Feature Builder</a>
-      <a href="aob_finder.html" class="btn btn-dark btn-sm" style="border-radius:50px;">AOB Safe Finder</a>
+    <div class="nav-right">
+      <a href="admin.html" class="nav-link">UID Dashboard</a>
+      <a href="panel_admin.html" class="nav-link active">Panel Dashboard</a>
+      <a href="offsets_manager.html" class="nav-link">Offsets</a>
+      <a href="silent_aim_admin.html" class="nav-link">Silent Aim</a>
+      <a href="feature_builder.html" class="nav-link">Feature Builder</a>
+      <a href="aob_finder.html" class="nav-link">AOB Safe Finder</a>
       <button class="btn btn-dark btn-sm" id="logoutBtn">Sign out</button>
     </div>
   </nav>
 
   <main class="page-wrapper">
 
-    <!-- ── OVERVIEW STATS ── -->
-    <section class="card fade-in" style="margin-bottom:1.5rem;">
-      <h3 class="card-title" style="margin-bottom:.25rem;">Panel Overview</h3>
-      <p class="card-subtitle" style="margin-bottom:1rem;">Live statistics of DP Panel client connections</p>
+    <!-- ── PAGE HEADER ── -->
+    <div class="page-header fade-in">
+      <h2>🔐 Panel Admin</h2>
+      <p>Manage panel client accounts & per-user cheat feature permissions</p>
+    </div>
 
-      <div class="overview-grid" style="display: flex; flex-direction: row; gap: 1.5rem; flex-wrap: wrap;">
-        <div class="overview-card">
-          <div class="oval" id="statTotalUsers" style="color:var(--text-100);">—</div>
+    <!-- ── OVERVIEW STATS ── -->
+    <section class="card fade-in card-hover-glow" style="margin-bottom:1.5rem;">
+      <div class="overview-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="overview-card float-in" style="animation-delay: 0.05s;">
+          <div class="oval stat-count" id="statTotalUsers" style="color:var(--text-100);">—</div>
           <div class="olabel">Total Clients</div>
         </div>
-        <div class="overview-card">
-          <div class="oval" id="statActiveUsers" style="color:var(--green);">—</div>
+        <div class="overview-card float-in" style="animation-delay: 0.1s;">
+          <div class="oval stat-count" id="statActiveUsers" style="color:var(--green);">—</div>
           <div class="olabel">Active Clients</div>
         </div>
-        <div class="overview-card">
-          <div class="oval" id="statDisabledUsers" style="color:var(--red);">—</div>
+        <div class="overview-card float-in" style="animation-delay: 0.15s;">
+          <div class="oval stat-count" id="statDisabledUsers" style="color:var(--red);">—</div>
           <div class="olabel">Disabled</div>
         </div>
       </div>
     </section>
 
-    <div class="admin-grid" style="grid-template-columns: 350px 1fr;">
+    <div class="admin-grid" style="grid-template-columns: 380px 1fr;">
 
       <!-- Create User -->
-      <section class="card fade-in">
-        <h3 class="card-title">Add Panel Account</h3>
-        <p class="card-subtitle">Register a client with customized cheat feature permissions</p>
+      <section class="card fade-in card-hover-glow" style="position: sticky; top: 90px;">
+        <h3 class="card-title">➕ Add Panel Account</h3>
+        <p class="card-subtitle">Register a client with customized feature permissions</p>
         <form id="createUserForm" autocomplete="off">
           <div class="form-group">
             <label for="newUsername">USERNAME</label>
@@ -122,41 +71,56 @@
           </div>
           <div class="form-group">
             <label for="newPassword">PASSWORD</label>
-            <input type="password" id="newPassword" class="form-input" placeholder="password" required />
+            <input type="password" id="newPassword" class="form-input" placeholder="Secure password" required />
           </div>
-          
-          <div class="form-group" style="margin-top:1rem;">
-            <label>ALLOWED FEATURES</label>
-            <div id="featureCheckboxes"><p style="color:var(--text-400);font-size:0.82rem;">Loading features...</p></div>
+
+          <div class="form-group" style="margin-top:1.2rem;">
+            <label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem;">
+              <span>🎯 ALLOWED FEATURES</span>
+              <span style="font-size:0.7rem;color:var(--text-400);">(Select permissions)</span>
+            </label>
+            <div id="featureCheckboxes" style="max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:0.8rem;"><p style="color:var(--text-400);font-size:0.82rem;text-align:center;padding:1rem;">Loading features...</p></div>
           </div>
-          
-          <button type="submit" class="btn btn-primary btn-full" style="margin-top:1.5rem;" id="createUserBtn">Create User</button>
+
+          <button type="submit" class="btn btn-primary btn-full" style="margin-top:1.5rem;" id="createUserBtn">✨ Create User</button>
         </form>
       </section>
 
       <!-- User List -->
       <section class="card fade-in">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:1rem;">
           <div>
-            <h3 class="card-title" style="margin-bottom:.25rem;">Panel Client Accounts</h3>
-            <p class="card-subtitle">Manage feature toggles remotely per user</p>
+            <h3 class="card-title" style="margin-bottom:.25rem;">👥 Panel Client Accounts</h3>
+            <p class="card-subtitle">Manage feature toggles and permissions remotely</p>
           </div>
-          <button class="btn btn-dark btn-sm" id="refreshUsersBtn">↻ Refresh</button>
+          <button class="btn btn-dark btn-sm" id="refreshUsersBtn" style="display:flex;align-items:center;gap:0.4rem;">
+            <span>↻</span> <span>Refresh</span>
+          </button>
         </div>
-        <div style="overflow-x:auto;">
-          <table class="data-table" id="userTable">
+
+        <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--border);">
+          <table class="data-table panel-users-table" id="userTable">
             <thead>
-              <tr>
-                <th>User</th>
-                <th>Status</th>
-                <th>Features</th>
-                <th>Actions</th>
+              <tr style="background:rgba(79,140,255,0.05);">
+                <th style="text-align:left;">👤 User</th>
+                <th style="text-align:center;">Status</th>
+                <th style="text-align:center;">Features</th>
+                <th style="text-align:right;">Actions</th>
               </tr>
             </thead>
             <tbody id="userTableBody">
-              <tr><td colspan="4" style="text-align:center;color:var(--text-300);padding:2rem;">Loading accounts...</td></tr>
+              <tr><td colspan="4" style="text-align:center;color:var(--text-300);padding:3rem;font-size:0.9rem;">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+                  <span style="font-size:1.5rem;">⏳</span>
+                  <span>Loading panel accounts...</span>
+                </div>
+              </td></tr>
             </tbody>
           </table>
+        </div>
+
+        <div style="margin-top:1rem;padding:0.8rem;background:rgba(79,140,255,0.05);border-radius:10px;border-left:3px solid var(--primary);font-size:0.82rem;color:var(--text-200);">
+          💡 <strong>Tip:</strong> Click on a user to view and edit their assigned features in real-time.
         </div>
       </section>
 
@@ -202,7 +166,7 @@
 
         const grid = document.createElement('div');
         grid.className = 'checkbox-grid';
-        
+
         groups[cat].forEach(f => {
           const isChecked = checkedMap ? (checkedMap[f.key] || false) : true;
           grid.innerHTML += `

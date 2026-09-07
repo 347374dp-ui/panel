@@ -7,198 +7,98 @@
   <title>AOB Safe Finder — DP Control</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,600;1,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <style>
-    .aob-grid {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 1.5rem;
-      align-items: start;
-    }
-    .status-match { color: var(--green); font-weight: 700; font-size: 0.9rem; }
-    .status-mismatch { color: var(--red); font-weight: 700; font-size: 0.9rem; }
-    .status-safe { color: var(--green); font-weight: 700; font-size: 0.95rem; }
-    .status-unsafe { color: #f39c12; font-weight: 700; font-size: 0.95rem; }
-
-    .analysis-card {
-      background: var(--bg-card-alt);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 1.25rem;
-      margin-top: 1rem;
-    }
-
-    .analysis-stat {
-      display: flex;
-      justify-content: space-between;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-      padding: 0.5rem 0;
-      font-size: 0.85rem;
-    }
-    .analysis-stat:last-child { border-bottom: none; }
-    .analysis-label { color: var(--text-200); }
-    .analysis-val { font-weight: 600; color: var(--text-100); }
-
-    .code-preview-box {
-      background: var(--bg-deep);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 0.8rem;
-      font-family: 'Courier New', monospace;
-      font-size: 0.78rem;
-      color: #00ffcc;
-      overflow-x: auto;
-      white-space: pre-wrap;
-      word-break: break-all;
-      margin-top: 0.5rem;
-      max-height: 200px;
-      position: relative;
-    }
-
-    .copy-code-btn {
-      position: absolute;
-      top: 0.4rem;
-      right: 0.4rem;
-      padding: 0.2rem 0.5rem;
-      font-size: 0.7rem;
-      cursor: pointer;
-    }
-
-    .interactive-simulator {
-      background: var(--bg-card);
-      border: 1px solid var(--border-primary);
-      border-radius: var(--radius-lg);
-      padding: 1.5rem;
-      margin-top: 1.5rem;
-    }
-
-    .simulation-result {
-      background: var(--bg-deep);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 1rem;
-      font-family: 'Courier New', monospace;
-      font-size: 0.82rem;
-      margin-top: 1rem;
-      display: none;
-    }
-
-    .sim-match-highlight {
-      background: rgba(138, 43, 226, 0.3);
-      border: 1px solid var(--primary);
-      color: #fff;
-      padding: 0 0.15rem;
-      border-radius: 3px;
-      font-weight: bold;
-    }
-
-    .sim-replaced-highlight {
-      background: rgba(0, 200, 83, 0.25);
-      border: 1px solid var(--green);
-      color: #fff;
-      padding: 0 0.15rem;
-      border-radius: 3px;
-      font-weight: bold;
-    }
-
-    .tab-container {
-      display: flex;
-      gap: 0.5rem;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 0.75rem;
-    }
-    .exporter-tab {
-      padding: 0.4rem 0.8rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-300);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all var(--transition);
-    }
-    .exporter-tab.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
-    }
-  </style>
 </head>
 <body>
 
   <!-- NAVBAR -->
   <nav class="navbar" id="navbar">
     <div class="nav-brand">
-      <h1>DP Control Panel</h1>
-      <span class="nav-subtitle">AOB Safe Finder & Validator</span>
+      <div class="nav-logo">DP</div>
+      <div class="nav-titles">
+        <h1>DP Control Panel</h1>
+        <span class="nav-subtitle">AOB Safe Finder & Validator</span>
+      </div>
     </div>
-    <div class="nav-right" style="gap: 1rem;">
-      <a href="admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">UID Dashboard</a>
-      <a href="panel_admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Panel Dashboard</a>
-      <a href="offsets_manager.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Offsets</a>
-      <a href="silent_aim_admin.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Silent Aim</a>
-      <a href="feature_builder.html" class="btn btn-dark btn-sm" style="border-radius:50px;">Feature Builder</a>
-      <a href="aob_finder.html" class="btn btn-primary btn-sm" style="border-radius:50px;">AOB Safe Finder</a>
+    <div class="nav-right">
+      <a href="admin.html" class="nav-link">UID Dashboard</a>
+      <a href="panel_admin.html" class="nav-link">Panel Dashboard</a>
+      <a href="offsets_manager.html" class="nav-link">Offsets</a>
+      <a href="silent_aim_admin.html" class="nav-link">Silent Aim</a>
+      <a href="feature_builder.html" class="nav-link">Feature Builder</a>
+      <a href="aob_finder.html" class="nav-link active">AOB Safe Finder</a>
       <button class="btn btn-dark btn-sm" id="logoutBtn">Sign out</button>
     </div>
   </nav>
 
   <main class="page-wrapper">
 
-    <!-- Header Description -->
-    <section class="card fade-in" style="margin-bottom:1.5rem;">
-      <h3 class="card-title" style="margin-bottom:.25rem;">🛡 AOB Safe Finder & Code Builder</h3>
-      <p class="card-subtitle" style="margin-bottom:0rem;">Perfect companion tool to design safe, crash-free AOB memory search & replace codes for Free Fire panels</p>
-    </section>
+    <!-- ── PAGE HEADER ── -->
+    <div class="page-header fade-in">
+      <h2>🛡 AOB Safe Finder</h2>
+      <p>Design safe, crash-free AOB memory search & replace codes for Free Fire panels</p>
+    </div>
 
     <div class="aob-grid">
       <!-- Form Input Column -->
-      <section class="card fade-in">
-        <h3 class="card-title">Define Array of Bytes (AOB)</h3>
+      <section class="card fade-in card-hover-glow">
+        <h3 class="card-title" style="display:flex;align-items:center;gap:0.5rem;">
+          <span>🔍</span> Define Array of Bytes (AOB)
+        </h3>
         <p class="card-subtitle">Input your target search hex signature and patched replacement</p>
 
         <form id="aobForm" autocomplete="off">
           <div class="form-group">
-            <label for="searchAob">SEARCH PATTERN (AOB HEX)</label>
-            <input type="text" id="searchAob" class="form-input" style="font-family:monospace;letter-spacing:0.05em;"
+            <label for="searchAob" style="display:flex;align-items:center;gap:0.5rem;">
+              <span>🎯</span> SEARCH PATTERN
+            </label>
+            <input type="text" id="searchAob" class="form-input" style="font-family:monospace;letter-spacing:0.05em;font-size:0.8rem;"
                    value="8F C2 F5 3C CD CC CC 3D ?? ?? ?? ?? EC 51 B8 3D"
                    placeholder="e.g. 8F C2 F5 3C ?? ?? ?? ??" required />
-            <small style="color:var(--text-300);font-size:0.75rem;margin-top:0.25rem;">Supports wildcards using <strong style="color:var(--primary);">??</strong> for dynamic memory offsets</small>
+            <small style="color:var(--text-300);font-size:0.75rem;margin-top:0.25rem;">Use <strong style="color:var(--cyan);">??</strong> wildcards for dynamic offsets</small>
 
             <!-- Preset & Sanitizer Controls -->
-            <div style="display:flex;gap:0.5rem;margin-top:0.5rem;flex-wrap:wrap;">
-              <button type="button" class="btn btn-primary btn-sm" id="sanitizeBtn">💡 Auto-Sanitize Signature</button>
-              <button type="button" class="btn btn-dark btn-sm" id="loadAimbotPresetBtn">🎯 Load Aimbot Preset</button>
+            <div style="display:flex;gap:0.5rem;margin-top:0.75rem;flex-wrap:wrap;">
+              <button type="button" class="btn btn-primary btn-sm" id="sanitizeBtn">💡 Auto-Sanitize</button>
+              <button type="button" class="btn btn-dark btn-sm" id="loadAimbotPresetBtn">🎯 Load Preset</button>
             </div>
           </div>
 
           <div class="form-group" style="margin-top:1.25rem;">
-            <label for="replaceAob">REPLACE PATTERN (AOB HEX)</label>
-            <input type="text" id="replaceAob" class="form-input" style="font-family:monospace;letter-spacing:0.05em;"
+            <label for="replaceAob" style="display:flex;align-items:center;gap:0.5rem;">
+              <span>✨</span> REPLACE PATTERN
+            </label>
+            <input type="text" id="replaceAob" class="form-input" style="font-family:monospace;letter-spacing:0.05em;font-size:0.8rem;"
                    value="8F C2 F5 3C CD CC CC 3D 00 00 80 3F EC 51 B8 3D"
                    placeholder="e.g. 8F C2 F5 3C 00 00 80 3F" required />
-            <small style="color:var(--text-300);font-size:0.75rem;margin-top:0.25rem;">Replacement bytes to write once the search pattern is matched</small>
+            <small style="color:var(--text-300);font-size:0.75rem;margin-top:0.25rem;">Bytes to write once pattern is matched</small>
           </div>
 
           <div class="form-group" style="margin-top:1.25rem;">
-            <label for="targetLib">TARGET BINARY / LIBRARY</label>
+            <label for="targetLib" style="display:flex;align-items:center;gap:0.5rem;">
+              <span>📦</span> TARGET BINARY
+            </label>
             <input type="text" id="targetLib" class="form-input" value="libil2cpp.so" placeholder="e.g. libil2cpp.so or libue4.so" required />
           </div>
         </form>
 
         <!-- Interactive Exporters -->
         <div style="margin-top: 1.5rem;">
-          <h4 style="font-size: 0.9rem; color: var(--text-100); margin-bottom: 0.5rem;">📦 Export Generated Code</h4>
-          <div class="tab-container">
-            <div class="exporter-tab active" data-tab="cpp">C++ Hooks</div>
-            <div class="exporter-tab" data-tab="frida">Frida Script</div>
-            <div class="exporter-tab" data-tab="gg">GameGuardian</div>
-            <div class="exporter-tab" data-tab="json">DP Feature JSON</div>
+          <h4 style="font-size: 0.9rem; color: var(--text-100); margin-bottom: 0.8rem; display:flex;align-items:center;gap:0.5rem;">
+            <span>📄</span> Export Generated Code
+          </h4>
+          <div class="tab-container" style="border-bottom:1px solid var(--border);margin-bottom:1rem;">
+            <div class="exporter-tab active" data-tab="cpp" style="cursor:pointer;padding:0.5rem 1rem;border-bottom:2px solid var(--primary);">C++ Hooks</div>
+            <div class="exporter-tab" data-tab="frida" style="cursor:pointer;padding:0.5rem 1rem;">Frida Script</div>
+            <div class="exporter-tab" data-tab="gg" style="cursor:pointer;padding:0.5rem 1rem;">GameGuardian</div>
+            <div class="exporter-tab" data-tab="json" style="cursor:pointer;padding:0.5rem 1rem;">DP Feature JSON</div>
           </div>
 
           <!-- C++ Code Exporter -->
           <div id="export-cpp" class="exporter-content">
             <div class="code-preview-box">
-              <button class="btn btn-dark btn-sm copy-code-btn" onclick="copySnippet('cppCode')">Copy</button>
+              <button class="btn btn-dark btn-sm copy-code-btn" onclick="copySnippet('cppCode')">📋 Copy</button>
               <code id="cppCode">Loading...</code>
             </div>
           </div>
@@ -206,7 +106,7 @@
           <!-- Frida Exporter -->
           <div id="export-frida" class="exporter-content" style="display:none;">
             <div class="code-preview-box">
-              <button class="btn btn-dark btn-sm copy-code-btn" onclick="copySnippet('fridaCode')">Copy</button>
+              <button class="btn btn-dark btn-sm copy-code-btn" onclick="copySnippet('fridaCode')">📋 Copy</button>
               <code id="fridaCode">Loading...</code>
             </div>
           </div>
@@ -253,7 +153,7 @@
           </div>
           <div class="analysis-stat">
             <span class="analysis-label">Wildcard Count</span>
-            <span class="analysis-val" id="wildcardsText" style="color:#f39c12;">0 bytes</span>
+            <span class="analysis-val" id="wildcardsText" style="color:var(--orange);">0 bytes</span>
           </div>
           <div class="analysis-stat">
             <span class="analysis-label">AOB Safeness Rating</span>
@@ -261,11 +161,11 @@
           </div>
           <div class="analysis-stat" id="aimbotOffsetsRow" style="display:none;">
             <span class="analysis-label">Aimbot Offsets</span>
-            <span class="analysis-val" style="color:var(--text-100);"><strong style="color:#00ffcc;">Read:</strong> 0xB8 &nbsp;|&nbsp; <strong style="color:var(--red-hover);">Write:</strong> 0xB4</span>
+            <span class="analysis-val" style="color:var(--text-100);"><strong style="color:#00ffcc;">Read:</strong> 0xB8 &nbsp;|&nbsp; <strong style="color:var(--red);">Write:</strong> 0xB4</span>
           </div>
         </div>
 
-        <div style="background: rgba(138,43,226,0.06); border: 1px solid var(--border-primary); border-radius: 10px; padding: 1.2rem; margin-top: 1.5rem;">
+        <div style="background: rgba(139,92,246,0.06); border: 1px solid var(--border-primary); border-radius: 10px; padding: 1.2rem; margin-top: 1.5rem;">
           <h4 style="font-size:0.85rem;color:var(--text-100);font-weight:700;letter-spacing:0.02em;margin-bottom:0.5rem;display:flex;align-items:center;gap:0.4rem;">
             <span>💡</span> WHY LENGTH INTEGRITY MATTERS?
           </h4>
@@ -570,8 +470,8 @@ applyAobPatch()`;
 
     // ── Load Aimbot Preset ──
     function loadAimbotPreset() {
-      const AIMBOT_SEARCH = "FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A5 43";
-      const AIMBOT_REPLACE = "FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80 3F 00 00 80 3F 00 00 80 3F 00 00 80 3F 00 00 00 00 00 00 00 00 80 3F 00 00 00 00 00 00 80 3F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A5 43";
+      const AIMBOT_SEARCH = "FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A5 43";
+      const AIMBOT_REPLACE = "FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80 3F 00 00 80 3F 00 00 80 3F 00 00 80 3F 00 00 00 00 00 00 00 00 80 3F 00 00 00 00 00 00 80 3F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A5 43";
 
       searchAobInput.value = AIMBOT_SEARCH;
       replaceAobInput.value = AIMBOT_REPLACE;
@@ -704,7 +604,7 @@ applyAobPatch()`;
       if (matchIndices.length > 0) {
         successSpan.innerHTML = `<strong style="color:var(--green);">Successfully patched</strong> memory with replacement bytes without crashes.`;
       } else {
-        successSpan.innerHTML = `<span style="color:#f39c12;">No occurrences found. Module signature is secure.</span>`;
+        successSpan.innerHTML = `<span style="color:var(--orange);">No occurrences found. Module signature is secure.</span>`;
       }
 
       document.getElementById('simReport').style.display = 'block';
