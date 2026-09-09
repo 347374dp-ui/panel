@@ -399,6 +399,19 @@ const App = (() => {
   };
 
   // ==========================================
+  // ADMIN NOTES (/admin_notes/)
+  // ==========================================
+  const getAdminNotes = async () => await fbGet('admin_notes');
+
+  const saveAdminNotes = async (title, html) => {
+    return await fbPut('admin_notes', {
+      title: String(title || '').trim() || 'Admin Notes',
+      html: String(html || ''),
+      updatedAt: new Date().toISOString()
+    });
+  };
+
+  // ==========================================
   // 2. DP PANEL USER MANAGEMENT (/dp_panel_users/)
   // ==========================================
   const getAllPanelUsers = async () => {
@@ -607,6 +620,9 @@ const App = (() => {
     addAllowlistUid,
     removeAllowlistUid,
     toggleAllowlistUid,
+    // Admin notes
+    getAdminNotes,
+    saveAdminNotes,
     // Panel users
     getAllPanelUsers,
     getPanelUser,
