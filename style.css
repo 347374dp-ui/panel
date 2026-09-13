@@ -395,6 +395,12 @@ a:hover { text-decoration: underline; }
   font-size: 0.88rem;
   transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
   outline: none;
+  position: relative;
+  z-index: 2;
+  pointer-events: auto !important;
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  touch-action: manipulation;
 }
 
 .form-input:focus {
@@ -1612,14 +1618,22 @@ textarea.code-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px 
 #particleCanvas {
   mix-blend-mode: screen;
   opacity: 0.58;
+  pointer-events: none !important;
+  z-index: -1 !important;
 }
 
 .navbar,
 .page-wrapper,
+.login-page,
 .footer,
 .card {
   position: relative;
   z-index: 1;
+}
+
+.login-card {
+  position: relative;
+  z-index: 2;
 }
 
 .navbar { z-index: 1000; }
@@ -2140,9 +2154,17 @@ textarea.code-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px 
   input[type="text"],
   input[type="password"],
   input[type="datetime-local"],
+  input[type="search"],
+  textarea,
   select {
     font-size: 16px !important; /* Prevents auto-zoom on iOS Safari */
     min-height: 44px;
+    pointer-events: auto !important;
+    -webkit-user-select: text !important;
+    user-select: text !important;
+    touch-action: manipulation;
+    position: relative;
+    z-index: 5;
   }
 
   /* Expiry options box */
