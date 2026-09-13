@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="DP Panel Admin - Manage Panel Accounts" />
-  <title>Panel Admin — DP Control</title>
+  <meta name="description" content="DP Panel - Feature Builder & Manager" />
+  <title>Feature Builder — DP Control</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -18,15 +18,15 @@
       <div class="nav-logo">DP</div>
       <div class="nav-titles">
         <h1>DP Control Panel</h1>
-        <span class="nav-subtitle">Panel Admin</span>
+        <span class="nav-subtitle">Feature Builder</span>
       </div>
     </div>
     <div class="nav-right">
       <a href="admin.html" class="nav-link">UID Dashboard</a>
-      <a href="panel_admin.html" class="nav-link active">Panel Dashboard</a>
+      <a href="panel_admin.html" class="nav-link">Panel Dashboard</a>
       <a href="offsets_manager.html" class="nav-link">Offsets</a>
       <a href="silent_aim_admin.html" class="nav-link">Silent Aim</a>
-      <a href="feature_builder.html" class="nav-link">Feature Builder</a>
+      <a href="feature_builder.html" class="nav-link active">Feature Builder</a>
       <a href="aob_finder.html" class="nav-link">AOB Safe Finder</a>
       <button class="btn btn-dark btn-sm" id="logoutBtn">Sign out</button>
     </div>
@@ -36,91 +36,130 @@
 
     <!-- ── PAGE HEADER ── -->
     <div class="page-header fade-in">
-      <h2>🔐 Panel Admin</h2>
-      <p>Manage panel client accounts & per-user cheat feature permissions</p>
+      <h2>🧩 Feature Builder</h2>
+      <p>Define & manage cheat features assignable to panel client accounts</p>
     </div>
 
-    <!-- ── OVERVIEW STATS ── -->
+    <!-- Stats -->
     <section class="card fade-in card-hover-glow" style="margin-bottom:1.5rem;">
-      <div class="overview-grid" style="grid-template-columns: repeat(3, 1fr);">
-        <div class="overview-card float-in" style="animation-delay: 0.05s;">
-          <div class="oval stat-count" id="statTotalUsers" style="color:var(--text-100);">—</div>
-          <div class="olabel">Total Clients</div>
+      <h3 class="card-title" style="margin-bottom:.25rem;">Feature Definitions</h3>
+      <p class="card-subtitle" style="margin-bottom:1rem;">Manage available features that can be assigned to panel client accounts</p>
+      <div class="stats-strip">
+        <div class="stat-item float-in" style="animation-delay: 0.05s;">
+          <span class="stat-number stat-count" id="statTotalFeatures">—</span>
+          <span class="stat-label">Total<br>Features</span>
         </div>
-        <div class="overview-card float-in" style="animation-delay: 0.1s;">
-          <div class="oval stat-count" id="statActiveUsers" style="color:var(--green);">—</div>
-          <div class="olabel">Active Clients</div>
+        <div class="stat-item float-in" style="animation-delay: 0.1s;">
+          <span class="stat-number stat-count" id="statTotalCategories" style="color:var(--red);">—</span>
+          <span class="stat-label">Total<br>Categories</span>
         </div>
-        <div class="overview-card float-in" style="animation-delay: 0.15s;">
-          <div class="oval stat-count" id="statDisabledUsers" style="color:var(--red);">—</div>
-          <div class="olabel">Disabled</div>
+        <div class="stat-item float-in" style="animation-delay: 0.15s;">
+          <span class="stat-number stat-count" id="statTotalClients" style="color:var(--green);">—</span>
+          <span class="stat-label">Panel<br>Clients</span>
         </div>
       </div>
     </section>
 
-    <div class="admin-grid" style="grid-template-columns: 380px 1fr;">
+    <div class="builder-grid">
 
-      <!-- Create User -->
-      <section class="card fade-in card-hover-glow" style="position: sticky; top: 90px;">
-        <h3 class="card-title">➕ Add Panel Account</h3>
-        <p class="card-subtitle">Register a client with customized feature permissions</p>
-        <form id="createUserForm" autocomplete="off">
+      <!-- Add Feature Form -->
+      <section class="card fade-in feature-form-card">
+        <h3 class="card-title">Add New Feature</h3>
+        <p class="card-subtitle">Define a new feature that can be toggled per client account</p>
+        <form id="addFeatureForm" autocomplete="off">
           <div class="form-group">
-            <label for="newUsername">USERNAME</label>
-            <input type="text" id="newUsername" class="form-input" placeholder="e.g. john" required />
+            <label for="featKey">FEATURE KEY</label>
+            <input type="text" id="featKey" class="form-input" placeholder="e.g. speed_hack" required pattern="[a-z0-9_]+" title="Lowercase letters, numbers, and underscores only" />
           </div>
           <div class="form-group">
-            <label for="newPassword">PASSWORD</label>
-            <input type="password" id="newPassword" class="form-input" placeholder="Secure password" required />
+            <label for="featLabel">DISPLAY LABEL</label>
+            <input type="text" id="featLabel" class="form-input" placeholder="e.g. Speed Hack" required />
+          </div>
+          <div class="form-group">
+            <label for="featCategory">CATEGORY (TAB GROUP)</label>
+            <input type="text" id="featCategory" class="form-input" list="categoryList" placeholder="e.g. Movement" required />
+            <datalist id="categoryList"></datalist>
           </div>
 
-          <div class="form-group" style="margin-top:1.2rem;">
-            <label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem;">
-              <span>🎯 ALLOWED FEATURES</span>
-              <span style="font-size:0.7rem;color:var(--text-400);">(Select permissions)</span>
+          <div style="margin-top: 1rem; margin-bottom: 0.5rem; display: flex; gap: 1rem;">
+            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.85rem; color:var(--text-200); user-select:none;">
+              <input type="checkbox" id="isMemoryPatch" style="width:16px;height:16px;accent-color:var(--red);" />
+              <strong>IS MEMORY PATCH?</strong>
             </label>
-            <div id="featureCheckboxes" style="max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:0.8rem;"><p style="color:var(--text-400);font-size:0.82rem;text-align:center;padding:1rem;">Loading features...</p></div>
+            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.85rem; color:var(--text-200); user-select:none;">
+              <input type="checkbox" id="isAimbotPatch" style="width:16px;height:16px;accent-color:var(--green);" />
+              <strong>IS AIMBOT PATCH?</strong>
+            </label>
           </div>
 
-          <button type="submit" class="btn btn-primary btn-full" style="margin-top:1.5rem;" id="createUserBtn">✨ Create User</button>
+          <div id="aobInputs" style="display: none; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 6px; margin-bottom: 1rem; border: 1px solid var(--border);">
+            <div class="form-group">
+              <label for="featScan">SCAN PATTERN (HEX)</label>
+              <input type="text" id="featScan" class="form-input" placeholder="e.g. 8F C2 F5 3C ..." />
+            </div>
+            <div class="form-group" style="margin-top: 0.75rem;">
+              <label for="featReplace">REPLACE PATTERN (HEX)</label>
+              <input type="text" id="featReplace" class="form-input" placeholder="e.g. 8F C2 F5 3C ..." />
+            </div>
+          </div>
+
+          <div id="aimbotInputs" style="display: none; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 6px; margin-bottom: 1rem; border: 1px solid var(--border);">
+            <div class="form-group">
+              <label for="featAimScan">MAIN SCAN PATTERN (HEX)</label>
+              <input type="text" id="featAimScan" class="form-input" placeholder="e.g. FF FF FF FF ..." />
+            </div>
+
+            <div style="margin-top: 1rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+                <label>OFFSET SWAPS</label>
+                <div>
+                  <button type="button" class="btn btn-dark btn-sm" id="restoreDefaultAimbotBtn" style="margin-right:0.5rem;">↻ Restore Defaults</button>
+                  <button type="button" class="btn btn-dark btn-sm" id="addOffsetBtn">+ Add Offset Pair</button>
+                </div>
+              </div>
+              <div id="offsetList" style="display:flex; flex-direction:column; gap:0.5rem;">
+                <!-- Offsets go here -->
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full" style="margin-top:1rem;" id="addFeatureBtn">Add Feature</button>
         </form>
+
+        <!-- Live Preview -->
+        <div class="preview-section">
+          <h4 style="font-size:0.9rem;color:var(--text-100);margin-bottom:0.5rem;">📋 Checkbox Preview</h4>
+          <p style="font-size:0.75rem;color:var(--text-300);margin-bottom:0.75rem;">How features appear when creating a panel user</p>
+          <div class="preview-card" id="previewContainer">
+            <p style="color:var(--text-400);text-align:center;font-size:0.82rem;">Loading...</p>
+          </div>
+        </div>
       </section>
 
-      <!-- User List -->
+      <!-- Feature List -->
       <section class="card fade-in">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:1rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
           <div>
-            <h3 class="card-title" style="margin-bottom:.25rem;">👥 Panel Client Accounts</h3>
-            <p class="card-subtitle">Manage feature toggles and permissions remotely</p>
+            <h3 class="card-title" style="margin-bottom:.25rem;">All Features</h3>
+            <p class="card-subtitle">Edit or remove existing feature definitions</p>
           </div>
-          <button class="btn btn-dark btn-sm" id="refreshUsersBtn" style="display:flex;align-items:center;gap:0.4rem;">
-            <span>↻</span> <span>Refresh</span>
-          </button>
+          <button class="btn btn-dark btn-sm" id="refreshBtn">↻ Refresh</button>
         </div>
-
-        <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--border);">
-          <table class="data-table panel-users-table" id="userTable">
+        <div style="overflow-x:auto;">
+          <table class="feature-table" id="featureTable">
             <thead>
-              <tr style="background:rgba(79,140,255,0.05);">
-                <th style="text-align:left;">👤 User</th>
-                <th style="text-align:center;">Status</th>
-                <th style="text-align:center;">Features</th>
-                <th style="text-align:right;">Actions</th>
+              <tr>
+                <th>Key</th>
+                <th>Label</th>
+                <th>Category</th>
+                <th>Type</th>
+                <th>Actions</th>
               </tr>
             </thead>
-            <tbody id="userTableBody">
-              <tr><td colspan="4" style="text-align:center;color:var(--text-300);padding:3rem;font-size:0.9rem;">
-                <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
-                  <span style="font-size:1.5rem;">⏳</span>
-                  <span>Loading panel accounts...</span>
-                </div>
-              </td></tr>
+            <tbody id="featureTableBody">
+              <tr><td colspan="5" style="text-align:center;color:var(--text-300);padding:2rem;">Loading features...</td></tr>
             </tbody>
           </table>
-        </div>
-
-        <div style="margin-top:1rem;padding:0.8rem;background:rgba(79,140,255,0.05);border-radius:10px;border-left:3px solid var(--primary);font-size:0.82rem;color:var(--text-200);">
-          💡 <strong>Tip:</strong> Click on a user to view and edit their assigned features in real-time.
         </div>
       </section>
 
@@ -129,7 +168,7 @@
   </main>
 
   <footer class="footer">
-    <p>© 2026 <a href="#">DP</a> — Panel Control</p>
+    <p>© 2026 <a href="#">DP</a> — Feature Builder</p>
   </footer>
 
   <div class="toast-container" id="toastContainer"></div>
@@ -142,225 +181,410 @@
       window.location.href = 'index.html';
     }
 
-    // ── Store loaded feature list ──
-    let _loadedFeatures = [];
-
-    // ── Render checkbox list (grouped by category) ──
-    const renderCheckboxes = async (containerId, features, idPrefix, checkedMap) => {
-      const container = document.getElementById(containerId);
-      container.innerHTML = '';
-
-      // Group by category
-      const groups = {};
-      features.forEach(f => {
-        const cat = f.category || 'General';
-        if (!groups[cat]) groups[cat] = [];
-        groups[cat].push(f);
-      });
-
-      Object.keys(groups).sort().forEach(cat => {
-        const header = document.createElement('div');
-        header.className = 'cat-section-header';
-        header.textContent = cat;
-        container.appendChild(header);
-
-        const grid = document.createElement('div');
-        grid.className = 'checkbox-grid';
-
-        groups[cat].forEach(f => {
-          const isChecked = checkedMap ? (checkedMap[f.key] || false) : true;
-          grid.innerHTML += `
-            <label class="checkbox-item">
-              <input type="checkbox" id="${idPrefix}-${f.key}" ${isChecked ? 'checked' : ''} />
-              <span>${f.label.toUpperCase()}</span>
-            </label>
-          `;
-        });
-
-        container.appendChild(grid);
-      });
-    };
-
-    // ── Initialize checkboxes ──
-    const initCheckboxes = async () => {
-      _loadedFeatures = await App.getFeatureList(true);
-      await renderCheckboxes('featureCheckboxes', _loadedFeatures, 'feat', null);
-    };
-
-    const loadStats = async () => {
-      const stats = await App.getGlobalPanelStats();
-      document.getElementById('statTotalUsers').textContent = stats.totalUsers;
-      document.getElementById('statActiveUsers').textContent = stats.activeUsers;
-      document.getElementById('statDisabledUsers').textContent = stats.disabledUsers;
-    };
-
-    const renderUsers = async () => {
-      // Reload features to stay in sync
-      _loadedFeatures = await App.getFeatureList(true);
-
-      const users = await App.getAllPanelUsers();
-      const tbody = document.getElementById('userTableBody');
+    // ── Render Feature Table ──
+    const renderFeatures = async () => {
+      const features = await App.getFeatureList(true); // Force refresh
+      const tbody = document.getElementById('featureTableBody');
       tbody.innerHTML = '';
 
-      if (users.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-300);padding:2rem;">No panel accounts yet. Create one!</td></tr>`;
+      if (features.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-300);padding:2rem;">No features defined. Add one!</td></tr>`;
+        updateStats(features);
         return;
       }
 
-      users.forEach(user => {
-        const statusClass = user.active ? 'status-active' : 'status-disabled';
-        const statusText = user.active ? 'Active' : 'Disabled';
+      // Sort by category, then by label
+      const sorted = [...features].sort((a, b) => {
+        if (a.category < b.category) return -1;
+        if (a.category > b.category) return 1;
+        return a.label.localeCompare(b.label);
+      });
 
-        // Render features using dynamic feature list
-        let featuresHtml = '';
-        _loadedFeatures.forEach(f => {
-          const isEnabled = user.features && user.features[f.key];
-          featuresHtml += `<span class="feature-tag ${isEnabled ? 'enabled' : 'disabled'}">${f.label}</span>`;
-        });
-
+      sorted.forEach(f => {
         const tr = document.createElement('tr');
+        let typeBadge = '<span style="color:var(--text-400);font-size:0.8rem;">Toggle</span>';
+        if (f.isAimbot) typeBadge = '<span style="color:var(--green);font-size:0.8rem;font-weight:bold;">⊕ Aimbot</span>';
+        else if (f.scanHex && f.replaceHex) typeBadge = '<span style="color:var(--red);font-size:0.8rem;font-weight:bold;">⚙ Mem Patch</span>';
+
         tr.innerHTML = `
-          <td><strong>${user.username}</strong><br><span style="font-size:0.72rem;color:var(--text-400);">Created: ${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}</span></td>
-          <td class="${statusClass}">${statusText}</td>
-          <td style="max-width:350px;white-space:normal;">${featuresHtml}</td>
-          <td class="user-controls">
-            <button class="btn btn-dark btn-sm toggle-active-btn" data-username="${user.username}">${user.active ? 'Disable' : 'Enable'}</button>
-            <button class="btn btn-dark btn-sm edit-features-btn" data-username="${user.username}">Features</button>
-            <button class="btn btn-red btn-sm delete-user-btn" data-username="${user.username}">Delete</button>
+          <td><span class="key-badge">${f.key}</span></td>
+          <td><strong>${f.label}</strong></td>
+          <td><span class="cat-badge">${f.category}</span></td>
+          <td>${typeBadge}</td>
+          <td class="actions">
+            <button class="btn btn-dark btn-sm edit-btn" data-key="${f.key}">Edit</button>
+            <button class="btn btn-red btn-sm delete-btn" data-key="${f.key}">Delete</button>
           </td>
         `;
         tbody.appendChild(tr);
       });
 
-      loadStats();
+      updateStats(features);
+      renderPreview(features);
+      updateCategoryDatalist(features);
     };
 
-    // Form submission
-    document.getElementById('createUserForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const username = document.getElementById('newUsername').value.trim().toLowerCase();
-      const password = document.getElementById('newPassword').value;
+    // ── Update Stats ──
+    const updateStats = async (features) => {
+      document.getElementById('statTotalFeatures').textContent = features.length;
+      const cats = [...new Set(features.map(f => f.category))];
+      document.getElementById('statTotalCategories').textContent = cats.length;
 
-      const features = {};
-      _loadedFeatures.forEach(f => {
-        const cb = document.getElementById(`feat-${f.key}`);
-        features[f.key] = cb ? cb.checked : false;
+      const panelStats = await App.getGlobalPanelStats();
+      document.getElementById('statTotalClients').textContent = panelStats.totalUsers;
+    };
+
+    // ── Render Preview ──
+    const renderPreview = (features) => {
+      const container = document.getElementById('previewContainer');
+
+      // Group by category
+      const groups = {};
+      features.forEach(f => {
+        if (!groups[f.category]) groups[f.category] = [];
+        groups[f.category].push(f);
       });
 
-      const btn = document.getElementById('createUserBtn');
-      btn.disabled = true;
-      btn.textContent = 'Creating...';
+      let html = '';
+      Object.keys(groups).sort().forEach(cat => {
+        html += `<div class="preview-cat-header">${cat}</div>`;
+        html += `<div class="preview-checkbox-grid">`;
+        groups[cat].forEach(f => {
+          html += `
+            <label class="preview-checkbox-item">
+              <input type="checkbox" checked disabled />
+              <span>${f.label.toUpperCase()}</span>
+            </label>
+          `;
+        });
+        html += `</div>`;
+      });
 
-      const result = await App.createPanelUser(username, password, 0, features);
+      container.innerHTML = html || '<p style="color:var(--text-400);text-align:center;">No features</p>';
+    };
+
+    // ── Update category datalist ──
+    const updateCategoryDatalist = (features) => {
+      const dl = document.getElementById('categoryList');
+      const cats = [...new Set(features.map(f => f.category))];
+      dl.innerHTML = '';
+      cats.sort().forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        dl.appendChild(opt);
+      });
+    };
+
+    // ── Add Feature ──
+    document.getElementById('addFeatureForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const key = document.getElementById('featKey').value.trim();
+      const label = document.getElementById('featLabel').value.trim();
+      const category = document.getElementById('featCategory').value.trim();
+
+      let scanHex = '';
+      let replaceHex = '';
+      let isAimbot = false;
+      let aimOffsets = [];
+
+      if (document.getElementById('isMemoryPatch').checked) {
+        scanHex = document.getElementById('featScan').value.trim();
+        replaceHex = document.getElementById('featReplace').value.trim();
+        if (!scanHex || !replaceHex) {
+          App.toast('Please provide both scan and replace hex patterns.', 'error');
+          return;
+        }
+      } else if (document.getElementById('isAimbotPatch').checked) {
+        isAimbot = true;
+        scanHex = document.getElementById('featAimScan').value.trim();
+        if (!scanHex) {
+          App.toast('Please provide main scan pattern for aimbot.', 'error');
+          return;
+        }
+
+        // Collect offsets
+        const offsetRows = document.querySelectorAll('.offset-row');
+        offsetRows.forEach(row => {
+          const name = row.querySelector('.off-name').value.trim();
+          const o1 = row.querySelector('.off-1').value.trim();
+          const o2 = row.querySelector('.off-2').value.trim();
+          if (name && o1 && o2) {
+            aimOffsets.push({ name, offset1: o1, offset2: o2 });
+          }
+        });
+      }
+
+      const btn = document.getElementById('addFeatureBtn');
+      btn.disabled = true;
+      btn.textContent = 'Adding...';
+
+      const result = await App.addFeatureDefinition(key, label, category, scanHex, replaceHex, isAimbot, aimOffsets);
       btn.disabled = false;
-      btn.textContent = 'Create User';
+      btn.textContent = 'Add Feature';
 
       if (result.success) {
-        App.toast(`Account "${username}" created!`, 'success');
+        App.toast('Feature added successfully!', 'success');
         this.reset();
-        // Re-check all checkboxes
-        _loadedFeatures.forEach(f => {
-          const cb = document.getElementById(`feat-${f.key}`);
-          if (cb) cb.checked = true;
-        });
-        renderUsers();
+        document.getElementById('aobInputs').style.display = 'none';
+        document.getElementById('aimbotInputs').style.display = 'none';
+        document.getElementById('offsetList').innerHTML = '';
+        renderFeatures();
       } else {
         App.toast(result.msg, 'error');
       }
     });
 
-    // Button clicks
-    document.getElementById('userTable').addEventListener('click', async (e) => {
+    document.getElementById('isMemoryPatch').addEventListener('change', (e) => {
+      if (e.target.checked) {
+        document.getElementById('isAimbotPatch').checked = false;
+        document.getElementById('aimbotInputs').style.display = 'none';
+      }
+      document.getElementById('aobInputs').style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    document.getElementById('isAimbotPatch').addEventListener('change', (e) => {
+      if (e.target.checked) {
+        document.getElementById('isMemoryPatch').checked = false;
+        document.getElementById('aobInputs').style.display = 'none';
+      }
+      document.getElementById('aimbotInputs').style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    document.getElementById('restoreDefaultAimbotBtn').addEventListener('click', () => {
+      document.getElementById('featAimScan').value = 'FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A5 43';
+
+      const list = document.getElementById('offsetList');
+      list.innerHTML = `
+        <div class="offset-row" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+          <input type="text" class="form-input off-name" placeholder="Name (e.g. Chest)" style="flex:2; min-width:140px;" value="Chest to Head" />
+          <input type="text" class="form-input off-1" placeholder="Off 1 (0xE8)" style="flex:1; min-width:80px;" title="The memory value at this offset will be swapped with Offset 2" value="E8" />
+          <input type="text" class="form-input off-2" placeholder="Off 2 (0xB4)" style="flex:1; min-width:80px;" title="The memory value at this offset will be swapped with Offset 1" value="B4" />
+          <button type="button" class="btn btn-dark btn-sm" onclick="this.parentElement.remove()" style="padding:0.4rem 0.6rem; min-width:32px;">✕</button>
+        </div>
+      `;
+    });
+
+    document.getElementById('addOffsetBtn').addEventListener('click', () => {
+      const row = document.createElement('div');
+      row.className = 'offset-row';
+      row.style.display = 'flex';
+      row.style.gap = '0.5rem';
+      row.style.flexWrap = 'wrap';
+      row.style.alignItems = 'center';
+      row.innerHTML = `
+        <input type="text" class="form-input off-name" placeholder="Name (e.g. Chest)" style="flex:2; min-width:140px;" />
+        <input type="text" class="form-input off-1" placeholder="Off 1 (0xB4)" style="flex:1; min-width:80px;" title="The memory value at this offset will be swapped with Offset 2" />
+        <input type="text" class="form-input off-2" placeholder="Off 2 (0xE8)" style="flex:1; min-width:80px;" title="The memory value at this offset will be swapped with Offset 1" />
+        <button type="button" class="btn btn-dark btn-sm" onclick="this.parentElement.remove()" style="padding:0.4rem 0.6rem; min-width:32px;">✕</button>
+      `;
+      document.getElementById('offsetList').appendChild(row);
+    });
+
+    // ── Table button clicks ──
+    document.getElementById('featureTable').addEventListener('click', async (e) => {
       const btn = e.target.closest('button');
       if (!btn) return;
 
-      const username = btn.dataset.username;
-
-      if (btn.classList.contains('toggle-active-btn')) {
-        const newState = await App.togglePanelUserActive(username);
-        App.toast(`Client status -> ${newState ? 'Active' : 'Disabled'}`, newState ? 'success' : 'error');
-        renderUsers();
-      }
-
-      if (btn.classList.contains('delete-user-btn')) {
-        if (confirm(`Delete panel account "${username}"?`)) {
-          await App.deletePanelUser(username);
-          App.toast(`Deleted client account`, 'info');
-          renderUsers();
+      if (btn.classList.contains('delete-btn')) {
+        const key = btn.dataset.key;
+        if (confirm(`Delete feature "${key}"? This will also remove it from all panel user accounts.`)) {
+          await App.deleteFeatureDefinition(key);
+          App.toast(`Feature "${key}" deleted`, 'info');
+          renderFeatures();
         }
       }
 
-      if (btn.classList.contains('edit-features-btn')) {
-        const user = await App.getPanelUser(username);
-        if (!user) return;
-        const currFeatures = user.features || {};
+      if (btn.classList.contains('edit-btn')) {
+        const key = btn.dataset.key;
+        const features = await App.getFeatureList(true); // Force refresh to get latest aimbot offsets
+        const feat = features.find(f => f.key === key);
+        if (!feat) return;
 
-        // Build modal with dynamic features grouped by category
-        const groups = {};
-        _loadedFeatures.forEach(f => {
-          const cat = f.category || 'General';
-          if (!groups[cat]) groups[cat] = [];
-          groups[cat].push(f);
-        });
-
-        let checkboxHtml = '';
-        Object.keys(groups).sort().forEach(cat => {
-          checkboxHtml += `<div class="cat-section-header">${cat}</div>`;
-          checkboxHtml += `<div class="checkbox-grid">`;
-          groups[cat].forEach(f => {
-            checkboxHtml += `
-              <label class="checkbox-item">
-                <input type="checkbox" id="edit-feat-${f.key}" ${currFeatures[f.key] ? 'checked' : ''} />
-                <span>${f.label.toUpperCase()}</span>
-              </label>
+        const isPatch = !feat.isAimbot && !!feat.scanHex;
+        const isAimbot = !!feat.isAimbot;
+        let offsetsHtml = '';
+        if (feat.aimOffsets && feat.aimOffsets.length > 0) {
+          feat.aimOffsets.forEach(off => {
+            offsetsHtml += `
+              <div class="offset-row" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+                <input type="text" class="form-input off-name" placeholder="Name (e.g. Chest)" style="flex:2; min-width:140px;" value="${off.name || ''}" />
+                <input type="text" class="form-input off-1" placeholder="Off 1 (0xB4)" style="flex:1; min-width:80px;" value="${off.offset1 || ''}" />
+                <input type="text" class="form-input off-2" placeholder="Off 2 (0xE8)" style="flex:1; min-width:80px;" value="${off.offset2 || ''}" />
+                <button type="button" class="btn btn-dark btn-sm" onclick="this.parentElement.remove()" style="padding:0.4rem 0.6rem; min-width:32px;">✕</button>
+              </div>
             `;
           });
-          checkboxHtml += `</div>`;
-        });
+        }
 
-        let modalHtml = `
-          <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9998;display:flex;align-items:center;justify-content:center;" id="featureEditModal">
-            <div class="card" style="width:90%;max-width:450px;max-height:80vh;overflow-y:auto;">
-              <h3 class="card-title">Edit permissions: ${username}</h3>
-              <div style="margin-top:1rem;margin-bottom:1.5rem;">
-                ${checkboxHtml}
+        const modalHtml = `
+          <div class="modal-overlay" id="editModal">
+            <div class="card modal-card" style="max-width: 650px; width: 95%;">
+              <h3 class="card-title">Edit Feature</h3>
+              <div class="form-group" style="margin-top:1rem;">
+                <label>KEY (Cannot be changed)</label>
+                <input type="text" class="form-input" value="${feat.key}" disabled />
               </div>
-              <div style="display:flex;gap:0.75rem;">
-                <button class="btn btn-primary btn-full" id="saveFeaturesBtn">Save</button>
-                <button class="btn btn-dark btn-full" onclick="document.getElementById('featureEditModal').remove()">Cancel</button>
+              <div class="form-group" style="margin-top:1rem;">
+                <label>LABEL</label>
+                <input type="text" id="editLabel" class="form-input" value="${feat.label}" />
+              </div>
+              <div class="form-group" style="margin-top:1rem;">
+                <label>CATEGORY</label>
+                <input type="text" id="editCategory" class="form-input" list="categoryList" value="${feat.category}" />
+              </div>
+
+              <div style="margin-top: 1rem; margin-bottom: 0.5rem; display: flex; flex-wrap: wrap; gap: 1rem;">
+                <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.85rem; color:var(--text-200); user-select:none;">
+                  <input type="checkbox" id="editIsPatch" style="width:16px;height:16px;accent-color:var(--red);" ${isPatch ? 'checked' : ''} />
+                  <strong>IS MEMORY PATCH?</strong>
+                </label>
+                <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.85rem; color:var(--text-200); user-select:none;">
+                  <input type="checkbox" id="editIsAimbot" style="width:16px;height:16px;accent-color:var(--green);" ${isAimbot ? 'checked' : ''} />
+                  <strong>IS AIMBOT PATCH?</strong>
+                </label>
+              </div>
+
+              <div id="editAobInputs" style="display: ${isPatch ? 'block' : 'none'}; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 6px; margin-bottom: 1rem; border: 1px solid var(--border);">
+                <div class="form-group">
+                  <label>SCAN PATTERN (HEX)</label>
+                  <input type="text" id="editScan" class="form-input" value="${isAimbot ? '' : (feat.scanHex || '')}" />
+                </div>
+                <div class="form-group" style="margin-top: 0.75rem;">
+                  <label>REPLACE PATTERN (HEX)</label>
+                  <input type="text" id="editReplace" class="form-input" value="${feat.replaceHex || ''}" />
+                </div>
+              </div>
+
+              <div id="editAimbotInputs" style="display: ${isAimbot ? 'block' : 'none'}; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 6px; margin-bottom: 1rem; border: 1px solid var(--border);">
+                <div class="form-group">
+                  <label>MAIN SCAN PATTERN (HEX)</label>
+                  <input type="text" id="editAimScan" class="form-input" value="${isAimbot ? (feat.scanHex || '') : ''}" />
+                </div>
+
+                <div style="margin-top: 1rem;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom: 0.5rem;">
+                    <label>OFFSET SWAPS</label>
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                      <button type="button" class="btn btn-dark btn-sm" id="editRestoreDefaultAimbotBtn">↻ Restore Defaults</button>
+                      <button type="button" class="btn btn-dark btn-sm" id="editAddOffsetBtn">+ Add Offset Pair</button>
+                    </div>
+                  </div>
+                  <div id="editOffsetList" style="display:flex; flex-direction:column; gap:0.5rem;">
+                    ${offsetsHtml}
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:0.75rem;margin-top:1.5rem;">
+                <button class="btn btn-primary btn-full" id="saveEditBtn">Save Changes</button>
+                <button class="btn btn-dark btn-full" onclick="document.getElementById('editModal').remove()">Cancel</button>
               </div>
             </div>
           </div>
         `;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-        document.getElementById('saveFeaturesBtn').addEventListener('click', async () => {
-          const updated = {};
-          _loadedFeatures.forEach(f => {
-            const cb = document.getElementById(`edit-feat-${f.key}`);
-            updated[f.key] = cb ? cb.checked : false;
-          });
-          await App.updatePanelUserFeatures(username, updated);
-          App.toast('Features updated successfully', 'success');
-          document.getElementById('featureEditModal').remove();
-          renderUsers();
+        document.getElementById('editIsPatch').addEventListener('change', (e) => {
+          if (e.target.checked) {
+            document.getElementById('editIsAimbot').checked = false;
+            document.getElementById('editAimbotInputs').style.display = 'none';
+          }
+          document.getElementById('editAobInputs').style.display = e.target.checked ? 'block' : 'none';
+        });
+
+        document.getElementById('editIsAimbot').addEventListener('change', (e) => {
+          if (e.target.checked) {
+            document.getElementById('editIsPatch').checked = false;
+            document.getElementById('editAobInputs').style.display = 'none';
+          }
+          document.getElementById('editAimbotInputs').style.display = e.target.checked ? 'block' : 'none';
+        });
+
+        document.getElementById('editRestoreDefaultAimbotBtn').addEventListener('click', () => {
+          document.getElementById('editAimScan').value = 'FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A5 43';
+
+          const list = document.getElementById('editOffsetList');
+          list.innerHTML = `
+            <div class="offset-row" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+              <input type="text" class="form-input off-name" placeholder="Name (e.g. Chest)" style="flex:2; min-width:140px;" value="Chest to Head" />
+              <input type="text" class="form-input off-1" placeholder="Off 1 (0xE8)" style="flex:1; min-width:80px;" value="E8" />
+              <input type="text" class="form-input off-2" placeholder="Off 2 (0xB4)" style="flex:1; min-width:80px;" value="B4" />
+              <button type="button" class="btn btn-dark btn-sm" onclick="this.parentElement.remove()" style="padding:0.4rem 0.6rem; min-width:32px;">✕</button>
+            </div>
+          `;
+        });
+
+        document.getElementById('editAddOffsetBtn').addEventListener('click', () => {
+          const row = document.createElement('div');
+          row.className = 'offset-row';
+          row.style.display = 'flex';
+          row.style.gap = '0.5rem';
+          row.style.flexWrap = 'wrap';
+          row.style.alignItems = 'center';
+          row.innerHTML = `
+            <input type="text" class="form-input off-name" placeholder="Name (e.g. Chest)" style="flex:2; min-width:140px;" />
+            <input type="text" class="form-input off-1" placeholder="Off 1 (0xB4)" style="flex:1; min-width:80px;" />
+            <input type="text" class="form-input off-2" placeholder="Off 2 (0xE8)" style="flex:1; min-width:80px;" />
+            <button type="button" class="btn btn-dark btn-sm" onclick="this.parentElement.remove()" style="padding:0.4rem 0.6rem; min-width:32px;">✕</button>
+          `;
+          document.getElementById('editOffsetList').appendChild(row);
+        });
+
+        document.getElementById('saveEditBtn').addEventListener('click', async () => {
+          const newLabel = document.getElementById('editLabel').value.trim();
+          const newCategory = document.getElementById('editCategory').value.trim();
+
+          let scanHex = '';
+          let replaceHex = '';
+          let finalIsAimbot = false;
+          let aimOffsets = [];
+
+          if (document.getElementById('editIsPatch').checked) {
+            scanHex = document.getElementById('editScan').value.trim();
+            replaceHex = document.getElementById('editReplace').value.trim();
+            if (!scanHex || !replaceHex) {
+              App.toast('Please provide both scan and replace hex patterns.', 'error');
+              return;
+            }
+          } else if (document.getElementById('editIsAimbot').checked) {
+            finalIsAimbot = true;
+            scanHex = document.getElementById('editAimScan').value.trim();
+            if (!scanHex) {
+              App.toast('Please provide main scan pattern for aimbot.', 'error');
+              return;
+            }
+            const offsetRows = document.querySelectorAll('#editModal .offset-row');
+            offsetRows.forEach(row => {
+              const name = row.querySelector('.off-name').value.trim();
+              const o1 = row.querySelector('.off-1').value.trim();
+              const o2 = row.querySelector('.off-2').value.trim();
+              if (name && o1 && o2) {
+                aimOffsets.push({ name, offset1: o1, offset2: o2 });
+              }
+            });
+          }
+
+          if (newLabel && newCategory) {
+            await App.updateFeatureDefinition(key, newLabel, newCategory, scanHex, replaceHex, finalIsAimbot, aimOffsets);
+            App.toast('Feature updated successfully', 'success');
+            document.getElementById('editModal').remove();
+            renderFeatures();
+          } else {
+            App.toast('Fields cannot be empty', 'error');
+          }
         });
       }
     });
 
-    document.getElementById('refreshUsersBtn').addEventListener('click', renderUsers);
+    // ── Refresh + Logout ──
+    document.getElementById('refreshBtn').addEventListener('click', renderFeatures);
     document.getElementById('logoutBtn').addEventListener('click', () => {
       sessionStorage.clear();
       window.location.href = 'index.html';
     });
 
     // ── Initial Load ──
-    App.initFirebase().then(async () => {
-      await initCheckboxes();
-      renderUsers();
-    });
-
-    setInterval(renderUsers, 30000);
+    App.initFirebase().then(renderFeatures);
   </script>
 </body>
 </html>
