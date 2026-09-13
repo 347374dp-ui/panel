@@ -411,7 +411,7 @@ const App = (() => {
     return await fbGet(`dp_panel_users/${username}`);
   };
 
-  const createPanelUser = async (username, password, _unused, features) => {
+  const createPanelUser = async (username, password, _unused, features, isTrial = false, durationHoursOrDays = 0, customExpiresAt = '') => {
     const existing = await fbGet(`dp_panel_users/${username}`);
     if (existing) return { success: false, msg: 'Username already exists.' };
     if (username === 'admin') return { success: false, msg: 'Cannot use "admin" as username.' };
@@ -425,17 +425,41 @@ const App = (() => {
     const featureObj = {};
     featureList.forEach(f => { featureObj[f.key] = !!(features && features[f.key]); });
 
+    // Calculate expiry ISO
+    let expiresAt = '';
+    if (customExpiresAt) {
+      try {
+        expiresAt = new Date(customExpiresAt).toISOString();
+      } catch (e) {
+        expiresAt = '';
+      }
+    } else if (durationHoursOrDays > 0) {
+      const now = new Date();
+      now.setHours(now.getHours() + (parseInt(durationHoursOrDays) || 24));
+      expiresAt = now.toISOString();
+    }
+
     const userData = {
       username,
       password,
       displayName: username,
       secret,
       active: true,
+      is_trial: !!isTrial,
+      trial_hours: isTrial ? (parseInt(durationHoursOrDays) || 24) : 0,
+      expiresAt: expiresAt || '',
       createdAt: new Date().toISOString(),
       features: featureObj,
     };
 
     await fbPut(`dp_panel_users/${username}`, userData);
+    return { success: true };
+  };
+
+  const updatePanelUserExpiry = async (username, expiresAt, isTrial = false) => {
+    const updates = { expiresAt: expiresAt || '' };
+    if (typeof isTrial === 'boolean') updates.is_trial = isTrial;
+    await fbPatch(`dp_panel_users/${username}`, updates);
     return { success: true };
   };
 
@@ -505,8 +529,21 @@ const App = (() => {
 
   // --- Helpers ---
   const getTimeLeft = (isoString) => {
+    if (!isoString) {
+      return {
+        expired: false,
+        text: 'Lifetime',
+        toString() { return 'Lifetime'; }
+      };
+    }
     const diff = new Date(isoString) - new Date();
-    if (diff <= 0) return 'Expired';
+    if (diff <= 0) {
+      return {
+        expired: true,
+        text: 'Expired',
+        toString() { return 'Expired'; }
+      };
+    }
     const d = Math.floor(diff / 86400000);
     const h = Math.floor((diff % 86400000) / 3600000);
     const m = Math.floor((diff % 3600000) / 60000);
@@ -516,11 +553,12 @@ const App = (() => {
     if (h > 0 || d > 0) parts.push(`${h}h`);
     if (m > 0 || h > 0 || d > 0) parts.push(`${m}m`);
     parts.push(`${s}s`);
-    return parts.join(' ');
-  };
-
-  const updatePanelUserExpiry = async (username, expiresAt) => {
-    await fbPatch(`dp_panel_users/${username}`, { expiresAt });
+    const str = parts.join(' ');
+    return {
+      expired: false,
+      text: str,
+      toString() { return str; }
+    };
   };
 
   const updatePanelUserPassword = async (username, password) => {
@@ -661,4 +699,30 @@ async function deleteProto(key) {
   const res = await fetch(`${FIREBASE_URL}/protos/${key}.json`, { method: 'DELETE' });
   return res.ok;
 }
+
+// ── Mobile Device Auto-Detection & Responsiveness Helper ──
+(function initMobileDetection() {
+  function checkMobile() {
+    const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isSmallScreen = window.innerWidth <= 768 || window.matchMedia('(max-width: 768px)').matches;
+    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    const isMobile = isMobileUA || (isSmallScreen && isTouch);
+
+    document.documentElement.classList.toggle('is-mobile-device', isMobile);
+    document.documentElement.classList.toggle('is-touch-device', isTouch);
+    document.body.classList.toggle('is-mobile-view', window.innerWidth <= 840);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkMobile);
+  } else {
+    checkMobile();
+  }
+
+  window.addEventListener('resize', checkMobile);
+  window.addEventListener('orientationchange', () => {
+    setTimeout(checkMobile, 150);
+  });
+})();
+
 

@@ -58,37 +58,100 @@
       </div>
     </section>
 
-    <div class="admin-grid" style="grid-template-columns: 380px 1fr;">
+    <div class="admin-grid" style="grid-template-columns: minmax(360px, 430px) 1fr;">
 
-      <!-- Create User -->
+      <!-- Create User / Trial Account (mirrored from admin.html) -->
       <section class="card fade-in card-hover-glow" style="position: sticky; top: 90px;">
-        <h3 class="card-title">➕ Add Panel Account</h3>
-        <p class="card-subtitle">Register a client with customized feature permissions</p>
-        <form id="createUserForm" autocomplete="off">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;flex-wrap:wrap;gap:.5rem;">
+          <div>
+            <h3 class="card-title" style="margin:0;">Register Panel Account</h3>
+            <p class="card-subtitle" style="margin:0;">Register standard clients or trial accounts with custom expiry &amp; feature permissions.</p>
+          </div>
+          <button class="btn btn-dark btn-sm" id="createTestAccountBtn" type="button" style="color:var(--amber);border-color:var(--amber);">🧪 Quick Trial (24h)</button>
+        </div>
+
+        <form id="createUserForm" autocomplete="off" style="margin-top:1rem;">
           <div class="form-group">
-            <label for="newUsername">USERNAME</label>
-            <input type="text" id="newUsername" class="form-input" placeholder="e.g. john" required />
+            <label for="newUsername">👤 USERNAME</label>
+            <input type="text" id="newUsername" class="form-input" placeholder="e.g. supporter_trial" required />
           </div>
           <div class="form-group">
-            <label for="newPassword">PASSWORD</label>
-            <input type="password" id="newPassword" class="form-input" placeholder="Secure password" required />
+            <label for="newPassword">🔐 PASSWORD</label>
+            <input type="password" id="newPassword" class="form-input" placeholder="password" required />
           </div>
 
+          <!-- Account Expiration Options (matches admin.html) -->
+          <div id="accOptsContainer" class="expiry-box">
+            <span class="expiry-box-label">⏱ Account Expiration &amp; Duration</span>
+
+            <div class="expiry-radio-group">
+              <label>
+                <input type="radio" name="trialExpiryMode" value="days" checked /> Preset Duration
+              </label>
+              <label>
+                <input type="radio" name="trialExpiryMode" value="date" /> Exact Date &amp; Time Picker
+              </label>
+            </div>
+
+            <div id="presetDaysDiv">
+              <label style="font-size:0.8rem;color:var(--text-300);margin-bottom:0.3rem;display:block;">Select Account Duration:</label>
+              <select id="trialDaysSelect" class="form-input">
+                <option value="0">Never Expire (Lifetime Account)</option>
+                <option value="1" selected>1 Day (24 Hours)</option>
+                <option value="3">3 Days</option>
+                <option value="7">7 Days (1 Week)</option>
+                <option value="14">14 Days (2 Weeks)</option>
+                <option value="30">30 Days (1 Month)</option>
+                <option value="60">60 Days (2 Months)</option>
+                <option value="90">90 Days (3 Months)</option>
+                <option value="180">180 Days (6 Months)</option>
+                <option value="365">365 Days (1 Year)</option>
+              </select>
+            </div>
+
+            <div id="directDateDiv" style="display:none;">
+              <label style="font-size:0.8rem;color:var(--text-300);margin-bottom:0.3rem;display:block;">Select Exact Expiration Date &amp; Time:</label>
+              <input type="datetime-local" id="trialDirectDate" class="form-input" />
+            </div>
+          </div>
+
+          <!-- Feature Selection: Interactive Tabbed Pop-up Trigger -->
           <div class="form-group" style="margin-top:1.2rem;">
-            <label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem;">
-              <span>🎯 ALLOWED FEATURES</span>
-              <span style="font-size:0.7rem;color:var(--text-400);">(Select permissions)</span>
-            </label>
-            <div id="featureCheckboxes" style="max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:0.8rem;"><p style="color:var(--text-400);font-size:0.82rem;text-align:center;padding:1rem;">Loading features...</p></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.4rem;">
+              <label style="font-weight:700;color:var(--text-100);font-size:0.82rem;display:flex;align-items:center;gap:6px;">
+                <span>🎯</span> <span>ALLOWED CHEAT FEATURES</span>
+              </label>
+              <div style="display:flex;gap:0.4rem;">
+                <button type="button" class="btn btn-dark btn-sm" id="regSelectAllQuickBtn" style="padding:0.2rem 0.6rem;font-size:0.72rem;color:var(--cyan);border-color:rgba(0,229,255,0.3);">✓ All</button>
+                <button type="button" class="btn btn-dark btn-sm" id="regClearAllQuickBtn" style="padding:0.2rem 0.6rem;font-size:0.72rem;">✕ Clear</button>
+              </div>
+            </div>
+
+            <!-- Sleek Feature Summary Card with direct click to open tabbed selector popup -->
+            <div class="feature-summary-card" id="openFeatModalBtn" style="border:1px solid rgba(0,229,255,0.25);background:rgba(0,229,255,0.03);">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;">
+                <div>
+                  <div id="regFeatSummaryTitle" style="font-weight:700;font-size:0.85rem;color:var(--cyan);">✨ All Features Enabled</div>
+                  <div id="regFeatSummaryCount" style="font-size:0.75rem;color:var(--text-300);margin-top:2px;">Click to switch tabs &amp; pick features</div>
+                </div>
+                <button type="button" class="btn btn-dark btn-sm" style="background:rgba(0,229,255,0.12);color:var(--cyan);border:1px solid rgba(0,229,255,0.4);font-weight:700;font-size:0.75rem;padding:0.35rem 0.75rem;white-space:nowrap;display:flex;align-items:center;gap:5px;">
+                  <span>📑 Switch Tabs</span>
+                </button>
+              </div>
+              <div id="regFeatCategoryPills" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:0.6rem;"></div>
+            </div>
           </div>
 
-          <button type="submit" class="btn btn-primary btn-full" style="margin-top:1.5rem;" id="createUserBtn">✨ Create User</button>
+          <div class="account-action-grid">
+            <button type="button" class="btn btn-full" id="createTrialBtn" style="background:rgba(255,152,0,0.18);border:1px solid var(--amber);color:var(--amber);font-weight:600;">🧪 Create Trial Account</button>
+            <button type="button" class="btn btn-primary btn-full" id="createStandardBtn">👤 Create Standard Account</button>
+          </div>
         </form>
       </section>
 
       <!-- User List -->
       <section class="card fade-in">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:1rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:1rem;">
           <div>
             <h3 class="card-title" style="margin-bottom:.25rem;">👥 Panel Client Accounts</h3>
             <p class="card-subtitle">Manage feature toggles and permissions remotely</p>
@@ -98,13 +161,24 @@
           </button>
         </div>
 
+        <!-- Search & Filter Bar (matches admin.html) -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;gap:0.75rem;flex-wrap:wrap;background:var(--bg-1);padding:0.6rem 0.9rem;border-radius:8px;border:1px solid var(--border);">
+          <input type="text" id="userSearchInput" class="form-input" placeholder="🔍 Search client username..." style="max-width:240px;font-size:0.8rem;padding:0.45rem 0.75rem;" />
+          <div class="filter-pills" id="userFilterPills">
+            <button class="filter-pill active" data-filter="all">All</button>
+            <button class="filter-pill" data-filter="active">Active</button>
+            <button class="filter-pill" data-filter="trial">Trial</button>
+            <button class="filter-pill" data-filter="disabled">Disabled / Expired</button>
+          </div>
+        </div>
+
         <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--border);">
           <table class="data-table panel-users-table" id="userTable">
             <thead>
               <tr style="background:rgba(79,140,255,0.05);">
                 <th style="text-align:left;">👤 User</th>
-                <th style="text-align:center;">Status</th>
-                <th style="text-align:center;">Features</th>
+                <th style="text-align:center;">Status &amp; Timeline</th>
+                <th style="text-align:left;">Allowed Features</th>
                 <th style="text-align:right;">Actions</th>
               </tr>
             </thead>
@@ -142,90 +216,396 @@
       window.location.href = 'index.html';
     }
 
-    // ── Store loaded feature list ──
+    // ── Store loaded feature list & registration feature state ──
     let _loadedFeatures = [];
+    let _regFeatures = {}; // { [featureKey]: boolean }
 
-    // ── Render checkbox list (grouped by category) ──
-    const renderCheckboxes = async (containerId, features, idPrefix, checkedMap) => {
-      const container = document.getElementById(containerId);
-      container.innerHTML = '';
+    // ── Update registration feature summary card ──
+    function updateRegSummary() {
+      const titleEl = document.getElementById('regFeatSummaryTitle');
+      const countEl = document.getElementById('regFeatSummaryCount');
+      const pillsEl = document.getElementById('regFeatCategoryPills');
+      if (!titleEl || !_loadedFeatures.length) return;
 
-      // Group by category
-      const groups = {};
-      features.forEach(f => {
-        const cat = f.category || 'General';
-        if (!groups[cat]) groups[cat] = [];
-        groups[cat].push(f);
-      });
+      const enabledList = _loadedFeatures.filter(f => _regFeatures[f.key]);
+      const total = _loadedFeatures.length;
+      const count = enabledList.length;
 
-      Object.keys(groups).sort().forEach(cat => {
-        const header = document.createElement('div');
-        header.className = 'cat-section-header';
-        header.textContent = cat;
-        container.appendChild(header);
+      if (count === total) {
+        titleEl.textContent = '✨ All Features Enabled';
+        titleEl.style.color = 'var(--cyan)';
+        countEl.textContent = `${count} of ${total} features active (Full Access)`;
+      } else if (count === 0) {
+        titleEl.textContent = '🚫 No Features Selected';
+        titleEl.style.color = 'var(--text-400)';
+        countEl.textContent = 'Click to configure permissions';
+      } else {
+        titleEl.textContent = `⚡ ${count} of ${total} Features Selected`;
+        titleEl.style.color = 'var(--primary)';
+        countEl.textContent = 'Custom feature profile configured';
+      }
 
-        const grid = document.createElement('div');
-        grid.className = 'checkbox-grid';
-
-        groups[cat].forEach(f => {
-          const isChecked = checkedMap ? (checkedMap[f.key] || false) : true;
-          grid.innerHTML += `
-            <label class="checkbox-item">
-              <input type="checkbox" id="${idPrefix}-${f.key}" ${isChecked ? 'checked' : ''} />
-              <span>${f.label.toUpperCase()}</span>
-            </label>
-          `;
+      if (pillsEl) {
+        // Group enabled by category
+        const catCounts = {};
+        enabledList.forEach(f => {
+          const cat = f.category || 'General';
+          catCounts[cat] = (catCounts[cat] || 0) + 1;
         });
 
-        container.appendChild(grid);
-      });
-    };
+        pillsEl.innerHTML = Object.entries(catCounts).map(([cat, c]) => `
+          <span style="font-size:0.68rem;padding:2px 7px;border-radius:6px;background:rgba(0,229,255,0.08);color:var(--cyan);border:1px solid rgba(0,229,255,0.2);white-space:nowrap;">
+            ${cat}: <strong>${c}</strong>
+          </span>
+        `).join('');
+      }
+    }
 
-    // ── Initialize checkboxes ──
+    // ── Generic Tabbed Feature Selector Modal ──
+    function openTabbedFeatureModal({ title, subtitle, initialFeatures, onSave }) {
+      const existing = document.getElementById('tabbedFeatureModal');
+      if (existing) existing.remove();
+
+      // Working copy
+      const tempFeatures = { ...initialFeatures };
+      let activeCategory = 'ALL';
+
+      // Group features by category
+      const categories = ['ALL'];
+      const catMap = { 'ALL': _loadedFeatures };
+      _loadedFeatures.forEach(f => {
+        const cat = f.category || 'General';
+        if (!catMap[cat]) {
+          catMap[cat] = [];
+          categories.push(cat);
+        }
+        catMap[cat].push(f);
+      });
+
+      const modalDiv = document.createElement('div');
+      modalDiv.className = 'modal-overlay';
+      modalDiv.id = 'tabbedFeatureModal';
+      modalDiv.innerHTML = `
+        <div class="card modal-card" style="max-width:760px;width:95%;max-height:92vh;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem;">
+            <div>
+              <h3 class="card-title" style="margin-bottom:0.2rem;">${title}</h3>
+              <p class="card-subtitle">${subtitle || 'Switch tabs on the left to toggle features per category'}</p>
+            </div>
+            <div style="text-align:right;">
+              <span id="modalSelectedCounter" style="font-size:0.85rem;font-weight:700;color:var(--cyan);background:rgba(0,229,255,0.1);padding:4px 10px;border-radius:20px;border:1px solid rgba(0,229,255,0.3);">
+                0 / ${_loadedFeatures.length} Active
+              </span>
+            </div>
+          </div>
+
+          <!-- Two-Column Body: Left Tabs Sidebar, Right Features Content -->
+          <div class="feature-modal-body">
+            <!-- Left Column: Category Tabs -->
+            <div class="feature-sidebar-tabs" id="modalTabBar"></div>
+
+            <!-- Right Column: Quick Action Bar + Feature Cards Grid -->
+            <div class="feature-content-column">
+              <!-- Quick Action Bar -->
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.8rem;background:rgba(255,255,255,0.02);padding:0.5rem 0.8rem;border-radius:8px;border:1px solid var(--border-light);flex-wrap:wrap;">
+                <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                  <button type="button" class="btn btn-dark btn-sm" id="modalQuickAllBtn" style="color:var(--cyan);border-color:rgba(0,229,255,0.3);font-size:0.75rem;padding:0.3rem 0.65rem;">✓ All</button>
+                  <button type="button" class="btn btn-dark btn-sm" id="modalQuickClearBtn" style="font-size:0.75rem;padding:0.3rem 0.65rem;">✕ Clear</button>
+                  <button type="button" class="btn btn-dark btn-sm" id="modalQuickCatBtn" style="font-size:0.75rem;padding:0.3rem 0.65rem;">This Tab Only</button>
+                </div>
+                <input type="text" id="modalFeatFilter" class="form-input" placeholder="🔍 Search features..." style="max-width:180px;font-size:0.78rem;padding:0.3rem 0.6rem;height:auto;" />
+              </div>
+
+              <!-- Feature Cards Grid -->
+              <div class="feature-grid-modern" id="modalFeatureGrid"></div>
+            </div>
+          </div>
+
+          <!-- Footer Actions -->
+          <div style="display:flex;gap:0.75rem;margin-top:1rem;padding-top:0.8rem;border-top:1px solid var(--border);">
+            <button class="btn btn-primary btn-full" id="modalConfirmBtn">💾 Confirm &amp; Apply</button>
+            <button class="btn btn-dark btn-full" id="modalDismissBtn">Cancel</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modalDiv);
+
+      function updateCounter() {
+        const count = _loadedFeatures.filter(f => tempFeatures[f.key]).length;
+        const badge = document.getElementById('modalSelectedCounter');
+        if (badge) badge.textContent = `${count} / ${_loadedFeatures.length} Active`;
+
+        // Update tab badges
+        categories.forEach(cat => {
+          const tabBtn = document.querySelector(`#modalTabBar .feature-tab-btn[data-cat="${cat}"]`);
+          if (!tabBtn) return;
+          const items = catMap[cat] || [];
+          const sel = items.filter(f => tempFeatures[f.key]).length;
+          const b = tabBtn.querySelector('.tab-badge');
+          if (b) b.textContent = `${sel}/${items.length}`;
+        });
+
+        // Update current tab button label and state
+        const tabBtnText = document.getElementById('modalQuickCatBtn');
+        if (tabBtnText) {
+          const currentItems = catMap[activeCategory] || [];
+          const currentSelected = currentItems.filter(f => tempFeatures[f.key]).length;
+          const isAllSelected = currentItems.length > 0 && currentSelected === currentItems.length;
+          if (activeCategory === 'ALL') {
+            tabBtnText.textContent = isAllSelected ? '✕ Deselect All' : '✓ Select All';
+          } else {
+            tabBtnText.textContent = isAllSelected ? `✕ Deselect ${activeCategory}` : `✓ Select ${activeCategory} Only`;
+          }
+        }
+      }
+
+      function renderTabs() {
+        const bar = document.getElementById('modalTabBar');
+        bar.innerHTML = '';
+        categories.forEach(cat => {
+          const items = catMap[cat] || [];
+          const sel = items.filter(f => tempFeatures[f.key]).length;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = `feature-tab-btn ${cat === activeCategory ? 'active' : ''}`;
+          btn.dataset.cat = cat;
+          btn.innerHTML = `<span>${cat}</span> <span class="tab-badge">${sel}/${items.length}</span>`;
+          btn.addEventListener('click', () => {
+            activeCategory = cat;
+            // Highlight active tab without rebuilding entire DOM
+            document.querySelectorAll('#modalTabBar .feature-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderGrid();
+            updateCounter();
+          });
+          bar.appendChild(btn);
+        });
+      }
+
+      function renderGrid() {
+        const grid = document.getElementById('modalFeatureGrid');
+        grid.innerHTML = '';
+        const searchInput = document.getElementById('modalFeatFilter');
+        const search = (searchInput?.value || '').toLowerCase().trim();
+
+        // If searching, search across all features or within the active category
+        let list = search && activeCategory === 'ALL' 
+          ? _loadedFeatures 
+          : (catMap[activeCategory] || []);
+
+        if (search) {
+          list = list.filter(f => {
+            const label = (f.label || '').toLowerCase();
+            const cat = (f.category || '').toLowerCase();
+            const key = (f.key || '').toLowerCase();
+            return label.includes(search) || cat.includes(search) || key.includes(search);
+          });
+        }
+
+        if (list.length === 0) {
+          grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2.5rem;color:var(--text-400);font-size:0.85rem;">No features found matching "${search}"</div>`;
+          return;
+        }
+
+        list.forEach(f => {
+          const isChecked = !!tempFeatures[f.key];
+          const card = document.createElement('div');
+          card.className = `feature-card-toggle ${isChecked ? 'checked' : ''}`;
+          card.innerHTML = `
+            <div style="flex:1;min-width:0;">
+              <div class="f-title">${f.label}</div>
+              <div class="f-cat">${f.category || 'General'}</div>
+            </div>
+            <div class="feat-switch"></div>
+          `;
+
+          const toggle = () => {
+            const nextState = !tempFeatures[f.key];
+            tempFeatures[f.key] = nextState;
+            card.classList.toggle('checked', nextState);
+            updateCounter();
+          };
+
+          card.addEventListener('click', toggle);
+          grid.appendChild(card);
+        });
+      }
+
+      // Filter search with realtime input
+      const searchBox = document.getElementById('modalFeatFilter');
+      if (searchBox) {
+        searchBox.addEventListener('input', renderGrid);
+        searchBox.addEventListener('keyup', renderGrid);
+      }
+
+      // Select all
+      document.getElementById('modalQuickAllBtn').addEventListener('click', () => {
+        _loadedFeatures.forEach(f => tempFeatures[f.key] = true);
+        renderGrid();
+        updateCounter();
+      });
+
+      // Clear all
+      document.getElementById('modalQuickClearBtn').addEventListener('click', () => {
+        _loadedFeatures.forEach(f => tempFeatures[f.key] = false);
+        renderGrid();
+        updateCounter();
+      });
+
+      // Select / Deselect current tab only (smart toggle)
+      document.getElementById('modalQuickCatBtn').addEventListener('click', () => {
+        const list = catMap[activeCategory] || [];
+        const isAllSelected = list.length > 0 && list.every(f => tempFeatures[f.key]);
+        const targetState = !isAllSelected; // toggle all in tab on or off
+
+        list.forEach(f => {
+          tempFeatures[f.key] = targetState;
+        });
+
+        renderGrid();
+        updateCounter();
+      });
+
+      // Dismiss
+      document.getElementById('modalDismissBtn').addEventListener('click', () => modalDiv.remove());
+
+      // Confirm
+      document.getElementById('modalConfirmBtn').addEventListener('click', () => {
+        if (onSave) onSave({ ...tempFeatures });
+        modalDiv.remove();
+      });
+
+      renderTabs();
+      renderGrid();
+      updateCounter();
+    }
+
+    // ── Initialize feature options ──
     const initCheckboxes = async () => {
       _loadedFeatures = await App.getFeatureList(true);
-      await renderCheckboxes('featureCheckboxes', _loadedFeatures, 'feat', null);
+      _regFeatures = {};
+      _loadedFeatures.forEach(f => {
+        _regFeatures[f.key] = true;
+      });
+      updateRegSummary();
     };
 
-    const loadStats = async () => {
-      const stats = await App.getGlobalPanelStats();
-      document.getElementById('statTotalUsers').textContent = stats.totalUsers;
-      document.getElementById('statActiveUsers').textContent = stats.activeUsers;
-      document.getElementById('statDisabledUsers').textContent = stats.disabledUsers;
-    };
+    // Card trigger opens tabbed selector
+    const openFeatModalBtn = document.getElementById('openFeatModalBtn');
+    if (openFeatModalBtn) {
+      openFeatModalBtn.addEventListener('click', () => {
+        openTabbedFeatureModal({
+          title: '🎯 Select Registration Features',
+          subtitle: 'Choose which cheat features to enable for the new account',
+          initialFeatures: _regFeatures,
+          onSave: (updated) => {
+            _regFeatures = updated;
+            updateRegSummary();
+            App.toast('Feature selection updated!', 'info');
+          }
+        });
+      });
+    }
+
+    // Quick select all in registration
+    const regSelectAllQuickBtn = document.getElementById('regSelectAllQuickBtn');
+    if (regSelectAllQuickBtn) {
+      regSelectAllQuickBtn.addEventListener('click', () => {
+        _loadedFeatures.forEach(f => _regFeatures[f.key] = true);
+        updateRegSummary();
+        App.toast('Enabled all features for new account', 'success');
+      });
+    }
+
+    // Quick clear all in registration
+    const regClearAllQuickBtn = document.getElementById('regClearAllQuickBtn');
+    if (regClearAllQuickBtn) {
+      regClearAllQuickBtn.addEventListener('click', () => {
+        _loadedFeatures.forEach(f => _regFeatures[f.key] = false);
+        updateRegSummary();
+        App.toast('Cleared all features for new account', 'info');
+      });
+    }
+
+    // ── Render Panel Users Table ──
+    let currentFilter = 'all';
+    let searchQuery = '';
 
     const renderUsers = async () => {
-      // Reload features to stay in sync
       _loadedFeatures = await App.getFeatureList(true);
-
-      const users = await App.getAllPanelUsers();
+      let users = await App.getAllPanelUsers();
       const tbody = document.getElementById('userTableBody');
+      if (!tbody) return;
       tbody.innerHTML = '';
 
+      const now = new Date();
+
+      // Filter by category pill
+      if (currentFilter === 'active') {
+        users = users.filter(u => u.active && (!u.expiresAt || new Date(u.expiresAt) >= now));
+      } else if (currentFilter === 'trial') {
+        users = users.filter(u => u.is_trial);
+      } else if (currentFilter === 'disabled') {
+        users = users.filter(u => !u.active || (u.expiresAt && new Date(u.expiresAt) < now));
+      }
+
+      // Search query filter
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        users = users.filter(u => u.username && u.username.toLowerCase().includes(q));
+      }
+
       if (users.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-300);padding:2rem;">No panel accounts yet. Create one!</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-300);padding:2.5rem;">No panel accounts found matching criteria.</td></tr>`;
         return;
       }
 
       users.forEach(user => {
-        const statusClass = user.active ? 'status-active' : 'status-disabled';
-        const statusText = user.active ? 'Active' : 'Disabled';
+        const isExpired = user.expiresAt && (new Date(user.expiresAt) < now);
+        const statusClass = (user.active && !isExpired) ? 'status-active' : 'status-disabled';
+        const statusText = !user.active ? 'Disabled' : (isExpired ? 'Expired' : 'Active');
 
-        // Render features using dynamic feature list
-        let featuresHtml = '';
-        _loadedFeatures.forEach(f => {
-          const isEnabled = user.features && user.features[f.key];
-          featuresHtml += `<span class="feature-tag ${isEnabled ? 'enabled' : 'disabled'}">${f.label}</span>`;
-        });
+        // Trial badge
+        const trialBadge = user.is_trial
+          ? `<span style="background:linear-gradient(135deg, #e2e8f0, #94a3b8);color:#0f172a;font-size:0.7rem;font-weight:800;padding:2px 7px;border-radius:4px;margin-left:6px;letter-spacing:0.04em;box-shadow:0 2px 8px rgba(255,255,255,0.2);">[TRIAL]</span>`
+          : `<span style="background:rgba(79,140,255,0.15);color:var(--primary);font-size:0.7rem;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:6px;">PRO</span>`;
+
+        // Time left calculation
+        let timeBadge = `<span style="color:var(--green);font-size:0.78rem;font-weight:600;">Lifetime</span>`;
+        if (user.expiresAt) {
+          const timeLeftInfo = App.getTimeLeft(user.expiresAt);
+          if (timeLeftInfo.expired) {
+            timeBadge = `<span style="color:var(--red);font-weight:700;font-size:0.78rem;">Expired (${new Date(user.expiresAt).toLocaleDateString()})</span>`;
+          } else {
+            timeBadge = `<span style="color:var(--amber);font-weight:600;font-size:0.78rem;">⏳ ${timeLeftInfo.text}</span>`;
+          }
+        }
+
+        // Sleek Feature Status Chip (never dumps 30 pills!)
+        const enabledKeys = _loadedFeatures.filter(f => user.features && user.features[f.key]);
+        let chipHtml = '';
+        if (enabledKeys.length === _loadedFeatures.length && _loadedFeatures.length > 0) {
+          chipHtml = `<button type="button" class="feature-status-chip all edit-features-btn" data-username="${user.username}" title="Click to view/change features">
+            <span>✨ All Features</span> <span style="opacity:0.85;">(${enabledKeys.length})</span> <span>⚙️</span>
+          </button>`;
+        } else if (enabledKeys.length === 0) {
+          chipHtml = `<button type="button" class="feature-status-chip none edit-features-btn" data-username="${user.username}" title="Click to enable features">
+            <span>🚫 None Enabled</span> <span>⚙️</span>
+          </button>`;
+        } else {
+          chipHtml = `<button type="button" class="feature-status-chip partial edit-features-btn" data-username="${user.username}" title="Click to view/change features">
+            <span>⚡ ${enabledKeys.length} / ${_loadedFeatures.length} Active</span> <span>⚙️</span>
+          </button>`;
+        }
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><strong>${user.username}</strong><br><span style="font-size:0.72rem;color:var(--text-400);">Created: ${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}</span></td>
-          <td class="${statusClass}">${statusText}</td>
-          <td style="max-width:350px;white-space:normal;">${featuresHtml}</td>
-          <td class="user-controls">
+          <td><strong>${user.username}</strong> ${trialBadge}<br><span style="font-size:0.72rem;color:var(--text-400);">Created: ${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}</span></td>
+          <td class="${statusClass}" style="text-align:center;">${statusText}<br>${timeBadge}</td>
+          <td style="white-space:nowrap;">${chipHtml}</td>
+          <td class="user-controls" style="text-align:right;">
             <button class="btn btn-dark btn-sm toggle-active-btn" data-username="${user.username}">${user.active ? 'Disable' : 'Enable'}</button>
-            <button class="btn btn-dark btn-sm edit-features-btn" data-username="${user.username}">Features</button>
+            <button class="btn btn-dark btn-sm edit-features-btn" data-username="${user.username}">Manage</button>
             <button class="btn btn-red btn-sm delete-user-btn" data-username="${user.username}">Delete</button>
           </td>
         `;
@@ -235,41 +615,404 @@
       loadStats();
     };
 
-    // Form submission
-    document.getElementById('createUserForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
+    // ── Open Client Edit Modal (Full Details, Expiry & Tabbed Features) ──
+    async function openEditClientModal(username) {
+      const user = await App.getPanelUser(username);
+      if (!user) return;
+      let currFeatures = { ...(user.features || {}) };
+
+      const existingModal = document.getElementById('featureEditModal');
+      if (existingModal) existingModal.remove();
+
+      const modalDiv = document.createElement('div');
+      modalDiv.className = 'modal-overlay';
+      modalDiv.id = 'featureEditModal';
+      modalDiv.innerHTML = `
+        <div class="card modal-card" style="max-width:680px;width:95%;max-height:92vh;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+            <div>
+              <h3 class="card-title" style="margin-bottom:0.2rem;">Manage Account: <span style="color:var(--cyan);">${username}</span></h3>
+              <p class="card-subtitle">Update subscription duration, trial status and cheat features</p>
+            </div>
+            <div>
+              <span id="clientModalFeatBadge" style="font-size:0.8rem;font-weight:700;color:var(--cyan);background:rgba(0,229,255,0.1);padding:4px 10px;border-radius:20px;border:1px solid rgba(0,229,255,0.3);">
+                0 / ${_loadedFeatures.length} Active
+              </span>
+            </div>
+          </div>
+          
+          <!-- Subscription Expiry Extension Section -->
+          <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:0.9rem;margin-bottom:1rem;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.6rem;">
+              <div>
+                <label style="font-size:0.72rem;color:var(--text-300);text-transform:uppercase;letter-spacing:0.04em;">ACCOUNT TYPE</label>
+                <div style="margin-top:0.25rem;">
+                  <label style="display:inline-flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.82rem;color:var(--text-100);">
+                    <input type="checkbox" id="modalEditIsTrial" ${user.is_trial ? 'checked' : ''} style="width:16px;height:16px;accent-color:var(--cyan);" />
+                    <strong>Trial Account</strong>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label style="font-size:0.72rem;color:var(--text-300);text-transform:uppercase;letter-spacing:0.04em;">CURRENT EXPIRY</label>
+                <div style="font-size:0.82rem;font-weight:600;color:var(--green);margin-top:0.25rem;">
+                  ${user.expiresAt ? new Date(user.expiresAt).toLocaleString() : 'Lifetime (No Expiry)'}
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:0.4rem;">
+              <label style="font-size:0.75rem;color:var(--text-300);">ADJUST SUBSCRIPTION DURATION</label>
+              <select id="modalEditDuration" class="form-input" style="font-size:0.82rem;padding:0.4rem 0.7rem;">
+                <option value="keep" selected>-- Keep Current Expiry --</option>
+                <option value="24">+1 Day (24 Hours)</option>
+                <option value="72">+3 Days</option>
+                <option value="168">+7 Days (1 Week)</option>
+                <option value="720">+30 Days (1 Month)</option>
+                <option value="8760">+365 Days (1 Year)</option>
+                <option value="lifetime">Set Lifetime (Never Expire)</option>
+                <option value="custom">Set Custom Date &amp; Time</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="modalEditCustomGroup" style="display:none;margin-bottom:0;">
+              <label style="font-size:0.75rem;color:var(--text-300);">CUSTOM DATE &amp; TIME</label>
+              <input type="datetime-local" id="modalEditCustomDate" class="form-input" style="font-size:0.82rem;padding:0.4rem 0.7rem;" />
+            </div>
+          </div>
+
+          <!-- Two-Column Body: Left Tabs Sidebar, Right Features Content -->
+          <div class="feature-modal-body" style="min-height:280px;max-height:360px;">
+            <!-- Left Column: Category Tabs -->
+            <div class="feature-sidebar-tabs" id="clientModalTabBar"></div>
+
+            <!-- Right Column: Quick Action Bar + Feature Cards Grid -->
+            <div class="feature-content-column">
+              <!-- Quick Action Bar -->
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.6rem;flex-wrap:wrap;">
+                <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
+                  <button type="button" class="btn btn-dark btn-sm" id="clientModalAllBtn" style="font-size:0.72rem;padding:0.25rem 0.55rem;color:var(--cyan);border-color:rgba(0,229,255,0.3);">✓ All</button>
+                  <button type="button" class="btn btn-dark btn-sm" id="clientModalClearBtn" style="font-size:0.72rem;padding:0.25rem 0.55rem;">✕ Clear</button>
+                  <button type="button" class="btn btn-dark btn-sm" id="clientModalTabBtn" style="font-size:0.72rem;padding:0.25rem 0.55rem;">This Tab Only</button>
+                </div>
+                <input type="text" id="clientModalFeatFilter" class="form-input" placeholder="🔍 Search features..." style="max-width:180px;font-size:0.78rem;padding:0.3rem 0.6rem;height:auto;" />
+              </div>
+
+              <!-- Feature Cards Grid inside User Modal -->
+              <div class="feature-grid-modern" id="clientModalGrid"></div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:0.75rem;margin-top:0.9rem;padding-top:0.75rem;border-top:1px solid var(--border);">
+            <button class="btn btn-primary btn-full" id="saveFeaturesBtn">💾 Save All Changes</button>
+            <button class="btn btn-dark btn-full" id="cancelModalBtn">Cancel</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modalDiv);
+
+      let clientActiveCat = 'ALL';
+      const categories = ['ALL'];
+      const catMap = { 'ALL': _loadedFeatures };
+      _loadedFeatures.forEach(f => {
+        const cat = f.category || 'General';
+        if (!catMap[cat]) {
+          catMap[cat] = [];
+          categories.push(cat);
+        }
+        catMap[cat].push(f);
+      });
+
+      function updateClientModalCounter() {
+        const count = _loadedFeatures.filter(f => currFeatures[f.key]).length;
+        const b = document.getElementById('clientModalFeatBadge');
+        if (b) b.textContent = `${count} / ${_loadedFeatures.length} Active`;
+
+        categories.forEach(cat => {
+          const tabBtn = document.querySelector(`#clientModalTabBar .feature-tab-btn[data-cat="${cat}"]`);
+          if (!tabBtn) return;
+          const items = catMap[cat] || [];
+          const sel = items.filter(f => currFeatures[f.key]).length;
+          const span = tabBtn.querySelector('.tab-badge');
+          if (span) span.textContent = `${sel}/${items.length}`;
+        });
+
+        const tabBtn = document.getElementById('clientModalTabBtn');
+        if (tabBtn) {
+          const currentItems = catMap[clientActiveCat] || [];
+          const currentSelected = currentItems.filter(f => currFeatures[f.key]).length;
+          const isAllSelected = currentItems.length > 0 && currentSelected === currentItems.length;
+          if (clientActiveCat === 'ALL') {
+            tabBtn.textContent = isAllSelected ? '✕ Deselect All' : '✓ Select All';
+          } else {
+            tabBtn.textContent = isAllSelected ? `✕ Deselect ${clientActiveCat}` : `✓ Select ${clientActiveCat} Only`;
+          }
+        }
+      }
+
+      function renderClientTabs() {
+        const bar = document.getElementById('clientModalTabBar');
+        bar.innerHTML = '';
+        categories.forEach(cat => {
+          const items = catMap[cat] || [];
+          const sel = items.filter(f => currFeatures[f.key]).length;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = `feature-tab-btn ${cat === clientActiveCat ? 'active' : ''}`;
+          btn.dataset.cat = cat;
+          btn.innerHTML = `<span>${cat}</span> <span class="tab-badge">${sel}/${items.length}</span>`;
+          btn.addEventListener('click', () => {
+            clientActiveCat = cat;
+            document.querySelectorAll('#clientModalTabBar .feature-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderClientGrid();
+            updateClientModalCounter();
+          });
+          bar.appendChild(btn);
+        });
+      }
+
+      function renderClientGrid() {
+        const grid = document.getElementById('clientModalGrid');
+        grid.innerHTML = '';
+        const searchInput = document.getElementById('clientModalFeatFilter');
+        const search = (searchInput?.value || '').toLowerCase().trim();
+
+        let list = search && clientActiveCat === 'ALL'
+          ? _loadedFeatures
+          : (catMap[clientActiveCat] || []);
+
+        if (search) {
+          list = list.filter(f => {
+            const label = (f.label || '').toLowerCase();
+            const cat = (f.category || '').toLowerCase();
+            const key = (f.key || '').toLowerCase();
+            return label.includes(search) || cat.includes(search) || key.includes(search);
+          });
+        }
+
+        if (list.length === 0) {
+          grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2.5rem;color:var(--text-400);font-size:0.85rem;">No features found matching "${search}"</div>`;
+          return;
+        }
+
+        list.forEach(f => {
+          const isChecked = !!currFeatures[f.key];
+          const card = document.createElement('div');
+          card.className = `feature-card-toggle ${isChecked ? 'checked' : ''}`;
+          card.innerHTML = `
+            <div style="flex:1;min-width:0;">
+              <div class="f-title">${f.label}</div>
+              <div class="f-cat">${f.category || 'General'}</div>
+            </div>
+            <div class="feat-switch"></div>
+          `;
+
+          const toggle = () => {
+            const nextState = !currFeatures[f.key];
+            currFeatures[f.key] = nextState;
+            card.classList.toggle('checked', nextState);
+            updateClientModalCounter();
+          };
+
+          card.addEventListener('click', toggle);
+          grid.appendChild(card);
+        });
+      }
+
+      renderClientTabs();
+      renderClientGrid();
+      updateClientModalCounter();
+
+      const clientSearchBox = document.getElementById('clientModalFeatFilter');
+      if (clientSearchBox) {
+        clientSearchBox.addEventListener('input', renderClientGrid);
+        clientSearchBox.addEventListener('keyup', renderClientGrid);
+      }
+
+      // Quick buttons in client edit modal
+      document.getElementById('clientModalAllBtn').addEventListener('click', () => {
+        _loadedFeatures.forEach(f => currFeatures[f.key] = true);
+        renderClientGrid();
+        updateClientModalCounter();
+      });
+
+      document.getElementById('clientModalClearBtn').addEventListener('click', () => {
+        _loadedFeatures.forEach(f => currFeatures[f.key] = false);
+        renderClientGrid();
+        updateClientModalCounter();
+      });
+
+      document.getElementById('clientModalTabBtn').addEventListener('click', () => {
+        const list = catMap[clientActiveCat] || [];
+        const isAllSelected = list.length > 0 && list.every(f => currFeatures[f.key]);
+        const targetState = !isAllSelected;
+
+        list.forEach(f => {
+          currFeatures[f.key] = targetState;
+        });
+
+        renderClientGrid();
+        updateClientModalCounter();
+      });
+
+      document.getElementById('modalEditDuration').addEventListener('change', (ev) => {
+        document.getElementById('modalEditCustomGroup').style.display = ev.target.value === 'custom' ? 'block' : 'none';
+      });
+
+      document.getElementById('cancelModalBtn').addEventListener('click', () => {
+        modalDiv.remove();
+      });
+
+      document.getElementById('saveFeaturesBtn').addEventListener('click', async () => {
+        const isTrial = document.getElementById('modalEditIsTrial').checked;
+        const durationVal = document.getElementById('modalEditDuration').value;
+        const customDateVal = document.getElementById('modalEditCustomDate').value;
+
+        let newExpiresAt = user.expiresAt || '';
+        if (durationVal === 'custom' && customDateVal) {
+          newExpiresAt = new Date(customDateVal).toISOString();
+        } else if (durationVal === 'lifetime') {
+          newExpiresAt = '';
+        } else if (durationVal !== 'keep') {
+          const hours = parseInt(durationVal);
+          const nowTime = new Date();
+          nowTime.setHours(nowTime.getHours() + hours);
+          newExpiresAt = nowTime.toISOString();
+        }
+
+        const saveBtn = document.getElementById('saveFeaturesBtn');
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+
+        await App.updatePanelUserFeatures(username, currFeatures);
+        await App.updatePanelUserExpiry(username, newExpiresAt, isTrial);
+
+        App.toast(`Account "${username}" updated successfully!`, 'success');
+        modalDiv.remove();
+        renderUsers();
+      });
+    }
+
+    // ── Search & Filter Listeners ──
+    const searchInput = document.getElementById('userSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value.trim();
+        renderUsers();
+      });
+    }
+
+    const filterPills = document.getElementById('userFilterPills');
+    if (filterPills) {
+      filterPills.addEventListener('click', (e) => {
+        const pill = e.target.closest('.filter-pill');
+        if (!pill) return;
+        document.querySelectorAll('#userFilterPills .filter-pill').forEach(b => b.classList.remove('active'));
+        pill.classList.add('active');
+        currentFilter = pill.dataset.filter;
+        renderUsers();
+      });
+    }
+
+    // ── Create Account Handler (Trial vs Standard) ──
+    async function handleCreateAccount(isTrial) {
       const username = document.getElementById('newUsername').value.trim().toLowerCase();
-      const password = document.getElementById('newPassword').value;
+      const password = document.getElementById('newPassword').value.trim();
+
+      if (!username || !password) {
+        App.toast('Please enter both Username and Password!', 'error');
+        return;
+      }
+
+      let trialDays = 0;
+      let expiresAt = '';
+
+      const mode = document.querySelector('input[name="trialExpiryMode"]:checked').value;
+      if (mode === 'days') {
+        trialDays = parseInt(document.getElementById('trialDaysSelect').value) || 0;
+        if (trialDays > 0) {
+          expiresAt = new Date(Date.now() + trialDays * 86400000).toISOString();
+        }
+      } else {
+        const directVal = document.getElementById('trialDirectDate').value;
+        if (!directVal) {
+          App.toast('Please select an expiration date & time!', 'error');
+          return;
+        }
+        const dt = new Date(directVal);
+        expiresAt = dt.toISOString();
+        trialDays = Math.max(1, Math.round((dt.getTime() - Date.now()) / 86400000));
+      }
 
       const features = {};
       _loadedFeatures.forEach(f => {
-        const cb = document.getElementById(`feat-${f.key}`);
-        features[f.key] = cb ? cb.checked : false;
+        features[f.key] = _regFeatures[f.key] !== undefined ? !!_regFeatures[f.key] : true;
       });
 
-      const btn = document.getElementById('createUserBtn');
-      btn.disabled = true;
-      btn.textContent = 'Creating...';
+      const trialBtn = document.getElementById('createTrialBtn');
+      const stdBtn = document.getElementById('createStandardBtn');
+      if (trialBtn) trialBtn.disabled = true;
+      if (stdBtn) stdBtn.disabled = true;
 
-      const result = await App.createPanelUser(username, password, 0, features);
-      btn.disabled = false;
-      btn.textContent = 'Create User';
+      const result = await App.createPanelUser(username, password, 0, features, isTrial, trialDays * 24, expiresAt);
+
+      if (trialBtn) trialBtn.disabled = false;
+      if (stdBtn) stdBtn.disabled = false;
 
       if (result.success) {
-        App.toast(`Account "${username}" created!`, 'success');
-        this.reset();
-        // Re-check all checkboxes
+        App.toast(`Created ${isTrial ? 'Trial' : 'Standard'} Account for "${username}"!`, 'success');
+        document.getElementById('createUserForm').reset();
+        document.getElementById('trialDaysSelect').value = '1';
+        const daysRadio = document.querySelector('input[name="trialExpiryMode"][value="days"]');
+        if (daysRadio) daysRadio.checked = true;
+        if (presetDaysDiv) presetDaysDiv.style.display = 'block';
+        if (directDateDiv) directDateDiv.style.display = 'none';
+
+        // Re-check all features by default for next registration
+        _regFeatures = {};
         _loadedFeatures.forEach(f => {
-          const cb = document.getElementById(`feat-${f.key}`);
-          if (cb) cb.checked = true;
+          _regFeatures[f.key] = true;
         });
+        updateRegSummary();
         renderUsers();
       } else {
-        App.toast(result.msg, 'error');
+        App.toast(result.msg || 'Failed to create account', 'error');
       }
-    });
+    }
 
-    // Button clicks
+    document.getElementById('createTrialBtn').addEventListener('click', () => handleCreateAccount(true));
+    document.getElementById('createStandardBtn').addEventListener('click', () => handleCreateAccount(false));
+
+    // ── Quick Trial 24h Button (matches admin.html) ──
+    const createTestAccountBtnEl = document.getElementById('createTestAccountBtn');
+    if (createTestAccountBtnEl) {
+      createTestAccountBtnEl.addEventListener('click', () => {
+        const daysRadio = document.querySelector('input[name="trialExpiryMode"][value="days"]');
+        if (daysRadio) {
+          daysRadio.checked = true;
+          if (presetDaysDiv) presetDaysDiv.style.display = 'block';
+          if (directDateDiv) directDateDiv.style.display = 'none';
+        }
+        document.getElementById('trialDaysSelect').value = '1';
+
+        // Select all features
+        _regFeatures = {};
+        _loadedFeatures.forEach(f => {
+          _regFeatures[f.key] = true;
+        });
+        updateRegSummary();
+
+        const uname = prompt('Enter username for the 24-hour trial account:');
+        if (uname && uname.trim()) {
+          document.getElementById('newUsername').value = uname.trim().toLowerCase();
+          document.getElementById('newPassword').value = 'trial123';
+          App.toast('Filled form with 24h trial settings — click "Create Trial Account" to confirm.', 'info');
+        }
+      });
+    }
+
+    // ── User Table Action Buttons (toggle active, delete, edit features) ──
     document.getElementById('userTable').addEventListener('click', async (e) => {
       const btn = e.target.closest('button');
       if (!btn) return;
@@ -283,68 +1026,15 @@
       }
 
       if (btn.classList.contains('delete-user-btn')) {
-        if (confirm(`Delete panel account "${username}"?`)) {
+        if (confirm(`Permanently delete panel account "${username}"?`)) {
           await App.deletePanelUser(username);
-          App.toast(`Deleted client account`, 'info');
+          App.toast(`Deleted client account "${username}"`, 'info');
           renderUsers();
         }
       }
 
       if (btn.classList.contains('edit-features-btn')) {
-        const user = await App.getPanelUser(username);
-        if (!user) return;
-        const currFeatures = user.features || {};
-
-        // Build modal with dynamic features grouped by category
-        const groups = {};
-        _loadedFeatures.forEach(f => {
-          const cat = f.category || 'General';
-          if (!groups[cat]) groups[cat] = [];
-          groups[cat].push(f);
-        });
-
-        let checkboxHtml = '';
-        Object.keys(groups).sort().forEach(cat => {
-          checkboxHtml += `<div class="cat-section-header">${cat}</div>`;
-          checkboxHtml += `<div class="checkbox-grid">`;
-          groups[cat].forEach(f => {
-            checkboxHtml += `
-              <label class="checkbox-item">
-                <input type="checkbox" id="edit-feat-${f.key}" ${currFeatures[f.key] ? 'checked' : ''} />
-                <span>${f.label.toUpperCase()}</span>
-              </label>
-            `;
-          });
-          checkboxHtml += `</div>`;
-        });
-
-        let modalHtml = `
-          <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9998;display:flex;align-items:center;justify-content:center;" id="featureEditModal">
-            <div class="card" style="width:90%;max-width:450px;max-height:80vh;overflow-y:auto;">
-              <h3 class="card-title">Edit permissions: ${username}</h3>
-              <div style="margin-top:1rem;margin-bottom:1.5rem;">
-                ${checkboxHtml}
-              </div>
-              <div style="display:flex;gap:0.75rem;">
-                <button class="btn btn-primary btn-full" id="saveFeaturesBtn">Save</button>
-                <button class="btn btn-dark btn-full" onclick="document.getElementById('featureEditModal').remove()">Cancel</button>
-              </div>
-            </div>
-          </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-        document.getElementById('saveFeaturesBtn').addEventListener('click', async () => {
-          const updated = {};
-          _loadedFeatures.forEach(f => {
-            const cb = document.getElementById(`edit-feat-${f.key}`);
-            updated[f.key] = cb ? cb.checked : false;
-          });
-          await App.updatePanelUserFeatures(username, updated);
-          App.toast('Features updated successfully', 'success');
-          document.getElementById('featureEditModal').remove();
-          renderUsers();
-        });
+        openEditClientModal(username);
       }
     });
 
