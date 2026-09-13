@@ -399,19 +399,6 @@ const App = (() => {
   };
 
   // ==========================================
-  // ADMIN NOTES (/admin_notes/)
-  // ==========================================
-  const getAdminNotes = async () => await fbGet('admin_notes');
-
-  const saveAdminNotes = async (title, html) => {
-    return await fbPut('admin_notes', {
-      title: String(title || '').trim() || 'Admin Notes',
-      html: String(html || ''),
-      updatedAt: new Date().toISOString()
-    });
-  };
-
-  // ==========================================
   // 2. DP PANEL USER MANAGEMENT (/dp_panel_users/)
   // ==========================================
   const getAllPanelUsers = async () => {
@@ -541,7 +528,7 @@ const App = (() => {
   };
 
   const createSilentAimUser = async (username, password, durationHours, customExpiryStr, features) => {
-    const existing = await fbGet(`dp_panel_users/${username}`);
+    const existing = await fbGet(`dp_regedit_users/${username}`);
     if (existing) return { success: false, msg: 'Username already exists.' };
     if (username === 'admin') return { success: false, msg: 'Cannot use "admin" as username.' };
 
@@ -571,12 +558,12 @@ const App = (() => {
       features: featureObj,
     };
 
-    await fbPut(`dp_panel_users/${username}`, userData);
+    await fbPut(`dp_regedit_users/${username}`, userData);
     return { success: true };
   };
 
   const getSilentAimStats = async () => {
-    const users = await fbGet('dp_panel_users');
+    const users = await fbGet('dp_regedit_users');
     if (!users) return { totalUsers: 0, activeUsers: 0, expiredUsers: 0, disabledUsers: 0 };
 
     let totalUsers = 0, activeUsers = 0, expiredUsers = 0, disabledUsers = 0;
@@ -620,9 +607,6 @@ const App = (() => {
     addAllowlistUid,
     removeAllowlistUid,
     toggleAllowlistUid,
-    // Admin notes
-    getAdminNotes,
-    saveAdminNotes,
     // Panel users
     getAllPanelUsers,
     getPanelUser,
