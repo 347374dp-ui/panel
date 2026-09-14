@@ -458,6 +458,8 @@ const App = (() => {
       displayName: username,
       secret,
       active: true,
+      is_trial: !!isTrial,
+      expiresAt: (durationHours && durationHours > 0) ? new Date(Date.now() + durationHours * 3600000).toISOString() : (customExpiryStr || null),
       createdAt: new Date().toISOString(),
       features: featureObj,
     };
