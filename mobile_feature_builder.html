@@ -23,6 +23,7 @@
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: 16px; padding: 0.95rem; margin-bottom: 0.85rem;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .mobile-menu-drawer-overlay {
       position: fixed; inset: 0; background: rgba(5, 8, 14, 0.85);
@@ -203,7 +204,7 @@
     </div>
 
     <div style="font-weight:700;font-size:0.88rem;color:var(--cyan);margin-bottom:0.5rem;">📋 ACTIVE FEATURE DEFINITIONS:</div>
-    <div id="mobileFeatureCardsList">
+    <div id="mobileFeatureCardsList" style="padding:0.4rem; margin:-0.4rem; overflow:visible;">
       <div style="text-align:center;padding:1.5rem;color:var(--text-300);">Loading feature definitions...</div>
     </div>
 
@@ -214,7 +215,7 @@
 
   <div class="toast-container" id="toastContainer"></div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=2.2"></script>
   <script>
     if (sessionStorage.getItem('loggedIn') !== 'admin') { window.location.href = 'mobile_index.html'; }
     App.initFirebase();
@@ -345,8 +346,8 @@
       contentHtml += `<div class="preview-checkbox-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); gap:0.3rem;">`;
       groups[_mobileActivePreviewTab].forEach(f => {
         contentHtml += `
-          <label class="preview-checkbox-item" style="font-size:0.65rem; padding:0.28rem 0.4rem; gap:0.3rem;">
-            <input type="checkbox" checked disabled style="width:12px;height:12px;" />
+          <label class="preview-checkbox-item" data-key="${f.key}" style="font-size:0.65rem; padding:0.28rem 0.4rem; gap:0.3rem; cursor:pointer;" title="Click to find '${f.label}' in list">
+            <input type="checkbox" checked disabled style="width:12px;height:12px;pointer-events:none;" />
             <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${f.label.toUpperCase()}</span>
           </label>
         `;
@@ -377,6 +378,44 @@
           renderPreview(features);
         });
       });
+
+      function clearMobileHighlights() {
+        document.querySelectorAll('.mobile-feat-card.row-highlight').forEach(c => {
+          c.classList.remove('row-highlight');
+          c.classList.add('row-dissolve-off');
+          setTimeout(() => c.classList.remove('row-dissolve-off'), 700);
+        });
+      }
+
+      // Click handler for mobile feature items in preview menu
+      container.querySelectorAll('.preview-checkbox-item[data-key]').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const targetKey = item.dataset.key;
+          const card = document.querySelector(`.mobile-feat-card[data-key="${targetKey}"]`);
+          if (!card) return;
+
+          const isAlreadyGlowing = card.classList.contains('row-highlight');
+          clearMobileHighlights();
+
+          if (!isAlreadyGlowing) {
+            card.classList.remove('row-dissolve-off');
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            void card.offsetWidth;
+            card.classList.add('row-highlight');
+          }
+        });
+      });
+
+      // Global document click listener to clear glow when tapping outside
+      if (!window._mobileFeatGlowDocListener) {
+        window._mobileFeatGlowDocListener = true;
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('.preview-checkbox-item') && !e.target.closest('.mobile-feat-card')) {
+            clearMobileHighlights();
+          }
+        });
+      }
     };
 
     async function renderFeatures() {
@@ -404,7 +443,7 @@
         else if (f.scanHex && f.replaceHex) typeBadge = '<span style="color:var(--red);font-size:0.75rem;font-weight:bold;">⚙ Mem Patch</span>';
 
         return `
-          <div class="mobile-card-item">
+          <div class="mobile-card-item mobile-feat-card" data-key="${f.key}">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;">
               <div>
                 <div style="font-weight:700;font-size:0.95rem;color:#fff;">${f.label || f.key}</div>

@@ -146,7 +146,7 @@
           </div>
           <button class="btn btn-dark btn-sm" id="refreshBtn">↻ Refresh</button>
         </div>
-        <div style="overflow-x:auto;">
+        <div style="overflow-x:auto; padding:0.6rem 0.8rem; margin:-0.6rem -0.8rem;">
           <table class="feature-table" id="featureTable">
             <thead>
               <tr>
@@ -176,7 +176,7 @@
 
   <canvas id="particleCanvas"></canvas>
   <script src="particles.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=2.3"></script>
   <script>
     if (sessionStorage.getItem('loggedIn') !== 'admin') {
       window.location.href = 'index.html';
@@ -203,6 +203,7 @@
 
       sorted.forEach(f => {
         const tr = document.createElement('tr');
+        tr.dataset.key = f.key;
         let typeBadge = '<span style="color:var(--text-400);font-size:0.8rem;">Toggle</span>';
         if (f.isAimbot) typeBadge = '<span style="color:var(--green);font-size:0.8rem;font-weight:bold;">⊕ Aimbot</span>';
         else if (f.scanHex && f.replaceHex) typeBadge = '<span style="color:var(--red);font-size:0.8rem;font-weight:bold;">⚙ Mem Patch</span>';
@@ -280,8 +281,8 @@
       contentHtml += `<div class="preview-checkbox-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap:0.35rem;">`;
       groups[_activePreviewTab].forEach(f => {
         contentHtml += `
-          <label class="preview-checkbox-item" style="font-size:0.68rem; padding:0.35rem 0.5rem; gap:0.35rem;">
-            <input type="checkbox" checked disabled style="width:13px;height:13px;" />
+          <label class="preview-checkbox-item" data-key="${f.key}" style="font-size:0.68rem; padding:0.35rem 0.5rem; gap:0.35rem; cursor:pointer;" title="Click to find '${f.label}' in list">
+            <input type="checkbox" checked disabled style="width:13px;height:13px;pointer-events:none;" />
             <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${f.label.toUpperCase()}</span>
           </label>
         `;
@@ -312,6 +313,45 @@
           renderPreview(features);
         });
       });
+
+      function clearHighlights() {
+        document.querySelectorAll('tr.row-highlight').forEach(r => {
+          r.classList.remove('row-highlight');
+          r.classList.add('row-dissolve-off');
+          setTimeout(() => r.classList.remove('row-dissolve-off'), 700);
+        });
+      }
+
+      // Click handler for individual feature items in the preview menu
+      container.querySelectorAll('.preview-checkbox-item[data-key]').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const targetKey = item.dataset.key;
+          const tr = document.querySelector(`tr[data-key="${targetKey}"]`);
+          if (!tr) return;
+
+          const isAlreadyGlowing = tr.classList.contains('row-highlight');
+          clearHighlights();
+
+          // Toggle ON if it wasn't glowing
+          if (!isAlreadyGlowing) {
+            tr.classList.remove('row-dissolve-off');
+            tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            void tr.offsetWidth;
+            tr.classList.add('row-highlight');
+          }
+        });
+      });
+
+      // Global document click listener to clear glow when clicking outside
+      if (!window._featGlowDocListener) {
+        window._featGlowDocListener = true;
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('.preview-checkbox-item') && !e.target.closest('.feature-table')) {
+            clearHighlights();
+          }
+        });
+      }
     };
 
     // ── Update category datalist ──
