@@ -1319,14 +1319,26 @@
       });
     }
 
+    const FB_CONFIG_URL = 'https://dipesh-database-default-rtdb.firebaseio.com';
+    const DEFAULT_PROTO_PREVIEW = '25f16c42b17c8239fccb04095cf57404c3b0bb2...';
+
     async function loadDownloadConfig() {
       try {
-        const cfg = await App.getDownloadConfig() || {};
-        const url = cfg.url || cfg.download_url || '(not set)';
-        const ver = cfg.versionNote || cfg.version_note || '';
+        let cfg = null;
+        if (typeof App !== 'undefined' && App.getDownloadConfig) {
+          cfg = await App.getDownloadConfig();
+        }
+        if (!cfg || (!cfg.download_url && !cfg.version_note)) {
+          const r = await fetch(`${FB_CONFIG_URL}/config.json`);
+          if (r.ok) cfg = await r.json();
+        }
+        cfg = cfg || {};
+        const url = cfg.download_url || cfg.url || '(not set)';
+        const ver = cfg.version_note || cfg.versionNote || '';
         if (currentDownloadUrl) currentDownloadUrl.textContent = url;
         if (versionNoteInput && ver) versionNoteInput.value = ver;
       } catch(e) {
+        console.error('Download config load error:', e);
         if (currentDownloadUrl) currentDownloadUrl.textContent = 'Error loading config';
       }
     }
@@ -1335,11 +1347,27 @@
       saveUrlBtn.addEventListener('click', async () => {
         const raw = driveUrlInput.value.trim();
         if (!raw) { App.toast('Please enter a valid link', 'error'); return; }
-        const direct = App.convertDriveUrl(raw);
+        const direct = typeof App !== 'undefined' && App.convertDriveUrl ? App.convertDriveUrl(raw) : raw;
         saveUrlBtn.disabled = true;
         urlSaveStatus.textContent = 'Saving...';
         urlSaveStatus.style.color = 'var(--cyan)';
-        const success = await App.saveDownloadConfig({ download_url: direct, url: direct, rawUrl: raw });
+        
+        let success = false;
+        try {
+          if (typeof App !== 'undefined' && App.saveDownloadConfig) {
+            success = await App.saveDownloadConfig({ download_url: direct });
+          } else {
+            const r = await fetch(`${FB_CONFIG_URL}/config.json`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ download_url: direct })
+            });
+            success = r.ok;
+          }
+        } catch (e) {
+          success = false;
+        }
+
         saveUrlBtn.disabled = false;
         if (success) {
           urlSaveStatus.textContent = '✓ Saved direct URL successfully!';
@@ -1361,7 +1389,23 @@
         saveVersionBtn.disabled = true;
         versionSaveStatus.textContent = 'Saving note...';
         versionSaveStatus.style.color = 'var(--cyan)';
-        const success = await App.saveDownloadConfig({ version_note: note, versionNote: note });
+        
+        let success = false;
+        try {
+          if (typeof App !== 'undefined' && App.saveDownloadConfig) {
+            success = await App.saveDownloadConfig({ version_note: note });
+          } else {
+            const r = await fetch(`${FB_CONFIG_URL}/config.json`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ version_note: note })
+            });
+            success = r.ok;
+          }
+        } catch (e) {
+          success = false;
+        }
+
         saveVersionBtn.disabled = false;
         if (success) {
           versionSaveStatus.textContent = '✓ Note saved!';
@@ -1380,67 +1424,96 @@
       const badge = document.getElementById('protoPoolBadge');
       if (!container) return;
 
-      const pool = await App.getProtoPool();
-      let entries = [];
-
-      if (Array.isArray(pool)) {
-        entries = pool.filter(p => p !== null && p !== undefined).map((p, idx) => [idx.toString(), p]);
-      } else if (pool && typeof pool === 'object') {
-        entries = Object.entries(pool);
-      }
-
-      if (badge) {
-        badge.textContent = `${entries.length} Custom Protos`;
-        badge.style.borderColor = entries.length > 0 ? 'var(--green)' : 'var(--amber)';
-        badge.style.color = entries.length > 0 ? 'var(--green)' : 'var(--amber)';
-      }
-
-      if (entries.length === 0) {
-        container.innerHTML = `
-          <div class="card" style="text-align:center;padding:1.5rem;color:var(--text-300);font-size:0.85rem;border:1px dashed var(--border);">
-            No custom proto strings in pool.<br/>
-            <span style="font-size:0.75rem;color:var(--amber);margin-top:4px;display:inline-block;">🔒 Built-in default proto active</span>
-          </div>
-        `;
-        return;
-      }
-
-      let html = '';
-      entries.forEach(([id, p]) => {
-        let hexVal = typeof p === 'string' ? p : (p && p.hex ? p.hex : '');
-        if (!hexVal && typeof p === 'object') hexVal = JSON.stringify(p);
-        const preview = hexVal ? (hexVal.length > 40 ? hexVal.substring(0, 40) + '...' : hexVal) : '(empty proto)';
-        
-        let uploaded = id;
-        const ts = parseInt(id);
-        if (!isNaN(ts) && ts > 1000000000000) {
-          uploaded = new Date(ts).toLocaleString();
-        } else if (p && p.createdAt) {
-          uploaded = new Date(p.createdAt).toLocaleString();
+      try {
+        let pool = null;
+        if (typeof App !== 'undefined' && App.getProtoPool) {
+          pool = await App.getProtoPool();
+        } else {
+          const res = await fetch(`${FB_CONFIG_URL}/protos.json`);
+          if (res.ok) pool = await res.json();
         }
 
+        let entries = [];
+        if (Array.isArray(pool)) {
+          entries = pool.filter(p => p !== null && p !== undefined).map((p, idx) => [idx.toString(), p]);
+        } else if (pool && typeof pool === 'object') {
+          entries = Object.entries(pool);
+        }
+
+        const customCount = entries.length;
+        if (badge) {
+          if (customCount === 0) {
+            badge.textContent = 'Built-in Default Active';
+            badge.style.borderColor = 'var(--amber)';
+            badge.style.color = 'var(--amber)';
+          } else {
+            badge.textContent = `${customCount} Custom Proto(s) ✓`;
+            badge.style.borderColor = 'var(--green)';
+            badge.style.color = 'var(--green)';
+          }
+        }
+
+        let html = '';
+
+        // Render custom protos
+        if (customCount > 0) {
+          entries.sort(([a], [b]) => b.localeCompare(a)).forEach(([id, p]) => {
+            let hexVal = typeof p === 'string' ? p : (p && p.hex ? p.hex : '');
+            if (!hexVal && typeof p === 'object') hexVal = JSON.stringify(p);
+            const preview = hexVal ? (hexVal.length > 40 ? hexVal.substring(0, 40) + '...' : hexVal) : '(empty proto)';
+            
+            let uploaded = id;
+            const ts = parseInt(id);
+            if (!isNaN(ts) && ts > 1000000000000) {
+              uploaded = new Date(ts).toLocaleString();
+            } else if (p && p.createdAt) {
+              uploaded = new Date(p.createdAt).toLocaleString();
+            }
+
+            html += `
+              <div class="mobile-card-item" style="border:1px solid rgba(0,242,254,0.25);border-radius:10px;padding:0.75rem;margin-bottom:0.6rem;background:var(--bg-1);">
+                <div style="font-weight:700;font-size:0.75rem;color:var(--cyan);font-family:monospace;word-break:break-all;margin-bottom:0.4rem;">${preview}</div>
+                <div style="font-size:0.7rem;color:var(--text-300);margin-bottom:0.5rem;">Key / Date: ${uploaded}</div>
+                <div style="text-align:right;">
+                  <button type="button" class="btn btn-red btn-sm delete-proto-btn" data-id="${id}" style="padding:0.3rem 0.65rem;font-size:0.75rem;">🗑 Delete</button>
+                </div>
+              </div>
+            `;
+          });
+        }
+
+        // Built-in Default Row
         html += `
-          <div class="mobile-card-item" style="border:1px solid rgba(0,242,254,0.25);border-radius:10px;padding:0.75rem;margin-bottom:0.6rem;background:var(--bg-1);">
-            <div style="font-weight:700;font-size:0.75rem;color:var(--cyan);font-family:monospace;word-break:break-all;margin-bottom:0.4rem;">${preview}</div>
-            <div style="font-size:0.7rem;color:var(--text-300);margin-bottom:0.5rem;">Key / Date: ${uploaded}</div>
-            <div style="text-align:right;">
-              <button type="button" class="btn btn-red btn-sm delete-proto-btn" data-id="${id}" style="padding:0.3rem 0.65rem;font-size:0.75rem;">🗑 Delete</button>
+          <div class="mobile-card-item" style="border:1px dashed ${customCount > 0 ? 'rgba(255,255,255,0.1)' : 'rgba(245,158,11,0.4)'};border-radius:10px;padding:0.75rem;margin-bottom:0.6rem;background:var(--bg-1);opacity:${customCount > 0 ? '0.5' : '1'};">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.3rem;">
+              <span style="font-size:0.72rem;font-weight:700;color:var(--amber);">🔒 Built-in Default Proto</span>
+              <span style="font-size:0.68rem;padding:1px 6px;border-radius:4px;background:rgba(245,158,11,0.15);color:var(--amber);">${customCount > 0 ? 'Standby' : 'Active'}</span>
             </div>
+            <div style="font-size:0.72rem;color:var(--text-300);font-family:monospace;word-break:break-all;">${DEFAULT_PROTO_PREVIEW}</div>
           </div>
         `;
-      });
 
-      container.innerHTML = html;
-      container.querySelectorAll('.delete-proto-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const id = btn.dataset.id;
-          if (confirm('Delete this proto from pool?')) {
-            await App.deleteProto(id);
-            App.toast('Proto removed', 'info');
-            renderMobileProtoPool();
-          }
+        container.innerHTML = html;
+        container.querySelectorAll('.delete-proto-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const id = btn.dataset.id;
+            if (confirm('Delete this proto from pool?')) {
+              let ok = false;
+              if (typeof App !== 'undefined' && App.deleteProto) {
+                ok = await App.deleteProto(id);
+              } else {
+                const r = await fetch(`${FB_CONFIG_URL}/protos/${id}.json`, { method: 'DELETE' });
+                ok = r.ok;
+              }
+              App.toast('Proto removed', 'info');
+              renderMobileProtoPool();
+            }
+          });
         });
-      });
+      } catch (err) {
+        console.error('Proto pool render error:', err);
+        container.innerHTML = `<div style="text-align:center;padding:1rem;color:var(--red);font-size:0.8rem;">Failed to load proto pool</div>`;
+      }
     }
 
     const uploadProtoBtn = document.getElementById('uploadProtoBtn');
@@ -1450,14 +1523,33 @@
 
     if (uploadProtoBtn) {
       uploadProtoBtn.addEventListener('click', async () => {
-        const hex = protoHexInput.value.trim();
+        const hex = protoHexInput.value.trim().replace(/\s+/g, '');
         if (!hex) { App.toast('Paste a hex proto string', 'error'); return; }
+        if (hex.length < 50) { App.toast('Hex string too short', 'error'); return; }
         uploadProtoBtn.disabled = true;
         protoUploadStatus.textContent = 'Uploading...';
         protoUploadStatus.style.color = 'var(--cyan)';
-        const res = await App.addProto(hex);
+        
+        let ok = false;
+        try {
+          if (typeof App !== 'undefined' && App.addProto) {
+            const res = await App.addProto(hex);
+            ok = res === true || res?.success || res?.ok;
+          } else {
+            const key = Date.now().toString();
+            const r = await fetch(`${FB_CONFIG_URL}/protos/${key}.json`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(hex)
+            });
+            ok = r.ok;
+          }
+        } catch (e) {
+          ok = false;
+        }
+
         uploadProtoBtn.disabled = false;
-        if (res.success) {
+        if (ok) {
           protoUploadStatus.textContent = '✓ Uploaded!';
           protoUploadStatus.style.color = 'var(--green)';
           protoHexInput.value = '';

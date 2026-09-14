@@ -648,6 +648,10 @@ const App = (() => {
     getProtoPool,
     addProto,
     deleteProto,
+    // Download Config & Version Note
+    getDownloadConfig,
+    saveDownloadConfig,
+    convertDriveUrl,
     // Notification Config
     getNotifConfig: () => fbGet('config/notification'),
     saveNotifConfig: (cfg) => fbPut('config/notification', cfg),
@@ -657,26 +661,84 @@ const App = (() => {
   };
 })();
 
+// Global assignment
+if (typeof window !== 'undefined') {
+  window.App = App;
+}
+
 // ── Proto Pool Firebase helpers ──
 async function getProtoPool() {
-  const res = await fetch(`${FIREBASE_URL}/protos.json`);
-  if (!res.ok) return {};
-  const data = await res.json();
-  return data || {};
+  try {
+    const res = await fetch(`${FIREBASE_URL}/protos.json`);
+    if (!res.ok) return {};
+    const data = await res.json();
+    return data || {};
+  } catch (e) {
+    return {};
+  }
 }
 
 async function addProto(hexStr) {
-  const key = Date.now().toString();
-  const res = await fetch(`${FIREBASE_URL}/protos/${key}.json`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(hexStr)
-  });
-  return res.ok;
+  try {
+    const key = Date.now().toString();
+    const res = await fetch(`${FIREBASE_URL}/protos/${key}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(hexStr)
+    });
+    return res.ok ? { success: true } : { success: false };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
 }
 
 async function deleteProto(key) {
-  const res = await fetch(`${FIREBASE_URL}/protos/${key}.json`, { method: 'DELETE' });
-  return res.ok;
+  try {
+    const res = await fetch(`${FIREBASE_URL}/protos/${key}.json`, { method: 'DELETE' });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+// ── Download URL & Version helpers ──
+async function getDownloadConfig() {
+  try {
+    const res = await fetch(`${FIREBASE_URL}/config.json`);
+    if (!res.ok) return {};
+    return (await res.json()) || {};
+  } catch (e) {
+    return {};
+  }
+}
+
+async function saveDownloadConfig(cfg) {
+  try {
+    const res = await fetch(`${FIREBASE_URL}/config.json`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cfg)
+    });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+function convertDriveUrl(url) {
+  if (!url) return '';
+  if (url.includes('drive.usercontent.google.com')) return url;
+  const patterns = [
+    /\/file\/d\/([a-zA-Z0-9_-]+)/,
+    /[?&]id=([a-zA-Z0-9_-]+)/,
+    /\/d\/([a-zA-Z0-9_-]+)/,
+  ];
+  for (const pat of patterns) {
+    const m = url.match(pat);
+    if (m) {
+      return `https://drive.usercontent.google.com/download?id=${m[1]}&export=download&authuser=0&confirm=t`;
+    }
+  }
+  return url;
 }
 
