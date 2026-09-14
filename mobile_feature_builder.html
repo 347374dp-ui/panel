@@ -23,7 +23,45 @@
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: 16px; padding: 0.95rem; margin-bottom: 0.85rem;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: background 0.6s, border 0.6s, box-shadow 0.6s;
+      overflow: visible;
+    }
+    /* ── Glow highlight for mobile cards ── */
+    .mobile-card-item.row-highlight {
+      animation: mbHolyBreathe 2.2s ease-in-out infinite alternate !important;
+      border-radius: 20px !important;
+    }
+    @keyframes mbHolyBreathe {
+      0% {
+        background: rgba(251,191,36,0.22) !important;
+        border: 2px solid rgba(251,191,36,0.6) !important;
+        box-shadow: 0 0 18px rgba(251,191,36,0.55), 0 0 6px rgba(251,191,36,0.3) !important;
+        transform: scale(0.98);
+      }
+      100% {
+        background: rgba(251,191,36,0.50) !important;
+        border: 2px solid #ffe58f !important;
+        box-shadow: 0 0 55px rgba(251,191,36,0.95), 0 0 100px rgba(245,158,11,0.75), inset 0 0 28px rgba(255,255,255,0.7) !important;
+        transform: scale(1.03);
+      }
+    }
+    /* ── Dissolve off for mobile cards ── */
+    .mobile-card-item.row-dissolve-off {
+      animation: mbDissolveOff 0.7s cubic-bezier(0.16,1,0.3,1) forwards !important;
+    }
+    @keyframes mbDissolveOff {
+      0% {
+        background: rgba(251,191,36,0.40) !important;
+        border: 2px solid #fbbf24 !important;
+        box-shadow: 0 0 30px rgba(251,191,36,0.6) !important;
+        transform: scale(1.02);
+      }
+      100% {
+        background: var(--bg-card, #090e17) !important;
+        border: 1px solid var(--border, rgba(255,255,255,0.1)) !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.35) !important;
+        transform: scale(1);
+      }
     }
     .mobile-menu-drawer-overlay {
       position: fixed; inset: 0; background: rgba(5, 8, 14, 0.85);
