@@ -1628,7 +1628,7 @@ textarea.code-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px 
 }
 
 #clickEffectCanvas {
-  z-index: 950 !important;
+  z-index: 0 !important; /* Behind translucent cards & UI boxes so effects glow through from behind without blocking */
   pointer-events: none !important;
   touch-action: none !important;
 }
