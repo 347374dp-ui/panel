@@ -1615,11 +1615,22 @@ textarea.code-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px 
 /* ═══════════ UI STABILITY PASS ═══════════
    These final rules intentionally override earlier experimental effects.
    They keep interaction, sizing, and tables predictable across every page. */
-#particleCanvas {
+#particleCanvas,
+#clickEffectCanvas {
   mix-blend-mode: screen;
   opacity: 0.58;
   pointer-events: none !important;
+  touch-action: none !important;
+}
+
+#particleCanvas {
   z-index: -1 !important;
+}
+
+#clickEffectCanvas {
+  z-index: 950 !important;
+  pointer-events: none !important;
+  touch-action: none !important;
 }
 
 .navbar,
