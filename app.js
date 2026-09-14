@@ -426,7 +426,19 @@ const App = (() => {
     return await fbGet(`dp_panel_users/${username}`);
   };
 
-  const createPanelUser = async (username, password, _unused, features) => {
+  const createPanelUser = async (usernameOrObj, password, _unused, features, isTrial, durationHours, customExpiryStr) => {
+    let username = usernameOrObj;
+    if (typeof usernameOrObj === 'object' && usernameOrObj !== null) {
+      username = usernameOrObj.username;
+      password = usernameOrObj.password;
+      features = usernameOrObj.features;
+    }
+
+    if (!username || typeof username !== 'string') {
+      return { success: false, msg: 'Invalid username provided.' };
+    }
+    username = username.trim();
+
     const existing = await fbGet(`dp_panel_users/${username}`);
     if (existing) return { success: false, msg: 'Username already exists.' };
     if (username === 'admin') return { success: false, msg: 'Cannot use "admin" as username.' };
@@ -542,7 +554,21 @@ const App = (() => {
     await fbPatch(`dp_panel_users/${username}`, { password });
   };
 
-  const createSilentAimUser = async (username, password, durationHours, customExpiryStr, features) => {
+  const createSilentAimUser = async (usernameOrObj, password, durationHours, customExpiryStr, features) => {
+    let username = usernameOrObj;
+    if (typeof usernameOrObj === 'object' && usernameOrObj !== null) {
+      username = usernameOrObj.username;
+      password = usernameOrObj.password;
+      durationHours = usernameOrObj.durationHours || usernameOrObj.days;
+      customExpiryStr = usernameOrObj.customExpiryStr;
+      features = usernameOrObj.features;
+    }
+
+    if (!username || typeof username !== 'string') {
+      return { success: false, msg: 'Invalid username provided.' };
+    }
+    username = username.trim();
+
     const existing = await fbGet(`dp_panel_users/${username}`);
     if (existing) return { success: false, msg: 'Username already exists.' };
     if (username === 'admin') return { success: false, msg: 'Cannot use "admin" as username.' };

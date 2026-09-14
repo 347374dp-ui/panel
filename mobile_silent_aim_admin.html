@@ -284,12 +284,14 @@
           <div class="form-group" style="margin-top:0.6rem;">
             <label style="font-weight:600;font-size:0.78rem;">⏱ DURATION / EXPIRATION</label>
             <select id="durationPreset" class="form-input" style="font-size:16px;min-height:44px;border-radius:10px;">
-              <option value="0">Lifetime Access</option>
-              <option value="1" selected>1 Day (24 Hours)</option>
-              <option value="3">3 Days</option>
-              <option value="7">7 Days (1 Week)</option>
-              <option value="30">30 Days (1 Month)</option>
-              <option value="365">365 Days (1 Year)</option>
+              <option value="lifetime">Lifetime Access</option>
+              <option value="1">1 Hour</option>
+              <option value="12">12 Hours</option>
+              <option value="24" selected>1 Day (24 Hours)</option>
+              <option value="72">3 Days</option>
+              <option value="168">7 Days (1 Week)</option>
+              <option value="720">30 Days (1 Month)</option>
+              <option value="8760">365 Days (1 Year)</option>
             </select>
           </div>
 
@@ -451,18 +453,36 @@
     document.getElementById('createSilentUserForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const username = document.getElementById('newUsername').value.trim();
-      const password = document.getElementById('newPassword').value;
-      const days = parseInt(document.getElementById('durationPreset').value, 10);
+      const password = document.getElementById('newPassword').value.trim();
+      const durationVal = document.getElementById('durationPreset').value;
+      const btn = document.getElementById('createSilentUserBtn');
 
-      const res = await App.createPanelUser({ username, password, days });
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Creating...';
+      }
+
+      let durationHours = null;
+      if (durationVal === 'lifetime') {
+        durationHours = -1;
+      } else {
+        durationHours = parseInt(durationVal, 10);
+      }
+
+      const res = await App.createSilentAimUser(username, password, durationHours);
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '➕ Create Account';
+      }
+
       if (res.success) {
-        App.toast(`Created Silent Aim Account "${username}"!`, 'success');
+        App.toast(`Account "${username}" created!`, 'success');
         document.getElementById('newUsername').value = '';
         document.getElementById('newPassword').value = '';
         renderMobileSilentCards();
         document.getElementById('tabUsersBtn').click();
       } else {
-        App.toast(res.msg || 'Failed to create account', 'error');
+        App.toast(res.msg || 'Failed to create account.', 'error');
       }
     });
 
