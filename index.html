@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="DP Control Panel — Admin Login" />
   <title>DP Panel - Admin Login</title>
+  <script src="device_detect.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -42,10 +43,21 @@
           <label for="loginPass">Password</label>
           <input type="password" id="loginPass" class="form-input" placeholder="Password" required>
         </div>
+
+        <div style="margin-top: 1rem; margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between; background: rgba(0, 242, 254, 0.05); padding: 0.6rem 0.85rem; border-radius: 10px; border: 1px solid rgba(0, 242, 254, 0.2); animation: fadeIn 0.6s ease 0.32s forwards; opacity: 0;">
+          <label for="preferMobileCheck" style="display:flex; align-items:center; gap:0.6rem; cursor:pointer; font-size:0.82rem; color:var(--text-100); user-select:none; margin:0;">
+            <input type="checkbox" id="preferMobileCheck" style="width:17px; height:17px; accent-color:var(--cyan); cursor:pointer;" />
+            <span>📱 <strong>I am on a Mobile Device / Tablet</strong></span>
+          </label>
+        </div>
+
         <button type="submit" class="btn btn-primary btn-full" id="loginBtn" style="animation: fadeIn 0.6s ease 0.35s forwards; opacity: 0;">Sign In</button>
       </form>
 
       <p class="login-footer" style="animation: fadeIn 0.6s ease 0.4s forwards; opacity: 0;">DP Panel Admin - Only authorized access.</p>
+      <div style="margin-top: 0.8rem; text-align: center;">
+        <button type="button" id="forceMobileBtn" class="btn btn-dark btn-sm" style="font-size:0.75rem;padding:0.35rem 0.85rem;border-radius:8px;color:var(--cyan);border-color:rgba(0,242,254,0.3);">📱 Switch to Mobile View</button>
+      </div>
     </div>
   </main>
 
@@ -60,6 +72,15 @@
   <script src="app.js"></script>
   <script>
     App.initFirebase();
+
+    // Auto-check if a mobile/touch device is detected
+    const ua = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
+    const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|tablet/i.test(ua);
+    const isMobileWidth = window.innerWidth <= 850;
+    if (isMobileUA || isMobileWidth) {
+      const chk = document.getElementById('preferMobileCheck');
+      if (chk) chk.checked = true;
+    }
 
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -77,8 +98,19 @@
       if (result.success) {
         sessionStorage.setItem('loggedIn', 'admin');
         sessionStorage.setItem('currentUser', 'admin');
+        const preferMobile = document.getElementById('preferMobileCheck').checked;
+        if (preferMobile) {
+          sessionStorage.removeItem('prefer_desktop_view');
+          sessionStorage.setItem('prefer_mobile_view', 'true');
+        }
         App.toast('Signed in as Admin', 'success');
-        setTimeout(() => window.location.href = 'admin.html', 500);
+        setTimeout(() => {
+          if (preferMobile) {
+            window.location.href = 'mobile_panel_admin.html';
+          } else {
+            window.location.href = 'panel_admin.html';
+          }
+        }, 500);
         return;
       }
 
@@ -87,6 +119,12 @@
       errorEl.textContent = 'Invalid username or password.';
       errorEl.style.display = 'block';
       App.toast('Login failed', 'error');
+    });
+
+    document.getElementById('forceMobileBtn').addEventListener('click', function() {
+      sessionStorage.removeItem('prefer_desktop_view');
+      sessionStorage.setItem('prefer_mobile_view', 'true');
+      window.location.href = 'mobile_index.html';
     });
   </script>
 </body>
