@@ -426,12 +426,13 @@ const App = (() => {
     return await fbGet(`dp_panel_users/${username}`);
   };
 
-  const createPanelUser = async (usernameOrObj, password, _unused, features, isTrial, durationHours, customExpiryStr) => {
+  const createPanelUser = async (usernameOrObj, password, _unused, features, isTrial, durationHours, customExpiryStr, autoSync) => {
     let username = usernameOrObj;
     if (typeof usernameOrObj === 'object' && usernameOrObj !== null) {
       username = usernameOrObj.username;
       password = usernameOrObj.password;
       features = usernameOrObj.features;
+      autoSync = usernameOrObj.autoSync;
     }
 
     if (!username || typeof username !== 'string') {
@@ -459,6 +460,7 @@ const App = (() => {
       secret,
       active: true,
       is_trial: !!isTrial,
+      auto_sync_features: autoSync !== undefined ? !!autoSync : true,
       expiresAt: (durationHours && durationHours > 0) ? new Date(Date.now() + durationHours * 3600000).toISOString() : (customExpiryStr || null),
       createdAt: new Date().toISOString(),
       features: featureObj,
@@ -630,6 +632,11 @@ const App = (() => {
     DEFAULT_FEATURES,
     initFirebase,
     loginAdmin,
+    // Raw Firebase helpers
+    fbGet,
+    fbPut,
+    fbPatch,
+    fbDelete,
     // Feature definitions
     getFeatureList,
     addFeatureDefinition,

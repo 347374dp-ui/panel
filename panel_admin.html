@@ -143,6 +143,17 @@
             </div>
           </div>
 
+          <!-- Auto Sync Features Option -->
+          <div class="form-group" style="margin-top:0.85rem;padding:0.65rem 0.85rem;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.2);border-radius:10px;">
+            <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin:0;">
+              <div>
+                <div style="font-weight:700;font-size:0.82rem;color:var(--cyan);">⚡ Auto Sync New Features</div>
+                <div style="font-size:0.72rem;color:var(--text-300);margin-top:2px;">Automatically grant features added to Feature Builder in the future</div>
+              </div>
+              <input type="checkbox" id="autoSyncFeaturesToggle" checked style="width:18px;height:18px;accent-color:var(--cyan);cursor:pointer;" />
+            </label>
+          </div>
+
           <div class="account-action-grid">
             <button type="button" class="btn btn-full" id="createTrialBtn" style="background:rgba(255,152,0,0.18);border:1px solid var(--amber);color:var(--amber);font-weight:600;">🧪 Create Trial Account</button>
             <button type="button" class="btn btn-primary btn-full" id="createStandardBtn">👤 Create Standard Account</button>
@@ -211,7 +222,7 @@
 
   <canvas id="particleCanvas"></canvas>
   <script src="particles.js"></script>
-  <script src="app.js?v=2.0"></script>
+  <script src="app.js?v=2.2"></script>
   <script>
     if (sessionStorage.getItem('loggedIn') !== 'admin') {
       window.location.href = 'index.html';
@@ -569,8 +580,8 @@
 
         // Trial badge
         const trialBadge = user.is_trial
-          ? `<span style="background:linear-gradient(135deg, #e2e8f0, #94a3b8);color:#0f172a;font-size:0.7rem;font-weight:800;padding:2px 7px;border-radius:4px;margin-left:6px;letter-spacing:0.04em;box-shadow:0 2px 8px rgba(255,255,255,0.2);">[TRIAL]</span>`
-          : `<span style="background:rgba(79,140,255,0.15);color:var(--primary);font-size:0.7rem;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:6px;">PRO</span>`;
+          ? `<span style="display:inline-block;white-space:nowrap;background:linear-gradient(135deg, #e2e8f0, #94a3b8);color:#0f172a;font-size:0.7rem;font-weight:800;padding:2px 7px;border-radius:4px;margin-left:6px;letter-spacing:0.04em;box-shadow:0 2px 8px rgba(255,255,255,0.2);">[TRIAL]</span>`
+          : `<span style="display:inline-block;white-space:nowrap;background:rgba(79,140,255,0.15);color:var(--primary);font-size:0.7rem;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:6px;">PRO</span>`;
 
         // Time left calculation
         let timeBadge = `<span style="color:var(--green);font-size:0.78rem;font-weight:600;">Lifetime</span>`;
@@ -614,7 +625,7 @@
         tbody.appendChild(tr);
       });
 
-      loadStats();
+      if (typeof loadStats === 'function') loadStats();
     };
 
     async function openEditClientModal(username) {
@@ -661,6 +672,10 @@
                   <label style="display:inline-flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.82rem;color:var(--text-100);">
                     <input type="checkbox" id="modalEditIsTrial" ${user.is_trial ? 'checked' : ''} style="width:16px;height:16px;accent-color:var(--cyan);" />
                     <strong>Trial Account</strong>
+                  </label>
+                  <label style="display:inline-flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.82rem;color:var(--cyan);margin-left:0.8rem;">
+                    <input type="checkbox" id="modalEditAutoSync" ${user.auto_sync_features !== false ? 'checked' : ''} style="width:16px;height:16px;accent-color:var(--cyan);" />
+                    <strong>⚡ Auto Sync New Features</strong>
                   </label>
                 </div>
               </div>
@@ -877,6 +892,7 @@
 
       document.getElementById('saveFeaturesBtn').addEventListener('click', async () => {
         const isTrial = document.getElementById('modalEditIsTrial').checked;
+        const autoSync = document.getElementById('modalEditAutoSync').checked;
         const durationVal = document.getElementById('modalEditDuration').value;
         const customDateVal = document.getElementById('modalEditCustomDate').value;
 
@@ -896,12 +912,23 @@
         saveBtn.disabled = true;
         saveBtn.textContent = 'Saving...';
 
-        await App.updatePanelUserFeatures(targetUsername, currFeatures);
-        await App.updatePanelUserExpiry(targetUsername, newExpiresAt, isTrial);
+        try {
+          await App.updatePanelUserFeatures(targetUsername, currFeatures);
+          await App.fbPatch(`dp_panel_users/${targetUsername}`, {
+            is_trial: isTrial,
+            auto_sync_features: autoSync,
+            expiresAt: newExpiresAt || null
+          });
 
-        App.toast(`Account "${targetUsername}" updated successfully!`, 'success');
-        modalDiv.remove();
-        renderUsers();
+          App.toast(`Account "${targetUsername}" updated successfully!`, 'success');
+          modalDiv.remove();
+          renderUsers();
+        } catch (err) {
+          console.error(err);
+          App.toast('Failed to update account: ' + (err.message || err), 'error');
+          saveBtn.disabled = false;
+          saveBtn.textContent = '💾 Save All Changes';
+        }
       });
     }
 
@@ -966,7 +993,10 @@
       if (trialBtn) trialBtn.disabled = true;
       if (stdBtn) stdBtn.disabled = true;
 
-      const result = await App.createPanelUser(username, password, 0, features, isTrial, trialDays * 24, expiresAt);
+      const autoSyncToggle = document.getElementById('autoSyncFeaturesToggle');
+      const autoSync = autoSyncToggle ? autoSyncToggle.checked : true;
+
+      const result = await App.createPanelUser(username, password, 0, features, isTrial, trialDays * 24, expiresAt, autoSync);
 
       if (trialBtn) trialBtn.disabled = false;
       if (stdBtn) stdBtn.disabled = false;
