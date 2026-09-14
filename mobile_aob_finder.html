@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DP Control Panel — Mobile AOB Finder" />
+  <title>DP Panel - Mobile AOB Safe Finder</title>
+  <script src="device_detect.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body.mobile-app-body { padding-bottom: 74px; background: var(--bg-deep); }
+    .mobile-header {
+      position: sticky; top: 0; z-index: 1000;
+      background: rgba(8, 12, 20, 0.94);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(0, 242, 254, 0.2);
+      padding: 0.65rem 1rem; display: flex; align-items: center; justify-content: space-between;
+    }
+    .mobile-card-item {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 0.95rem; margin-bottom: 0.85rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    }
+    .mobile-menu-drawer-overlay {
+      position: fixed; inset: 0; background: rgba(5, 8, 14, 0.85);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      z-index: 99999; opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+      display: flex; justify-content: flex-start;
+    }
+    .mobile-menu-drawer-overlay.active { opacity: 1; pointer-events: auto; }
+    .mobile-menu-drawer-panel {
+      width: 290px; max-width: 85vw; height: 100%; background: #090e17;
+      border-right: 1px solid rgba(0, 242, 254, 0.25);
+      box-shadow: 10px 0 40px rgba(0, 0, 0, 0.8);
+      display: flex; flex-direction: column; padding: 1.25rem 1rem;
+      transform: translateX(-100%); transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-sizing: border-box;
+    }
+    .mobile-menu-drawer-overlay.active .mobile-menu-drawer-panel { transform: translateX(0); }
+    .menu-drawer-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; padding-bottom: 0.8rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+    .sheet-close-btn { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem; }
+    .menu-drawer-links { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; overflow-y: auto; }
+    .menu-drawer-link { display: flex; align-items: center; gap: 0.8rem; padding: 0.75rem 1rem; border-radius: 12px; color: #b6bdcf; font-weight: 600; font-size: 0.88rem; text-decoration: none; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); }
+    .menu-drawer-link.active { background: linear-gradient(135deg, rgba(0, 242, 254, 0.18), rgba(79, 140, 255, 0.25)); color: var(--cyan); border-color: rgba(0, 242, 254, 0.4); }
+    .mobile-hamburger-btn { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; width: 38px; height: 38px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 8px; cursor: pointer; }
+    .mobile-hamburger-btn span { display: block; width: 18px; height: 2px; background: #fff; border-radius: 2px; }
+  </style>
+</head>
+<body class="mobile-app-body">
+
+  <header class="mobile-header">
+    <div style="display:flex;align-items:center;gap:0.6rem;">
+      <div class="nav-logo" style="width:36px;height:36px;font-size:1rem;background:linear-gradient(135deg,var(--cyan),var(--primary));box-shadow:0 0 12px rgba(0,242,254,0.4);">DP</div>
+      <div>
+        <div style="font-weight:700;font-size:0.95rem;color:#fff;">AOB Safe Finder</div>
+        <div style="font-size:0.68rem;color:var(--cyan);">Memory Safety Analyzer</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:0.4rem;align-items:center;">
+      <button class="btn btn-dark btn-sm" id="refreshBtn" style="padding:0.35rem 0.65rem;font-size:0.75rem;" title="Refresh Data">↻</button>
+      <button class="mobile-hamburger-btn" id="openMenuDrawerBtn" type="button" title="Open Navigation Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- TOP-RIGHT HAMBURGER NAVIGATION DRAWER OVERLAY -->
+  <div class="mobile-menu-drawer-overlay" id="menuDrawerOverlay">
+    <div class="mobile-menu-drawer-panel">
+      <div class="menu-drawer-header">
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <div class="nav-logo" style="width:30px;height:30px;font-size:0.8rem;background:linear-gradient(135deg,var(--cyan),var(--primary));">DP</div>
+          <span style="font-weight:700;font-size:0.95rem;color:#fff;">Navigation Menu</span>
+        </div>
+        <button type="button" class="sheet-close-btn" id="closeMenuDrawerBtn">✕</button>
+      </div>
+
+      <div class="menu-drawer-links">
+        <a href="mobile_admin.html" class="menu-drawer-link">
+          <span class="icon">⚡</span> <span>UID Dashboard</span>
+        </a>
+        <a href="mobile_panel_admin.html" class="menu-drawer-link">
+          <span class="icon">🔐</span> <span>Panel Dashboard</span>
+        </a>
+        <a href="mobile_silent_aim_admin.html" class="menu-drawer-link">
+          <span class="icon">🎯</span> <span>Silent Aim</span>
+        </a>
+        <a href="mobile_offsets_manager.html" class="menu-drawer-link">
+          <span class="icon">🛠</span> <span>Offsets Manager</span>
+        </a>
+        <a href="mobile_feature_builder.html" class="menu-drawer-link">
+          <span class="icon">📑</span> <span>Feature Builder</span>
+        </a>
+        <a href="mobile_aob_finder.html" class="menu-drawer-link active">
+          <span class="icon">🛡</span> <span>AOB Safe Finder</span>
+        </a>
+      </div>
+
+      <div style="margin-top:auto;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.1);display:flex;flex-direction:column;gap:0.5rem;">
+        <button type="button" id="drawerLogoutBtn" class="btn btn-red btn-full" style="padding:0.6rem;font-weight:700;">🚪 Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <main style="padding: 0.85rem;">
+
+    <!-- Form Input Card -->
+    <div class="mobile-card-item" style="border:1px solid rgba(0,242,254,0.25);">
+      <h3 style="font-size:1rem;color:#fff;margin-bottom:0.3rem;">🔍 Define Array of Bytes (AOB)</h3>
+      <p style="font-size:0.75rem;color:var(--text-300);margin-bottom:0.75rem;">Input target search hex signature and patched replacement</p>
+
+      <form id="aobForm" autocomplete="off">
+        <div class="form-group">
+          <label for="searchAob" style="font-size:0.75rem;font-weight:600;">🎯 SEARCH PATTERN</label>
+          <textarea id="searchAob" class="form-input" style="font-family:monospace;font-size:13px;min-height:75px;border-radius:8px;box-sizing:border-box;" required>8F C2 F5 3C CD CC CC 3D ?? ?? ?? ?? EC 51 B8 3D</textarea>
+          <div style="display:flex;gap:0.4rem;margin-top:0.5rem;flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary btn-sm" id="sanitizeBtn" style="font-size:0.72rem;padding:0.3rem 0.6rem;">💡 Auto-Sanitize</button>
+            <button type="button" class="btn btn-dark btn-sm" id="loadAimbotPresetBtn" style="font-size:0.72rem;padding:0.3rem 0.6rem;">🎯 Load Preset</button>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:0.85rem;">
+          <label for="replaceAob" style="font-size:0.75rem;font-weight:600;">✨ REPLACE PATTERN</label>
+          <textarea id="replaceAob" class="form-input" style="font-family:monospace;font-size:13px;min-height:75px;border-radius:8px;box-sizing:border-box;" required>8F C2 F5 3C CD CC CC 3D 00 00 80 3F EC 51 B8 3D</textarea>
+        </div>
+
+        <div class="form-group" style="margin-top:0.85rem;">
+          <label for="targetLib" style="font-size:0.75rem;font-weight:600;">📦 TARGET BINARY</label>
+          <input type="text" id="targetLib" class="form-input" value="libil2cpp.so" placeholder="e.g. libil2cpp.so" style="font-size:14px;min-height:40px;border-radius:8px;" required />
+        </div>
+      </form>
+
+      <!-- Code Exporters -->
+      <div style="margin-top: 1.2rem;">
+        <h4 style="font-size: 0.85rem; color: var(--text-100); margin-bottom: 0.5rem;">📄 Export Generated Code</h4>
+        <div class="tab-container" style="border-bottom:1px solid var(--border);margin-bottom:0.75rem;display:flex;overflow-x:auto;">
+          <div class="exporter-tab active" data-tab="cpp" style="cursor:pointer;padding:0.4rem 0.75rem;font-size:0.78rem;white-space:nowrap;border-bottom:2px solid var(--primary);">C++ Hooks</div>
+          <div class="exporter-tab" data-tab="frida" style="cursor:pointer;padding:0.4rem 0.75rem;font-size:0.78rem;white-space:nowrap;">Frida</div>
+          <div class="exporter-tab" data-tab="gg" style="cursor:pointer;padding:0.4rem 0.75rem;font-size:0.78rem;white-space:nowrap;">GG Lua</div>
+          <div class="exporter-tab" data-tab="json" style="cursor:pointer;padding:0.4rem 0.75rem;font-size:0.78rem;white-space:nowrap;">DP JSON</div>
+        </div>
+
+        <div id="export-cpp" class="exporter-content">
+          <div class="code-preview-box" style="padding:0.6rem;font-size:0.72rem;">
+            <button class="btn btn-dark btn-sm copy-code-btn" id="copyCppBtn" style="padding:0.25rem 0.5rem;font-size:0.68rem;">📋 Copy</button>
+            <code id="cppCode">Loading...</code>
+          </div>
+        </div>
+
+        <div id="export-frida" class="exporter-content" style="display:none;">
+          <div class="code-preview-box" style="padding:0.6rem;font-size:0.72rem;">
+            <button class="btn btn-dark btn-sm copy-code-btn" id="copyFridaBtn" style="padding:0.25rem 0.5rem;font-size:0.68rem;">📋 Copy</button>
+            <code id="fridaCode">Loading...</code>
+          </div>
+        </div>
+
+        <div id="export-gg" class="exporter-content" style="display:none;">
+          <div class="code-preview-box" style="padding:0.6rem;font-size:0.72rem;">
+            <button class="btn btn-dark btn-sm copy-code-btn" id="copyGgBtn" style="padding:0.25rem 0.5rem;font-size:0.68rem;">📋 Copy</button>
+            <code id="ggCode">Loading...</code>
+          </div>
+        </div>
+
+        <div id="export-json" class="exporter-content" style="display:none;">
+          <div class="code-preview-box" style="padding:0.6rem;font-size:0.72rem;">
+            <button class="btn btn-dark btn-sm copy-code-btn" id="copyJsonBtn" style="padding:0.25rem 0.5rem;font-size:0.68rem;">📋 Copy</button>
+            <code id="jsonCode">Loading...</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analysis Card -->
+    <div class="mobile-card-item">
+      <h3 style="font-size:0.95rem;color:var(--cyan);margin-bottom:0.5rem;">📊 AOB Pattern Analysis</h3>
+      <div class="analysis-card" style="padding:0.6rem;gap:0.4rem;">
+        <div class="analysis-stat"><span class="analysis-label" style="font-size:0.72rem;">Search Length</span><span class="analysis-val" id="searchLenText" style="font-size:0.75rem;">0 bytes</span></div>
+        <div class="analysis-stat"><span class="analysis-label" style="font-size:0.72rem;">Replace Length</span><span class="analysis-val" id="replaceLenText" style="font-size:0.75rem;">0 bytes</span></div>
+        <div class="analysis-stat"><span class="analysis-label" style="font-size:0.72rem;">Length Integrity</span><span class="analysis-val" id="lengthIntegrityText" style="font-size:0.75rem;">Checking...</span></div>
+        <div class="analysis-stat"><span class="analysis-label" style="font-size:0.72rem;">Static Bytes</span><span class="analysis-val" id="staticBytesText" style="color:var(--primary);font-size:0.75rem;">0 bytes</span></div>
+        <div class="analysis-stat"><span class="analysis-label" style="font-size:0.72rem;">Wildcard Count</span><span class="analysis-val" id="wildcardsText" style="color:var(--orange);font-size:0.75rem;">0 bytes</span></div>
+        <div class="analysis-stat"><span class="analysis-label" style="font-size:0.72rem;">AOB Safeness Rating</span><span class="analysis-val" id="safenessText" style="font-size:0.75rem;">Checking...</span></div>
+        <div class="analysis-stat" id="aimbotOffsetsRow" style="display:none;"><span class="analysis-label" style="font-size:0.72rem;">Aimbot Offsets</span><span class="analysis-val" style="color:var(--text-100);font-size:0.75rem;"><strong style="color:#00ffcc;">Read:</strong> 0xB8 &nbsp;|&nbsp; <strong style="color:var(--red);">Write:</strong> 0xB4</span></div>
+      </div>
+    </div>
+
+    <!-- Simulator -->
+    <div class="mobile-card-item" style="border:1px solid rgba(139,92,246,0.3);">
+      <h3 style="font-size:0.95rem;color:var(--purple);margin-bottom:0.3rem;">🛠 Memory Scan Simulator</h3>
+      <p style="font-size:0.72rem;color:var(--text-300);margin-bottom:0.6rem;">Test-run your AOB search and replace patch in sandbox</p>
+
+      <div class="form-group">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
+          <label style="font-size:0.72rem;">RAW MEMORY HEX</label>
+          <button type="button" class="btn btn-dark btn-sm" id="loadSampleHexBtn" style="font-size:0.68rem;padding:0.25rem 0.5rem;">⚡ Load Mock Dump</button>
+        </div>
+        <textarea id="rawHexBlock" rows="3" class="form-input" style="font-family:monospace;font-size:12px;width:100%;box-sizing:border-box;" placeholder="Paste raw memory hex sequence..."></textarea>
+      </div>
+
+      <button type="button" class="btn btn-primary btn-full" id="runSimulationBtn" style="margin-top:0.6rem;min-height:42px;font-weight:700;border-radius:8px;">🔍 Run Simulated AOB Scan & Patch</button>
+
+      <div id="simReport" class="simulation-result" style="display:none;margin-top:0.75rem;padding:0.75rem;">
+        <h4 style="color:#00ffcc;font-size:0.82rem;margin-bottom:0.4rem;">✓ SIMULATION COMPLETED</h4>
+        <div style="display:flex;flex-direction:column;gap:0.6rem;margin-top:0.5rem;">
+          <div>
+            <h5 style="color:var(--text-300);font-size:0.7rem;text-transform:uppercase;margin-bottom:0.2rem;">Original Hex (Matched Highlighted)</h5>
+            <div id="simOriginalHex" style="background:#111118;border:1px solid var(--border);border-radius:4px;padding:0.5rem;font-size:0.7rem;line-height:1.5;color:var(--text-200);word-break:break-all;">—</div>
+          </div>
+          <div>
+            <h5 style="color:var(--text-300);font-size:0.7rem;text-transform:uppercase;margin-bottom:0.2rem;">Patched Hex Preview (Green Modifications)</h5>
+            <div id="simPatchedHex" style="background:#111118;border:1px solid var(--border);border-radius:4px;padding:0.5rem;font-size:0.7rem;line-height:1.5;color:var(--text-200);word-break:break-all;">—</div>
+          </div>
+        </div>
+        <div style="margin-top:0.6rem;font-size:0.75rem;color:var(--text-200);border-top:1px solid rgba(255,255,255,0.05);padding-top:0.4rem;">
+          <strong>Scan Results:</strong> <span id="simMatchCountText" style="color:#fff;font-weight:bold;">0 matches</span> found. <span id="simSuccessText"></span>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:1.2rem;">
+      <button type="button" id="forceDesktopBtn" class="btn btn-dark btn-sm" style="font-size:0.72rem;padding:0.35rem 0.85rem;">💻 Switch to Desktop PC View</button>
+    </div>
+  </main>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+  <script>
+    if (sessionStorage.getItem('loggedIn') !== 'admin') { window.location.href = 'mobile_index.html'; }
+
+    // Drawer Logic
+    const openMenuDrawerBtn = document.getElementById('openMenuDrawerBtn');
+    const closeMenuDrawerBtn = document.getElementById('closeMenuDrawerBtn');
+    const menuDrawerOverlay = document.getElementById('menuDrawerOverlay');
+    const drawerLogoutBtn = document.getElementById('drawerLogoutBtn');
+
+    if (openMenuDrawerBtn) openMenuDrawerBtn.addEventListener('click', () => menuDrawerOverlay.classList.add('active'));
+    if (closeMenuDrawerBtn) closeMenuDrawerBtn.addEventListener('click', () => menuDrawerOverlay.classList.remove('active'));
+    if (drawerLogoutBtn) drawerLogoutBtn.addEventListener('click', () => { sessionStorage.clear(); window.location.href = 'mobile_index.html'; });
+
+    const searchAobInput = document.getElementById('searchAob');
+    const replaceAobInput = document.getElementById('replaceAob');
+    const targetLibInput = document.getElementById('targetLib');
+    const sanitizeBtn = document.getElementById('sanitizeBtn');
+    const loadAimbotPresetBtn = document.getElementById('loadAimbotPresetBtn');
+
+    const searchLenText = document.getElementById('searchLenText');
+    const replaceLenText = document.getElementById('replaceLenText');
+    const lengthIntegrityText = document.getElementById('lengthIntegrityText');
+    const staticBytesText = document.getElementById('staticBytesText');
+    const wildcardsText = document.getElementById('wildcardsText');
+    const safenessText = document.getElementById('safenessText');
+
+    const cppCode = document.getElementById('cppCode');
+    const fridaCode = document.getElementById('fridaCode');
+    const ggCode = document.getElementById('ggCode');
+    const jsonCode = document.getElementById('jsonCode');
+
+    function parseAob(raw) {
+      return raw.trim().toUpperCase().replace(/[^A-F0-9\?]/g, ' ').split(/\s+/).filter(x => x.length > 0);
+    }
+
+    function analyzeAob() {
+      const searchBytes = parseAob(searchAobInput.value);
+      const replaceBytes = parseAob(replaceAobInput.value);
+      const targetLib = targetLibInput.value.trim() || 'libil2cpp.so';
+
+      const searchLen = searchBytes.length;
+      const replaceLen = replaceBytes.length;
+
+      const aimbotOffsetsRow = document.getElementById('aimbotOffsetsRow');
+      const isAimbotPattern = searchAobInput.value.includes('A5 43') && searchAobInput.value.includes('FF FF FF FF');
+      if (aimbotOffsetsRow) aimbotOffsetsRow.style.display = isAimbotPattern ? 'flex' : 'none';
+
+      searchLenText.textContent = `${searchLen} byte${searchLen !== 1 ? 's' : ''}`;
+      replaceLenText.textContent = `${replaceLen} byte${replaceLen !== 1 ? 's' : ''}`;
+
+      if (searchLen === 0 || replaceLen === 0) {
+        lengthIntegrityText.innerHTML = '<span class="status-mismatch">No input</span>';
+      } else if (searchLen === replaceLen) {
+        lengthIntegrityText.innerHTML = '<span class="status-match">✓ Perfect Match</span>';
+      } else {
+        lengthIntegrityText.innerHTML = `<span class="status-mismatch">✗ Mismatch (${searchLen} vs ${replaceLen})</span>`;
+      }
+
+      let wildcards = 0;
+      let staticBytes = 0;
+      searchBytes.forEach(b => {
+        if (b.includes('?')) wildcards++;
+        else staticBytes++;
+      });
+
+      staticBytesText.textContent = `${staticBytes} byte${staticBytes !== 1 ? 's' : ''}`;
+      wildcardsText.textContent = `${wildcards} byte${wildcards !== 1 ? 's' : ''}`;
+
+      if (searchLen < 6) {
+        safenessText.innerHTML = '<span class="status-unsafe">⚠️ UNSAFE (Too short)</span>';
+      } else if (staticBytes < 4) {
+        safenessText.innerHTML = '<span class="status-unsafe">⚠️ UNSAFE (Few static bytes)</span>';
+      } else if (wildcards / searchLen > 0.5) {
+        safenessText.innerHTML = '<span class="status-unsafe">⚠️ UNSAFE (>50% wildcards)</span>';
+      } else {
+        safenessText.innerHTML = '<span class="status-safe">✓ SAFE (Unique signature)</span>';
+      }
+
+      updateSnippets(searchBytes, replaceBytes, targetLib);
+    }
+
+    function updateSnippets(searchBytes, replaceBytes, targetLib) {
+      const sHex = searchBytes.join(' ');
+      const rHex = replaceBytes.join(' ');
+
+      cppCode.textContent = `// C++ / Android Memory Patch
+#include "MemoryPatch.h"
+void ApplyCheat() {
+    MemoryPatch patch = MemoryPatch::createWithAOB("${targetLib}", "${sHex}", "${rHex}");
+    if (patch.isValid()) patch.Modify();
+}`;
+
+      fridaCode.textContent = `// Frida AOB Scanner
+function patchAob(libName, searchPattern, replaceBytes) {
+    const module = Process.findModuleByName(libName);
+    Memory.scan(module.base, module.size, searchPattern, {
+        onMatch: function(addr, size) {
+            Memory.protect(addr, replaceBytes.length, 'rwx');
+            addr.writeByteArray(replaceBytes);
+            return 'stop';
+        }
+    });
+}
+patchAob("${targetLib}", "${sHex}", [${replaceBytes.map(b => b.includes('?') ? '0x00' : '0x' + b).join(', ')}]);`;
+
+      ggCode.textContent = `-- GameGuardian Lua AOB Script
+gg.clearResults()
+gg.searchNumber("${sHex.replace(/\?\?/g, '??')}", gg.TYPE_BYTE)
+local results = gg.getResults(gg.getResultCount())
+local patch = {}
+local replaceBytes = {${replaceBytes.map(b => b.includes('?') ? 'nil' : '0x' + b).join(', ')}}
+for i, res in ipairs(results) do
+    for offset, byteVal in ipairs(replaceBytes) do
+        if byteVal ~= nil then patch[#patch + 1] = { address = res.address + offset - 1, flags = gg.TYPE_BYTE, value = byteVal } end
+    end
+end
+gg.setValues(patch)`;
+
+      jsonCode.textContent = JSON.stringify({ key: "dynamic_aob_cheat", label: "Dynamic AOB Hook", category: "Memory Hacks", scanHex: sHex, replaceHex: rHex }, null, 2);
+    }
+
+    function copySnippet(elementId) {
+      const codeText = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(codeText);
+      App.toast('Snippet copied!', 'success');
+    }
+
+    if (document.getElementById('copyCppBtn')) document.getElementById('copyCppBtn').addEventListener('click', () => copySnippet('cppCode'));
+    if (document.getElementById('copyFridaBtn')) document.getElementById('copyFridaBtn').addEventListener('click', () => copySnippet('fridaCode'));
+    if (document.getElementById('copyGgBtn')) document.getElementById('copyGgBtn').addEventListener('click', () => copySnippet('ggCode'));
+    if (document.getElementById('copyJsonBtn')) document.getElementById('copyJsonBtn').addEventListener('click', () => copySnippet('jsonCode'));
+
+    function sanitizeSignature() {
+      const val = searchAobInput.value.trim();
+      if (!val) return;
+      const bytes = parseAob(val);
+      if (bytes.length === 0) return;
+
+      let sanitized = [];
+      let modifiedCount = 0;
+      for (let i = 0; i < bytes.length; i++) {
+        let b = bytes[i];
+        if (i <= bytes.length - 4 &&
+            b !== '??' && b !== '00' && b !== 'FF' &&
+            bytes[i+1] !== '??' && bytes[i+1] !== '00' && bytes[i+1] !== 'FF' &&
+            bytes[i+2] !== '??' && bytes[i+2] !== '00' && bytes[i+2] !== 'FF' &&
+            bytes[i+3] !== '??' && bytes[i+3] !== '00' && bytes[i+3] !== 'FF') {
+          sanitized.push('??', '??', '??', '??');
+          modifiedCount += 4;
+          i += 3;
+        } else {
+          sanitized.push(b);
+        }
+      }
+
+      searchAobInput.value = sanitized.join(' ');
+      analyzeAob();
+      App.toast(`Sanitized signature! Converted ${modifiedCount} bytes.`, 'success');
+    }
+
+    function loadAimbotPreset() {
+      searchAobInput.value = "FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A5 43";
+      replaceAobInput.value = "FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80 3F 00 00 80 3F 00 00 80 3F 00 00 80 3F 00 00 00 00 00 00 00 00 80 3F 00 00 00 00 00 00 80 3F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A5 43";
+      targetLibInput.value = "libil2cpp.so";
+      analyzeAob();
+      App.toast("Loaded custom Aimbot memory preset!", "success");
+    }
+
+    searchAobInput.addEventListener('input', analyzeAob);
+    replaceAobInput.addEventListener('input', analyzeAob);
+    targetLibInput.addEventListener('input', analyzeAob);
+    sanitizeBtn.addEventListener('click', sanitizeSignature);
+    loadAimbotPresetBtn.addEventListener('click', loadAimbotPreset);
+
+    document.querySelectorAll('.exporter-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.exporter-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const activeTabName = tab.dataset.tab;
+        document.querySelectorAll('.exporter-content').forEach(c => c.style.display = 'none');
+        document.getElementById(`export-${activeTabName}`).style.display = 'block';
+      });
+    });
+
+    const MOCK_GAME_MEMORY = "00 00 80 3F 1A 2B 3C 4D 5E 6F 00 00 8F C2 F5 3C CD CC CC 3D 1A 2B 3C 4D EC 51 B8 3D FF FF FF FF 00 00 00 00 E3 F2 A1 4B CD CC CC 3D 8F C2 F5 3C CD CC CC 3D 99 AA BB CC EC 51 B8 3D 11 22 33 44";
+
+    document.getElementById('loadSampleHexBtn').addEventListener('click', () => {
+      document.getElementById('rawHexBlock').value = MOCK_GAME_MEMORY;
+      App.toast('Loaded simulated Free Fire memory dump!', 'info');
+    });
+
+    document.getElementById('runSimulationBtn').addEventListener('click', () => {
+      const rawHexInput = document.getElementById('rawHexBlock').value.trim();
+      const searchHex = searchAobInput.value.trim();
+      const replaceHex = replaceAobInput.value.trim();
+
+      if (!rawHexInput) { App.toast('Please load or paste raw memory hex first.', 'error'); return; }
+
+      const memoryBytes = rawHexInput.toUpperCase().split(/\s+/).filter(x => x.length > 0);
+      const sBytes = parseAob(searchHex);
+      const rBytes = parseAob(replaceHex);
+
+      if (sBytes.length === 0 || rBytes.length === 0) { App.toast('Enter valid search & replace patterns.', 'error'); return; }
+      if (sBytes.length !== rBytes.length) { App.toast('Unequal search and replace byte lengths!', 'error'); return; }
+
+      let matchIndices = [];
+      for (let i = 0; i <= memoryBytes.length - sBytes.length; i++) {
+        let isMatch = true;
+        for (let j = 0; j < sBytes.length; j++) {
+          const patternByte = sBytes[j];
+          const memByte = memoryBytes[i + j];
+          if (patternByte !== '??' && patternByte !== memByte) { isMatch = false; break; }
+        }
+        if (isMatch) matchIndices.push(i);
+      }
+
+      let origHtml = '';
+      let patchHtml = '';
+      const highlightedOrig = new Set();
+      const highlightedPatch = new Set();
+
+      matchIndices.forEach(idx => {
+        for (let j = 0; j < sBytes.length; j++) {
+          highlightedOrig.add(idx + j);
+          highlightedPatch.add(idx + j);
+        }
+      });
+
+      for (let i = 0; i < memoryBytes.length; i++) {
+        const byte = memoryBytes[i];
+        if (highlightedOrig.has(i)) origHtml += `<span class="sim-match-highlight">${byte}</span> `;
+        else origHtml += `${byte} `;
+
+        if (highlightedPatch.has(i)) {
+          let replacementByte = byte;
+          matchIndices.forEach(idx => {
+            if (i >= idx && i < idx + rBytes.length) {
+              const offset = i - idx;
+              const repVal = rBytes[offset];
+              if (repVal !== '??') replacementByte = repVal;
+            }
+          });
+          patchHtml += `<span class="sim-replaced-highlight">${replacementByte}</span> `;
+        } else {
+          patchHtml += `${byte} `;
+        }
+      }
+
+      document.getElementById('simOriginalHex').innerHTML = origHtml;
+      document.getElementById('simPatchedHex').innerHTML = patchHtml;
+      document.getElementById('simMatchCountText').textContent = `${matchIndices.length} match${matchIndices.length !== 1 ? 'es' : ''}`;
+      document.getElementById('simSuccessText').innerHTML = matchIndices.length > 0 ? `<strong style="color:var(--green);">Successfully patched</strong> memory.` : `<span style="color:var(--orange);">No occurrences found.</span>`;
+      document.getElementById('simReport').style.display = 'block';
+      App.toast(`Simulated patch run found ${matchIndices.length} matches.`, 'success');
+    });
+
+    document.getElementById('forceDesktopBtn').addEventListener('click', () => {
+      sessionStorage.setItem('prefer_desktop_view', 'true');
+      window.location.href = 'aob_finder.html';
+    });
+
+    analyzeAob();
+  </script>
+</body>
+</html>

@@ -26,14 +26,20 @@
     'index.html': 'mobile_index.html',
     'admin.html': 'mobile_admin.html',
     'panel_admin.html': 'mobile_panel_admin.html',
-    'silent_aim_admin.html': 'mobile_silent_aim_admin.html'
+    'silent_aim_admin.html': 'mobile_silent_aim_admin.html',
+    'offsets_manager.html': 'mobile_offsets_manager.html',
+    'feature_builder.html': 'mobile_feature_builder.html',
+    'aob_finder.html': 'mobile_aob_finder.html'
   };
 
   const mobileToDesktopMap = {
     'mobile_index.html': 'index.html',
     'mobile_admin.html': 'admin.html',
     'mobile_panel_admin.html': 'panel_admin.html',
-    'mobile_silent_aim_admin.html': 'silent_aim_admin.html'
+    'mobile_silent_aim_admin.html': 'silent_aim_admin.html',
+    'mobile_offsets_manager.html': 'offsets_manager.html',
+    'mobile_feature_builder.html': 'feature_builder.html',
+    'mobile_aob_finder.html': 'aob_finder.html'
   };
 
   if (isMobileDevice && desktopToMobileMap[pageName]) {
