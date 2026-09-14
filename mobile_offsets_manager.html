@@ -123,6 +123,64 @@
       <button id="parseAndPushBtn" class="btn btn-primary btn-full" style="font-weight:700;border-radius:10px;min-height:44px;">🚀 Parse & Push to Firebase</button>
     </div>
 
+    <!-- BONES / FIELD STRINGS -->
+    <div class="mobile-card-item">
+      <h3 style="font-size:0.95rem;color:var(--cyan);margin-bottom:0.4rem;">🦴 Bone IDs Map</h3>
+      <p style="font-size:0.75rem;color:var(--text-300);margin-bottom:0.75rem;">Character skeleton bone offset references (e.g. Head:0x458)</p>
+      <form id="boneForm">
+        <div class="form-group" style="margin-bottom:0.6rem;">
+          <label style="font-size:0.75rem;font-weight:600;">🎯 HEAD</label>
+          <input type="text" id="bone_Head" class="form-input" value="Head:0x458" style="font-size:14px;" />
+        </div>
+        <div class="form-group" style="margin-bottom:0.6rem;">
+          <label style="font-size:0.75rem;font-weight:600;">📍 ROOT</label>
+          <input type="text" id="bone_Root" class="form-input" value="Root:0x46c" style="font-size:14px;" />
+        </div>
+        <div class="form-group" style="margin-bottom:0.6rem;">
+          <label style="font-size:0.75rem;font-weight:600;">🔗 SPINE</label>
+          <input type="text" id="bone_Spine" class="form-input" value="Spine:0x460" style="font-size:14px;" />
+        </div>
+        <div class="form-group" style="margin-bottom:0.6rem;">
+          <label style="font-size:0.75rem;font-weight:600;">⭕ HIP</label>
+          <input type="text" id="bone_Hip" class="form-input" value="Hip:0x468" style="font-size:14px;" />
+        </div>
+        <div class="form-group" style="margin-bottom:0.6rem;">
+          <label style="font-size:0.75rem;font-weight:600;">👐 LEFT WRIST</label>
+          <input type="text" id="bone_LeftWrist" class="form-input" value="LeftWrist:0x454" style="font-size:14px;" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top:0.75rem;font-weight:700;border-radius:10px;">✨ Push Bone List</button>
+      </form>
+    </div>
+
+    <!-- CORE OFFSETS -->
+    <div class="mobile-card-item">
+      <h3 style="font-size:0.95rem;color:var(--cyan);margin-bottom:0.4rem;">🔧 Core Offsets</h3>
+      <p style="font-size:0.75rem;color:var(--text-300);margin-bottom:0.75rem;">Essential game engine static offsets (Hex &amp; Decimal)</p>
+      <form id="offsetForm">
+        <div class="form-group" style="margin-bottom:0.6rem;">
+          <label style="font-size:0.75rem;font-weight:600;">🎮 InitBase</label>
+          <input type="text" id="offset_InitBase" class="form-input" value="0xA9870BC" style="font-size:14px;" />
+        </div>
+        <div class="form-group" style="margin-bottom:0.6rem;">
+          <label style="font-size:0.75rem;font-weight:600;">📦 StaticClass</label>
+          <input type="text" id="offset_StaticClass" class="form-input" value="0x5C" style="font-size:14px;" />
+        </div>
+        <div class="form-group" style="margin-bottom:0.6rem;">
+          <label style="font-size:0.75rem;font-weight:600;">🔫 Weapon</label>
+          <input type="text" id="offset_Weapon" class="form-input" value="0x3F4" style="font-size:14px;" />
+        </div>
+        <div class="form-group" style="margin-bottom:0.6rem;">
+          <label style="font-size:0.75rem;font-weight:600;">👁️ FollowCamera</label>
+          <input type="text" id="offset_FollowCamera" class="form-input" value="0x450" style="font-size:14px;" />
+        </div>
+        <div class="form-group" style="margin-bottom:0.6rem;">
+          <label style="font-size:0.75rem;font-weight:600;">🔍 ViewMatrix</label>
+          <input type="text" id="offset_ViewMatrix" class="form-input" value="0xE8" style="font-size:14px;" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top:0.75rem;font-weight:700;border-radius:10px;">✨ Push Offset List</button>
+      </form>
+    </div>
+
     <!-- Live Sync Status -->
     <div class="mobile-card-item">
       <h3 style="font-size:0.95rem;color:var(--cyan);margin-bottom:0.4rem;">🔄 Live Sync Status</h3>

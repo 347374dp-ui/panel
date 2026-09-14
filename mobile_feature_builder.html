@@ -301,32 +301,82 @@
       });
     };
 
+    let _mobileActivePreviewTab = '';
     const renderPreview = (features) => {
       const container = document.getElementById('previewContainer');
       if (!container) return;
 
       const groups = {};
       features.forEach(f => {
-        if (!groups[f.category]) groups[f.category] = [];
-        groups[f.category].push(f);
+        const cat = f.category || 'General';
+        if (!groups[cat]) groups[cat] = [];
+        groups[cat].push(f);
       });
 
-      let html = '';
-      Object.keys(groups).sort().forEach(cat => {
-        html += `<div class="preview-cat-header" style="font-size:0.75rem;margin-top:0.4rem;">${cat}</div>`;
-        html += `<div class="preview-checkbox-grid" style="grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));">`;
-        groups[cat].forEach(f => {
-          html += `
-            <label class="preview-checkbox-item" style="font-size:0.72rem;padding:0.35rem 0.5rem;">
-              <input type="checkbox" checked disabled />
-              <span>${f.label.toUpperCase()}</span>
-            </label>
-          `;
+      const categories = Object.keys(groups).sort();
+      if (categories.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-400);text-align:center;font-size:0.8rem;">No features defined</p>';
+        return;
+      }
+
+      if (!_mobileActivePreviewTab || !groups[_mobileActivePreviewTab]) {
+        _mobileActivePreviewTab = categories[0];
+      }
+
+      let tabsHtml = `<div class="preview-sidebar-tabs" style="display:flex; flex-direction:column; gap:0.25rem; min-width:95px; max-width:110px; border-right:1px solid rgba(0,242,254,0.15); padding-right:0.35rem; overflow:hidden;">`;
+      categories.forEach(cat => {
+        const isActive = cat === _mobileActivePreviewTab;
+        const activeStyle = isActive
+          ? 'background:linear-gradient(135deg, rgba(0,242,254,0.22), rgba(79,140,255,0.28)); color:var(--cyan); border-color:var(--cyan); font-weight:700; box-shadow:0 0 8px rgba(0,242,254,0.25);'
+          : 'background:rgba(255,255,255,0.03); color:var(--text-300); border-color:rgba(255,255,255,0.08);';
+        tabsHtml += `
+          <button type="button" class="preview-tab-btn" data-cat="${cat}" style="text-align:left; padding:0.28rem 0.4rem; border-radius:6px; border:1px solid; font-size:0.65rem; cursor:pointer; transition:all 0.2s ease; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ${activeStyle}">
+            ⚡ ${cat}
+          </button>
+        `;
+      });
+      tabsHtml += `</div>`;
+
+      let contentHtml = `<div class="preview-content-column" style="flex:1; padding-left:0.35rem; overflow:hidden;">`;
+      contentHtml += `<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.35rem;">
+        <span style="font-size:0.68rem; font-weight:700; color:var(--cyan); text-transform:uppercase; letter-spacing:0.05em;">⚡ ${_mobileActivePreviewTab}</span>
+        <span style="font-size:0.6rem; color:var(--text-300);">${groups[_mobileActivePreviewTab].length} Items</span>
+      </div>`;
+      contentHtml += `<div class="preview-checkbox-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); gap:0.3rem;">`;
+      groups[_mobileActivePreviewTab].forEach(f => {
+        contentHtml += `
+          <label class="preview-checkbox-item" style="font-size:0.65rem; padding:0.28rem 0.4rem; gap:0.3rem;">
+            <input type="checkbox" checked disabled style="width:12px;height:12px;" />
+            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${f.label.toUpperCase()}</span>
+          </label>
+        `;
+      });
+      contentHtml += `</div></div>`;
+
+      const frameHtml = `
+        <div class="phone-mockup-frame" style="padding:0.55rem;">
+          <div class="phone-mockup-header" style="margin-bottom:0.4rem; padding-bottom:0.3rem;">
+            <div class="phone-mockup-title" style="font-size:0.75rem;">
+              <span style="font-size:0.8rem;">📱</span>
+              <span>DP MOD Menu</span>
+            </div>
+            <span style="font-size:0.6rem; color:var(--green); font-weight:700;">🟢 Active</span>
+          </div>
+          <div style="display:flex; gap:0.3rem; align-items:flex-start;">
+            ${tabsHtml}
+            ${contentHtml}
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = frameHtml;
+
+      container.querySelectorAll('.preview-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          _mobileActivePreviewTab = btn.dataset.cat;
+          renderPreview(features);
         });
-        html += `</div>`;
       });
-
-      container.innerHTML = html || '<p style="color:var(--text-400);text-align:center;font-size:0.8rem;">No features</p>';
     };
 
     async function renderFeatures() {

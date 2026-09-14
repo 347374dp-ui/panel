@@ -183,6 +183,129 @@
       background: #fff;
       border-radius: 2px;
     }
+
+    /* ── Mobile Slide-Up Bottom Sheet Drawer ── */
+    .mobile-sheet-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 8, 14, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 99999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .mobile-sheet-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .mobile-bottom-sheet {
+      width: 100%;
+      max-width: 620px;
+      max-height: 86vh;
+      background: #090e17;
+      border-top: 1px solid rgba(0, 242, 254, 0.35);
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      padding: 0.75rem 1rem 1.2rem;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      box-sizing: border-box;
+    }
+    .mobile-sheet-overlay.active .mobile-bottom-sheet {
+      transform: translateY(0);
+    }
+    .sheet-drag-handle {
+      width: 40px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 2px;
+      margin: 0 auto 0.75rem;
+    }
+    .sheet-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .sheet-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 0;
+    }
+    .sheet-subtitle {
+      font-size: 0.72rem;
+      color: var(--text-300);
+      margin: 2px 0 0;
+    }
+    .sheet-content {
+      overflow-y: auto;
+      flex: 1;
+      padding-bottom: 0.5rem;
+    }
+    .mobile-cat-tabs-scroll {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.45rem;
+      padding-bottom: 0.35rem;
+      margin-bottom: 0.75rem;
+    }
+    .mobile-cat-pill {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.35rem;
+      padding: 0.45rem 0.7rem;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-200);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+    }
+    .mobile-cat-pill:hover {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .mobile-cat-pill.active {
+      background: rgba(0, 242, 254, 0.15);
+      border-color: rgba(0, 242, 254, 0.5);
+      color: var(--cyan);
+    }
+    .mobile-cat-badge {
+      font-size: 0.65rem;
+      padding: 1px 6px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-300);
+    }
+    .mobile-cat-pill.active .mobile-cat-badge {
+      background: rgba(0, 242, 254, 0.25);
+      color: var(--cyan);
+    }
+    .mobile-feature-2col-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.4rem;
+    }
+    @media (min-width: 480px) {
+      .mobile-feature-2col-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
   </style>
 </head>
 <body class="mobile-app-body">
@@ -523,13 +646,13 @@
             </div>
 
             <div class="mobile-action-bar">
-              <button type="button" class="btn ${user.active ? 'btn-action-disable' : 'btn-action-enable'} btn-sm mobile-toggle-btn" data-username="${user.username}" style="padding:0.35rem 0.4rem;font-size:0.75rem;">
+              <button type="button" class="btn ${user.active ? 'btn-action-disable' : 'btn-action-enable'} btn-sm mobile-toggle-btn" data-username="${user.username || user._key || ''}" style="padding:0.35rem 0.4rem;font-size:0.75rem;">
                 ${user.active ? '⏸ Disable' : '▶ Enable'}
               </button>
-              <button type="button" class="btn btn-dark btn-sm mobile-manage-btn" data-username="${user.username}" style="padding:0.35rem 0.4rem;font-size:0.75rem;color:var(--cyan);border-color:rgba(0,242,254,0.35);">
+              <button type="button" class="btn btn-dark btn-sm mobile-manage-btn" data-username="${user.username || user._key || ''}" style="padding:0.35rem 0.4rem;font-size:0.75rem;color:var(--cyan);border-color:rgba(0,242,254,0.35);">
                 ⚙️ Manage
               </button>
-              <button type="button" class="btn btn-red btn-sm mobile-delete-btn" data-username="${user.username}" style="padding:0.35rem 0.4rem;font-size:0.75rem;">
+              <button type="button" class="btn btn-red btn-sm mobile-delete-btn" data-username="${user.username || user._key || ''}" style="padding:0.35rem 0.4rem;font-size:0.75rem;">
                 🗑️ Delete
               </button>
             </div>
@@ -572,10 +695,19 @@
     // Open Mobile Slide-Up Bottom Sheet Drawer for Client Account Editing
     // Upgrade Mobile Client Drawer to match Desktop Tabbed Feature Selector + Expiry Extension
     async function openMobileClientDrawer(username) {
-      const user = await App.getPanelUser(username);
-      if (!user) return;
+      if (!username) return;
+      let user = await App.getPanelUser(username);
+      if (!user) {
+        const all = await App.getAllPanelUsers();
+        user = all.find(u => u.username === username || u._key === username);
+      }
+      if (!user) {
+        App.toast(`Could not find client account details for "${username}"`, 'error');
+        return;
+      }
+      const targetUsername = user.username || user._key || username;
 
-      currentEditUsername = username;
+      currentEditUsername = targetUsername;
       tempMobileFeatures = { ...(user.features || {}) };
 
       const overlay = document.getElementById('mobileSheetOverlay');
@@ -586,10 +718,6 @@
 
       titleEl.textContent = `⚙️ Manage: ${username}`;
       subTitleEl.textContent = `Update duration, trial status & cheat permissions`;
-
-      let activeCategory = 'ALL';
-      let searchFilter = '';
-      let expiryHoursToAdd = 0;
 
       // Group features by category
       const categories = ['ALL'];
@@ -603,8 +731,22 @@
         catMap[cat].push(f);
       });
 
+      // Default to first specific category tab so a single tab is selected, otherwise 'ALL'
+      let activeCategory = categories.length > 1 ? categories[1] : 'ALL';
+      let searchFilter = '';
+      let expiryHoursToAdd = 0;
+
       function renderDrawerUI() {
         const activeCount = _loadedFeatures.filter(f => tempMobileFeatures[f.key]).length;
+
+        // Current tab selection status for Select Tab button
+        const isAllTab = activeCategory === 'ALL';
+        const currentTabItems = isAllTab ? [] : (catMap[activeCategory] || []);
+        const currentTabSelected = currentTabItems.filter(f => tempMobileFeatures[f.key]).length;
+        const isTabAllSelected = currentTabItems.length > 0 && currentTabSelected === currentTabItems.length;
+        const tabBtnLabel = isAllTab
+          ? 'Select a Tab'
+          : (isTabAllSelected ? `✕ Deselect ${activeCategory}` : `✓ Select ${activeCategory}`);
 
         // Render category tabs
         const tabsHtml = categories.map(cat => {
@@ -612,8 +754,8 @@
           const sel = items.filter(f => tempMobileFeatures[f.key]).length;
           return `
             <button type="button" class="mobile-cat-pill ${cat === activeCategory ? 'active' : ''}" data-cat="${cat}">
-              <span>${cat}</span>
-              <span class="mobile-cat-badge">${sel}/${items.length}</span>
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%;">${cat}</span>
+              <span class="mobile-cat-badge" style="flex-shrink:0;">${sel}/${items.length}</span>
             </button>
           `;
         }).join('');
@@ -659,11 +801,12 @@
           </div>
 
           <!-- Feature Action Header -->
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem;">
-            <span style="font-size:0.78rem;font-weight:700;color:var(--cyan);">🎯 PERMISSIONS (${activeCount}/${_loadedFeatures.length})</span>
-            <div style="display:flex;gap:0.3rem;">
-              <button type="button" class="btn btn-dark btn-sm" id="drawerSelectAll" style="padding:0.2rem 0.45rem;font-size:0.7rem;color:var(--cyan);">✓ All</button>
-              <button type="button" class="btn btn-dark btn-sm" id="drawerClearAll" style="padding:0.2rem 0.45rem;font-size:0.7rem;">✕ Clear</button>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.45rem;flex-wrap:wrap;gap:0.35rem;">
+            <span style="font-size:0.76rem;font-weight:700;color:var(--cyan);">🎯 PERMISSIONS (${activeCount}/${_loadedFeatures.length})</span>
+            <div style="display:flex;gap:0.3rem;align-items:center;">
+              <button type="button" class="btn btn-dark btn-sm" id="drawerSelectTab" ${isAllTab ? 'disabled style="padding:0.22rem 0.48rem;font-size:0.68rem;color:var(--text-400);border-color:rgba(255,255,255,0.1);opacity:0.45;cursor:not-allowed;"' : 'style="padding:0.22rem 0.48rem;font-size:0.68rem;color:var(--cyan);border-color:rgba(0,242,254,0.4);font-weight:600;"'}>${tabBtnLabel}</button>
+              <button type="button" class="btn btn-dark btn-sm" id="drawerSelectAll" style="padding:0.22rem 0.48rem;font-size:0.68rem;color:#22c55e;border-color:rgba(34,197,94,0.4);font-weight:600;">✓ All</button>
+              <button type="button" class="btn btn-dark btn-sm" id="drawerClearAll" style="padding:0.22rem 0.48rem;font-size:0.68rem;color:#ef4444;border-color:rgba(239,68,68,0.4);font-weight:600;">✕ Clear</button>
             </div>
           </div>
 
@@ -709,6 +852,23 @@
           });
         });
 
+        // Quick Select Current Tab Only
+        const selectTabBtn = bodyEl.querySelector('#drawerSelectTab');
+        if (selectTabBtn) {
+          selectTabBtn.addEventListener('click', () => {
+            if (activeCategory === 'ALL') {
+              App.toast('Please tap a category tab below to select its features', 'info');
+              return;
+            }
+            const list = catMap[activeCategory] || [];
+            if (!list.length) return;
+            const allSel = list.length > 0 && list.every(f => tempMobileFeatures[f.key]);
+            const targetState = !allSel;
+            list.forEach(f => tempMobileFeatures[f.key] = targetState);
+            renderDrawerUI();
+          });
+        }
+
         // Quick Select All / Clear
         const selectAllBtn = bodyEl.querySelector('#drawerSelectAll');
         if (selectAllBtn) {
@@ -741,20 +901,20 @@
         saveBtn.disabled = true;
         saveBtn.textContent = 'Saving...';
 
-        await App.updatePanelUserFeatures(username, tempMobileFeatures);
+        await App.updatePanelUserFeatures(targetUsername, tempMobileFeatures);
 
         // Handle Expiry Extension if requested
         if (expiryHoursToAdd === -1) {
-          await App.updatePanelUserExpiry(username, '', user.is_trial);
+          await App.updatePanelUserExpiry(targetUsername, '', user.is_trial);
         } else if (expiryHoursToAdd > 0) {
           const baseDate = (user.expiresAt && new Date(user.expiresAt) > new Date()) ? new Date(user.expiresAt) : new Date();
           baseDate.setHours(baseDate.getHours() + expiryHoursToAdd);
-          await App.updatePanelUserExpiry(username, baseDate.toISOString(), user.is_trial);
+          await App.updatePanelUserExpiry(targetUsername, baseDate.toISOString(), user.is_trial);
         }
 
         saveBtn.disabled = false;
         saveBtn.textContent = 'Save Changes';
-        App.toast(`Updated features & expiry for "${username}"`, 'success');
+        App.toast(`Updated features & expiry for "${targetUsername}"`, 'success');
         overlay.classList.remove('active');
         renderMobileUsers();
       };
@@ -773,9 +933,6 @@
       titleEl.textContent = `📑 Select Allowed Features`;
       subTitleEl.textContent = `Toggle per-category feature access for new account`;
 
-      let activeCategory = 'ALL';
-      let searchFilter = '';
-
       const categories = ['ALL'];
       const catMap = { 'ALL': _loadedFeatures };
       _loadedFeatures.forEach(f => {
@@ -787,17 +944,29 @@
         catMap[cat].push(f);
       });
 
+      let activeCategory = categories.length > 1 ? categories[1] : 'ALL';
+      let searchFilter = '';
+
       function renderRegDrawerUI() {
         if (!window.regSelectedFeatures) window.regSelectedFeatures = {};
         const activeCount = _loadedFeatures.filter(f => window.regSelectedFeatures[f.key]).length;
+
+        // Current tab selection status for Select Tab button
+        const isAllTab = activeCategory === 'ALL';
+        const currentTabItems = isAllTab ? [] : (catMap[activeCategory] || []);
+        const currentTabSelected = currentTabItems.filter(f => window.regSelectedFeatures[f.key]).length;
+        const isTabAllSelected = currentTabItems.length > 0 && currentTabSelected === currentTabItems.length;
+        const tabBtnLabel = isAllTab
+          ? 'Select a Tab'
+          : (isTabAllSelected ? `✕ Deselect ${activeCategory}` : `✓ Select ${activeCategory}`);
 
         const tabsHtml = categories.map(cat => {
           const items = catMap[cat] || [];
           const sel = items.filter(f => window.regSelectedFeatures[f.key]).length;
           return `
             <button type="button" class="mobile-cat-pill ${cat === activeCategory ? 'active' : ''}" data-cat="${cat}">
-              <span>${cat}</span>
-              <span class="mobile-cat-badge">${sel}/${items.length}</span>
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%;">${cat}</span>
+              <span class="mobile-cat-badge" style="flex-shrink:0;">${sel}/${items.length}</span>
             </button>
           `;
         }).join('');
@@ -825,11 +994,12 @@
         }).join('');
 
         bodyEl.innerHTML = `
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem;">
-            <span style="font-size:0.78rem;font-weight:700;color:var(--cyan);">🎯 ACTIVE (${activeCount}/${_loadedFeatures.length})</span>
-            <div style="display:flex;gap:0.3rem;">
-              <button type="button" class="btn btn-dark btn-sm" id="regDrawerSelectAll" style="padding:0.2rem 0.45rem;font-size:0.7rem;color:var(--cyan);">✓ All</button>
-              <button type="button" class="btn btn-dark btn-sm" id="regDrawerClearAll" style="padding:0.2rem 0.45rem;font-size:0.7rem;">✕ Clear</button>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.45rem;flex-wrap:wrap;gap:0.35rem;">
+            <span style="font-size:0.76rem;font-weight:700;color:var(--cyan);">🎯 ACTIVE (${activeCount}/${_loadedFeatures.length})</span>
+            <div style="display:flex;gap:0.3rem;align-items:center;">
+              <button type="button" class="btn btn-dark btn-sm" id="regDrawerSelectTab" ${isAllTab ? 'disabled style="padding:0.22rem 0.48rem;font-size:0.68rem;color:var(--text-400);border-color:rgba(255,255,255,0.1);opacity:0.45;cursor:not-allowed;"' : 'style="padding:0.22rem 0.48rem;font-size:0.68rem;color:var(--cyan);border-color:rgba(0,242,254,0.4);font-weight:600;"'}>${tabBtnLabel}</button>
+              <button type="button" class="btn btn-dark btn-sm" id="regDrawerSelectAll" style="padding:0.22rem 0.48rem;font-size:0.68rem;color:#22c55e;border-color:rgba(34,197,94,0.4);font-weight:600;">✓ All</button>
+              <button type="button" class="btn btn-dark btn-sm" id="regDrawerClearAll" style="padding:0.22rem 0.48rem;font-size:0.68rem;color:#ef4444;border-color:rgba(239,68,68,0.4);font-weight:600;">✕ Clear</button>
             </div>
           </div>
 
@@ -869,6 +1039,23 @@
           });
         });
 
+        // Quick Select Current Tab Only
+        const regSelectTabBtn = bodyEl.querySelector('#regDrawerSelectTab');
+        if (regSelectTabBtn) {
+          regSelectTabBtn.addEventListener('click', () => {
+            if (activeCategory === 'ALL') {
+              App.toast('Please tap a category tab below to select its features', 'info');
+              return;
+            }
+            const list = catMap[activeCategory] || [];
+            if (!list.length) return;
+            const allSel = list.length > 0 && list.every(f => window.regSelectedFeatures[f.key]);
+            const targetState = !allSel;
+            list.forEach(f => window.regSelectedFeatures[f.key] = targetState);
+            renderRegDrawerUI();
+          });
+        }
+
         const selectAllBtn = bodyEl.querySelector('#regDrawerSelectAll');
         if (selectAllBtn) {
           selectAllBtn.addEventListener('click', () => {
@@ -891,6 +1078,42 @@
       saveBtn.onclick = () => {
         App.toast('Registration feature permissions configured!', 'info');
         overlay.classList.remove('active');
+
+        // Update registration card summary
+        const activeCount = _loadedFeatures.filter(f => window.regSelectedFeatures && window.regSelectedFeatures[f.key]).length;
+        const titleEl2 = document.getElementById('regFeatSummaryTitle');
+        const countEl2 = document.getElementById('regFeatSummaryCount');
+        const pillsEl2 = document.getElementById('regFeatCategoryPills');
+
+        if (titleEl2) {
+          if (activeCount === _loadedFeatures.length) {
+            titleEl2.textContent = '✨ All Features Enabled';
+            titleEl2.style.color = 'var(--cyan)';
+          } else if (activeCount === 0) {
+            titleEl2.textContent = '🚫 None Enabled';
+            titleEl2.style.color = 'var(--text-400)';
+          } else {
+            titleEl2.textContent = `⚡ ${activeCount} / ${_loadedFeatures.length} Active`;
+            titleEl2.style.color = 'var(--primary)';
+          }
+        }
+        if (countEl2) {
+          countEl2.textContent = `${activeCount} of ${_loadedFeatures.length} features active`;
+        }
+        if (pillsEl2) {
+          const catCounts = {};
+          _loadedFeatures.forEach(f => {
+            if (window.regSelectedFeatures && window.regSelectedFeatures[f.key]) {
+              const cat = f.category || 'General';
+              catCounts[cat] = (catCounts[cat] || 0) + 1;
+            }
+          });
+          pillsEl2.innerHTML = Object.entries(catCounts).map(([cat, c]) => `
+            <span style="font-size:0.68rem;padding:2px 7px;border-radius:6px;background:rgba(0,229,255,0.08);color:var(--cyan);border:1px solid rgba(0,229,255,0.2);white-space:nowrap;">
+              ${cat}: <strong>${c}</strong>
+            </span>
+          `).join('');
+        }
       };
 
       overlay.classList.add('active');
@@ -898,6 +1121,12 @@
 
     document.getElementById('mobileSheetCloseBtn').addEventListener('click', () => {
       document.getElementById('mobileSheetOverlay').classList.remove('active');
+    });
+
+    document.getElementById('mobileSheetOverlay').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('mobileSheetOverlay')) {
+        document.getElementById('mobileSheetOverlay').classList.remove('active');
+      }
     });
 
     function loadStats() {

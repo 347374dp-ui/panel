@@ -561,6 +561,7 @@
       }
 
       users.forEach(user => {
+        const uName = user.username || user._key || '';
         const isExpired = user.expiresAt && (new Date(user.expiresAt) < now);
         const statusClass = (user.active && !isExpired) ? 'status-active' : 'status-disabled';
         const statusText = !user.active ? 'Disabled' : (isExpired ? 'Expired' : 'Active');
@@ -585,28 +586,28 @@
         const enabledKeys = _loadedFeatures.filter(f => user.features && user.features[f.key]);
         let chipHtml = '';
         if (enabledKeys.length === _loadedFeatures.length && _loadedFeatures.length > 0) {
-          chipHtml = `<button type="button" class="feature-status-chip all edit-features-btn" data-username="${user.username}" title="Click to view/change features">
+          chipHtml = `<button type="button" class="feature-status-chip all edit-features-btn" data-username="${uName}" title="Click to view/change features">
             <span>✨ All Features</span> <span style="opacity:0.85;">(${enabledKeys.length})</span> <span>⚙️</span>
           </button>`;
         } else if (enabledKeys.length === 0) {
-          chipHtml = `<button type="button" class="feature-status-chip none edit-features-btn" data-username="${user.username}" title="Click to enable features">
+          chipHtml = `<button type="button" class="feature-status-chip none edit-features-btn" data-username="${uName}" title="Click to enable features">
             <span>🚫 None Enabled</span> <span>⚙️</span>
           </button>`;
         } else {
-          chipHtml = `<button type="button" class="feature-status-chip partial edit-features-btn" data-username="${user.username}" title="Click to view/change features">
+          chipHtml = `<button type="button" class="feature-status-chip partial edit-features-btn" data-username="${uName}" title="Click to view/change features">
             <span>⚡ ${enabledKeys.length} / ${_loadedFeatures.length} Active</span> <span>⚙️</span>
           </button>`;
         }
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><strong>${user.username}</strong> ${trialBadge}<br><span style="font-size:0.72rem;color:var(--text-400);">Created: ${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}</span></td>
+          <td><strong>${uName}</strong> ${trialBadge}<br><span style="font-size:0.72rem;color:var(--text-400);">Created: ${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}</span></td>
           <td class="${statusClass}" style="text-align:center;">${statusText}<br>${timeBadge}</td>
           <td style="white-space:nowrap;">${chipHtml}</td>
           <td class="user-controls" style="text-align:right;">
-            <button class="btn ${user.active ? 'btn-action-disable' : 'btn-action-enable'} btn-sm toggle-active-btn" data-username="${user.username}" data-effect="${user.active ? 'disable' : 'enable'}">${user.active ? '⏸ Disable' : '▶ Enable'}</button>
-            <button class="btn btn-dark btn-sm edit-features-btn" data-username="${user.username}">Manage</button>
-            <button class="btn btn-red btn-sm delete-user-btn" data-username="${user.username}">Delete</button>
+            <button class="btn ${user.active ? 'btn-action-disable' : 'btn-action-enable'} btn-sm toggle-active-btn" data-username="${uName}" data-effect="${user.active ? 'disable' : 'enable'}">${user.active ? '⏸ Disable' : '▶ Enable'}</button>
+            <button class="btn btn-dark btn-sm edit-features-btn" data-username="${uName}">Manage</button>
+            <button class="btn btn-red btn-sm delete-user-btn" data-username="${uName}">Delete</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -615,10 +616,19 @@
       loadStats();
     };
 
-    // ── Open Client Edit Modal (Full Details, Expiry & Tabbed Features) ──
     async function openEditClientModal(username) {
-      const user = await App.getPanelUser(username);
-      if (!user) return;
+      if (!username) return;
+      let user = await App.getPanelUser(username);
+      if (!user) {
+        // Fallback: search all users by _key or username
+        const all = await App.getAllPanelUsers();
+        user = all.find(u => u.username === username || u._key === username);
+      }
+      if (!user) {
+        App.toast(`Could not find client account details for "${username}"`, 'error');
+        return;
+      }
+      const targetUsername = user.username || user._key || username;
       let currFeatures = { ...(user.features || {}) };
 
       const existingModal = document.getElementById('featureEditModal');
@@ -885,10 +895,10 @@
         saveBtn.disabled = true;
         saveBtn.textContent = 'Saving...';
 
-        await App.updatePanelUserFeatures(username, currFeatures);
-        await App.updatePanelUserExpiry(username, newExpiresAt, isTrial);
+        await App.updatePanelUserFeatures(targetUsername, currFeatures);
+        await App.updatePanelUserExpiry(targetUsername, newExpiresAt, isTrial);
 
-        App.toast(`Account "${username}" updated successfully!`, 'success');
+        App.toast(`Account "${targetUsername}" updated successfully!`, 'success');
         modalDiv.remove();
         renderUsers();
       });

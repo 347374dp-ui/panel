@@ -623,16 +623,8 @@ const App = (() => {
     removeAllowlistUid,
     toggleAllowlistUid,
     // Admin notes
-    getAdminNotes: () => fbGet('admin_notes'),
-    saveAdminNotes: (title, html) => fbPut('admin_notes', {
-      title: String(title || '').trim() || 'Admin Notes',
-      html: String(html || ''),
-      updatedAt: new Date().toISOString()
-    }),
-    // Download URL Config (Synced to /config.json for desktop admin.html & mobile launcher parity)
-    getDownloadConfig: () => fbGet('config'),
-    saveDownloadConfig: (cfg) => fbPatch('config', { ...cfg, updatedAt: new Date().toISOString() }),
-    convertDriveUrl: (url) => gdriveToDirectUrl(url),
+    getAdminNotes,
+    saveAdminNotes,
     // Panel users
     getAllPanelUsers,
     getPanelUser,
@@ -686,22 +678,5 @@ async function addProto(hexStr) {
 async function deleteProto(key) {
   const res = await fetch(`${FIREBASE_URL}/protos/${key}.json`, { method: 'DELETE' });
   return res.ok;
-}
-
-function gdriveToDirectUrl(url) {
-  if (!url) return '';
-  if (url.includes('drive.usercontent.google.com')) return url;
-  const patterns = [
-    /\/file\/d\/([a-zA-Z0-9_-]+)/,
-    /[?&]id=([a-zA-Z0-9_-]+)/,
-    /\/d\/([a-zA-Z0-9_-]+)/,
-  ];
-  for (const pat of patterns) {
-    const m = url.match(pat);
-    if (m) {
-      return `https://drive.usercontent.google.com/download?id=${m[1]}&export=download&authuser=0&confirm=t`;
-    }
-  }
-  return url;
 }
 
