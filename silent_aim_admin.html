@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="DP Control Panel — Silent Aim Subscription Management" />
   <title>Silent Aim Admin — DP Control</title>
+  <script src="device_detect.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -62,10 +63,10 @@
       </div>
     </section>
 
-    <div class="admin-grid" style="grid-template-columns: 360px 1fr;">
+    <div class="admin-grid">
 
       <!-- Create Account -->
-      <section class="card fade-in card-hover-glow" style="position: sticky; top: 90px;">
+      <section class="card fade-in card-hover-glow sticky-card">
         <h3 class="card-title">➕ Add Silent Aim Account</h3>
         <p class="card-subtitle">Create account with server-validated subscription time</p>
         <form id="createSilentUserForm" autocomplete="off">

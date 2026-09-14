@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DP Control Panel — Mobile Admin Login" />
+  <title>DP Panel - Mobile Login</title>
+  <script src="device_detect.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="mobile-body">
+
+  <!-- MOBILE HEADER -->
+  <nav class="navbar" style="padding: 0.65rem 1rem;">
+    <div class="nav-brand">
+      <div class="nav-logo" style="width:36px;height:36px;font-size:1rem;background:linear-gradient(135deg,var(--cyan),var(--primary));box-shadow:0 0 12px rgba(0,242,254,0.4);">DP</div>
+      <div class="nav-titles">
+        <h1 style="font-size: 1rem;color:#fff;">DP Control Panel</h1>
+      </div>
+    </div>
+  </nav>
+
+  <main class="login-page" style="padding: 1.2rem 1rem;">
+    <div class="card login-card" style="max-width: 100%; border-radius: 20px; padding: 1.6rem 1.3rem; border: 1px solid rgba(0, 242, 254, 0.25); box-shadow: 0 12px 40px rgba(0,0,0,0.6);">
+      <div class="login-brand" style="margin-bottom: 0.9rem;">
+        <div class="nav-logo" style="width: 52px; height: 52px; font-size: 1.3rem; background:linear-gradient(135deg,var(--cyan),var(--primary)); box-shadow: 0 0 18px rgba(0,242,254,0.5);">DP</div>
+      </div>
+      <h2 class="card-title" style="font-size: 1.4rem; text-align: center;">Admin Login</h2>
+      <p class="card-subtitle" style="text-align: center; margin-bottom: 1.3rem;">Sign in to manage accounts on smartphone</p>
+
+      <div id="loginError" style="display:none;background:rgba(255,51,102,0.12);border:1px solid rgba(255,51,102,0.35);color:var(--red);padding:0.65rem 0.9rem;border-radius:10px;margin-bottom:1rem;font-size:0.84rem;"></div>
+
+      <form id="loginForm" autocomplete="off">
+        <div class="form-group">
+          <label for="loginUser" style="font-weight:600;font-size:0.78rem;">👤 ADMIN USERNAME</label>
+          <input type="text" id="loginUser" class="form-input" placeholder="Enter admin username" required style="font-size:16px;min-height:46px;border-radius:10px;">
+        </div>
+        <div class="form-group" style="margin-top:0.8rem;">
+          <label for="loginPass" style="font-weight:600;font-size:0.78rem;">🔐 PASSWORD</label>
+          <input type="password" id="loginPass" class="form-input" placeholder="Enter password" required style="font-size:16px;min-height:46px;border-radius:10px;">
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" id="loginBtn" style="margin-top:1.3rem;min-height:48px;font-size:0.95rem;font-weight:700;border-radius:12px;">Sign In to Mobile Panel</button>
+      </form>
+
+      <div style="margin-top: 1.6rem; text-align: center; font-size: 0.78rem; color: var(--text-300);">
+        <p>© 2026 DP Control Panel</p>
+        <button type="button" id="forceDesktopBtn" class="btn btn-dark btn-sm" style="margin-top:0.85rem;font-size:0.72rem;padding:0.35rem 0.85rem;border-radius:8px;">💻 Switch to Desktop PC View</button>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+  <script>
+    App.initFirebase();
+
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const username = document.getElementById('loginUser').value.trim();
+      const password = document.getElementById('loginPass').value;
+      const errorEl = document.getElementById('loginError');
+      const btn = document.getElementById('loginBtn');
+
+      errorEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+
+      const result = await App.loginAdmin(username, password);
+
+      if (result.success) {
+        sessionStorage.setItem('loggedIn', 'admin');
+        sessionStorage.setItem('currentUser', 'admin');
+        App.toast('Signed in as Admin', 'success');
+        setTimeout(() => window.location.href = 'mobile_panel_admin.html', 500);
+        return;
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Sign In to Mobile Panel';
+      errorEl.textContent = 'Invalid username or password.';
+      errorEl.style.display = 'block';
+      App.toast('Login failed', 'error');
+    });
+
+    document.getElementById('forceDesktopBtn').addEventListener('click', function() {
+      sessionStorage.setItem('prefer_desktop_view', 'true');
+      window.location.href = 'index.html';
+    });
+  </script>
+</body>
+</html>

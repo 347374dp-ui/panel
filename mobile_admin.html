@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DP Control Panel — Mobile UID Admin" />
+  <title>DP Panel - Mobile UID Management</title>
+  <script src="device_detect.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body.mobile-app-body {
+      padding-bottom: 74px;
+      background: var(--bg-deep);
+    }
+    .mobile-header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(8, 12, 20, 0.94);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(0, 242, 254, 0.2);
+      padding: 0.65rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .mobile-bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      z-index: 9900;
+      background: rgba(8, 12, 20, 0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(0, 242, 254, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 0.4rem;
+    }
+    .mobile-nav-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-300);
+      font-size: 0.68rem;
+      font-weight: 600;
+      background: none;
+      border: none;
+      cursor: pointer;
+      gap: 3px;
+      flex: 1;
+      padding: 6px 0;
+    }
+    .mobile-nav-tab.active {
+      color: var(--cyan);
+    }
+    .mobile-card-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 0.95rem;
+      margin-bottom: 0.85rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    }
+  </style>
+</head>
+<body class="mobile-app-body">
+
+  <header class="mobile-header">
+    <div style="display:flex;align-items:center;gap:0.6rem;">
+      <div class="nav-logo" style="width:36px;height:36px;font-size:1rem;background:linear-gradient(135deg,var(--cyan),var(--primary));box-shadow:0 0 12px rgba(0,242,254,0.4);">DP</div>
+      <div>
+        <div style="font-weight:700;font-size:0.95rem;color:#fff;">UID Management</div>
+        <div style="font-size:0.68rem;color:var(--cyan);">Admin System</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:0.4rem;align-items:center;">
+      <button class="btn btn-dark btn-sm" id="refreshBtn" style="padding:0.35rem 0.65rem;font-size:0.75rem;" title="Refresh Data">↻</button>
+      <button class="mobile-hamburger-btn" id="openMenuDrawerBtn" type="button" title="Open Navigation Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- TOP-RIGHT HAMBURGER NAVIGATION DRAWER OVERLAY -->
+  <div class="mobile-menu-drawer-overlay" id="menuDrawerOverlay">
+    <div class="mobile-menu-drawer-panel">
+      <div class="menu-drawer-header">
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <div class="nav-logo" style="width:30px;height:30px;font-size:0.8rem;background:linear-gradient(135deg,var(--cyan),var(--primary));">DP</div>
+          <span style="font-weight:700;font-size:0.95rem;color:#fff;">Navigation Menu</span>
+        </div>
+        <button type="button" class="sheet-close-btn" id="closeMenuDrawerBtn">✕</button>
+      </div>
+
+      <div class="menu-drawer-links">
+        <a href="mobile_admin.html" class="menu-drawer-link active">
+          <span class="icon">⚡</span> <span>UID Dashboard</span>
+        </a>
+        <a href="mobile_panel_admin.html" class="menu-drawer-link">
+          <span class="icon">🔐</span> <span>Panel Dashboard</span>
+        </a>
+        <a href="mobile_silent_aim_admin.html" class="menu-drawer-link">
+          <span class="icon">🎯</span> <span>Silent Aim</span>
+        </a>
+        <a href="offsets_manager.html" class="menu-drawer-link">
+          <span class="icon">🛠</span> <span>Offsets Manager</span>
+        </a>
+        <a href="feature_builder.html" class="menu-drawer-link">
+          <span class="icon">📑</span> <span>Feature Builder</span>
+        </a>
+        <a href="aob_finder.html" class="menu-drawer-link">
+          <span class="icon">🛡</span> <span>AOB Safe Finder</span>
+        </a>
+      </div>
+
+      <div style="margin-top:auto;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.1);display:flex;flex-direction:column;gap:0.5rem;">
+        <button type="button" id="drawerLogoutBtn" class="btn btn-red btn-full" style="padding:0.6rem;font-weight:700;">🚪 Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <main style="padding: 0.85rem;">
+
+    <!-- TOP OVERVIEW STATS -->
+    <section class="overview-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:0.55rem;margin-bottom:0.85rem;">
+      <div class="overview-card" style="padding:0.65rem 0.85rem;border-radius:14px;border:1px solid rgba(0,242,254,0.2);">
+        <div class="oval stat-count" id="statTotalUsers" style="font-size:1.35rem;color:#fff;">—</div>
+        <div class="olabel" style="font-size:0.68rem;color:var(--text-300);">Users</div>
+      </div>
+      <div class="overview-card" style="padding:0.65rem 0.85rem;border-radius:14px;border:1px solid rgba(16,185,129,0.25);">
+        <div class="oval stat-count" id="statActiveUsers" style="font-size:1.35rem;color:var(--green);">—</div>
+        <div class="olabel" style="font-size:0.68rem;color:var(--text-300);">Active Users</div>
+      </div>
+      <div class="overview-card" style="padding:0.65rem 0.85rem;border-radius:14px;border:1px solid rgba(0,242,254,0.25);">
+        <div class="oval stat-count" id="statTotalUids" style="font-size:1.35rem;color:var(--cyan);">—</div>
+        <div class="olabel" style="font-size:0.68rem;color:var(--text-300);">Total UIDs</div>
+      </div>
+      <div class="overview-card" style="padding:0.65rem 0.85rem;border-radius:14px;border:1px solid rgba(245,158,11,0.25);">
+        <div class="oval stat-count" id="statActiveUids" style="font-size:1.35rem;color:var(--amber);">—</div>
+        <div class="olabel" style="font-size:0.68rem;color:var(--text-300);">Active UIDs</div>
+      </div>
+    </section>
+
+    <!-- VIEW 1: UID USERS LIST -->
+    <section id="viewUsers" class="mobile-view-sec">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:0.65rem 0.85rem;margin-bottom:0.85rem;">
+        <input type="text" id="userSearchInput" class="form-input" placeholder="🔍 Search user or UID..." style="width:100%;font-size:16px;min-height:44px;margin-bottom:0.55rem;border-radius:10px;" />
+        <div class="filter-pills" id="userFilterPills" style="justify-content:space-between;">
+          <button class="filter-pill active" data-filter="all">All</button>
+          <button class="filter-pill" data-filter="active">Active</button>
+          <button class="filter-pill" data-filter="disabled">Disabled</button>
+        </div>
+      </div>
+
+      <div id="mobileUidCardsList">
+        <div style="text-align:center;padding:2rem;color:var(--text-300);">Loading users &amp; UIDs...</div>
+      </div>
+      <div style="display:none;"><tbody id="userTable"></tbody></div>
+    </section>
+
+    <!-- VIEW 2: ADD UID FORM -->
+    <section id="viewAddUid" class="mobile-view-sec" style="display:none;">
+      <div class="card" style="border-radius:16px;padding:1.1rem;border:1px solid rgba(0,242,254,0.2);">
+        <h3 class="card-title" style="margin-bottom:0.3rem;">➕ Add UID to Account</h3>
+        <p class="card-subtitle" style="margin-bottom:1rem;font-size:0.78rem;">Bind a game UID to a user account</p>
+
+        <div class="form-group">
+          <label style="font-weight:600;font-size:0.78rem;">👤 SELECT USER ACCOUNT</label>
+          <select id="addUidUserSelect" class="form-input" style="font-size:16px;min-height:44px;border-radius:10px;"></select>
+        </div>
+
+        <div class="form-group" style="margin-top:0.8rem;">
+          <label style="font-weight:600;font-size:0.78rem;">🎯 GAME UID</label>
+          <input type="number" id="addUidInput" class="form-input" placeholder="e.g. 1234567890" style="font-size:16px;min-height:44px;border-radius:10px;" />
+        </div>
+
+        <button type="button" class="btn btn-primary btn-full" id="submitAddUidBtn" style="margin-top:1.2rem;min-height:46px;font-weight:700;border-radius:10px;">➕ Bind UID to Allowlist</button>
+      </div>
+    </section>
+
+    <!-- VIEW 3: INDEPENDENT ALLOWLIST BASE (DESKTOP PARITY) -->
+    <section id="viewAllowlistBase" class="mobile-view-sec" style="display:none;">
+      <div class="card" style="border-radius:16px;padding:1.1rem;border:1px solid rgba(16,185,129,0.3);margin-bottom:0.85rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+          <h3 class="card-title" style="margin:0;font-size:1.05rem;">🛡️ UID Allowlist Base</h3>
+          <span id="allowlistBadge" style="font-size:0.7rem;padding:2px 8px;border-radius:20px;background:rgba(16,185,129,0.15);color:var(--green);border:1px solid rgba(16,185,129,0.3);font-weight:700;">0 Allowed UIDs</span>
+        </div>
+        <p class="card-subtitle" style="margin-bottom:0.85rem;font-size:0.75rem;">Standalone allowlist for UIDs not linked to any account</p>
+
+        <form id="allowlistForm" autocomplete="off">
+          <div class="form-group">
+            <label style="font-weight:600;font-size:0.75rem;">UID NUMBER</label>
+            <input type="text" id="allowlistUidInput" class="form-input" placeholder="e.g. 1234567890" required style="font-size:16px;min-height:42px;border-radius:8px;" />
+          </div>
+          <div class="form-group" style="margin-top:0.5rem;">
+            <label style="font-weight:600;font-size:0.75rem;">NAME / ADMIN NOTE</label>
+            <input type="text" id="allowlistNameInput" class="form-input" placeholder="e.g. VIP Player / Supporter" style="font-size:16px;min-height:42px;border-radius:8px;" />
+          </div>
+          <div class="form-group" style="margin-top:0.5rem;">
+            <label style="font-weight:600;font-size:0.75rem;">UID DURATION</label>
+            <select id="allowlistDaysSelect" class="form-input" style="font-size:16px;min-height:42px;border-radius:8px;">
+              <option value="0" selected>Never Expire (Lifetime)</option>
+              <option value="1">1 Day (24 Hours)</option>
+              <option value="3">3 Days</option>
+              <option value="7">7 Days (1 Week)</option>
+              <option value="14">14 Days (2 Weeks)</option>
+              <option value="30">30 Days (1 Month)</option>
+              <option value="60">60 Days (2 Months)</option>
+              <option value="90">90 Days (3 Months)</option>
+              <option value="180">180 Days (6 Months)</option>
+              <option value="365">365 Days (1 Year)</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-primary btn-full" id="addAllowlistBtn" style="margin-top:0.85rem;min-height:44px;font-weight:700;border-radius:10px;">➕ Add to Standalone Allowlist</button>
+        </form>
+      </div>
+
+      <div style="font-weight:700;font-size:0.85rem;color:var(--cyan);margin-bottom:0.5rem;">📋 STANDALONE ALLOWLISTED UIDS:</div>
+      <div id="mobileAllowlistCardsList">
+        <div style="text-align:center;padding:1.5rem;color:var(--text-300);">Loading standalone allowlist...</div>
+      </div>
+      <div style="display:none;"><tbody id="allowlistTableBody"></tbody></div>
+    </section>
+
+    <!-- VIEW 4: IN-GAME POPUP CUSTOMIZER (1:1 DESKTOP WYSIWYG PARITY) -->
+    <section id="viewNotif" class="mobile-view-sec" style="display:none;">
+      <div class="card" style="border-radius:16px;padding:1.1rem;border:1px solid rgba(0,242,254,0.2);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.3rem;">
+          <h3 class="card-title" style="margin:0;font-size:1.05rem;">📢 In-Game Notification Customizer</h3>
+          <button type="button" class="btn btn-primary btn-sm" id="saveNotifConfigBtn" style="font-size:0.75rem;padding:0.4rem 0.75rem;font-weight:700;">💾 Save Settings</button>
+        </div>
+        <p class="card-subtitle" style="margin-bottom:1rem;font-size:0.75rem;">Alert popup displayed in-game when non-allowlisted UID attempts to log in</p>
+
+        <!-- Live In-Game Box Preview (Matching Desktop Game Box) -->
+        <div style="background:#090910;border-radius:12px;padding:1.5rem 0.5rem;display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;border:1px solid rgba(255,170,0,0.25);background-image:radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);background-size:16px 16px;">
+          <div id="notifPreviewBox" style="position:relative;background:rgba(10,10,14,0.95);padding:1.1rem 1rem;text-align:center;width:230px;max-width:240px;box-shadow:0 8px 32px rgba(0,0,0,0.6);border:1px solid rgba(255,170,0,0.3);word-wrap:break-word;overflow:hidden;">
+            <div style="position:absolute;top:0;left:0;width:10px;height:10px;border-top:2px solid #ffaa00;border-left:2px solid #ffaa00;"></div>
+            <div style="position:absolute;top:0;right:0;width:10px;height:10px;border-top:2px solid #ffaa00;border-right:2px solid #ffaa00;"></div>
+            <div style="position:absolute;bottom:0;left:0;width:10px;height:10px;border-bottom:2px solid #ffaa00;border-left:2px solid #ffaa00;"></div>
+            <div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-bottom:2px solid #ffaa00;border-right:2px solid #ffaa00;"></div>
+
+            <div id="previewHeader" style="font-size:0.92rem;font-weight:800;letter-spacing:0.5px;margin-bottom:0.6rem;text-transform:uppercase;color:#ff3b30;line-height:1.2;">DP UID BYPASS</div>
+            <div id="previewUid" style="font-size:0.88rem;font-weight:700;margin-bottom:0.5rem;color:#ffffff;line-height:1.2;">UID: ###</div>
+            <div id="previewStatus" style="font-size:0.85rem;font-weight:600;margin-bottom:0.5rem;color:#ffffff;line-height:1.2;">Not in allowlist</div>
+            <div id="previewContact" style="font-size:0.82rem;font-weight:600;margin-bottom:0.25rem;color:#00e5ff;line-height:1.2;"><span style="color:#004cff">Contact : </span><span style="color:#c084fc">@1naddp</span> <span style="color:#004cff">ON </span><span style="color:#00e5ff">DISCORD !</span></div>
+            <div id="previewLine4" style="font-size:0.78rem;font-weight:500;display:block;margin-top:0.4rem;color:#ffff00;line-height:1.2;"><span style="color:#a6ff00">( ADD IT TO </span><span style="color:#ff3b30">• UID MANAGER </span><span style="color:#a6ff00">IF </span><span style="color:#ffff00">VIP </span><span style="color:#a6ff00">) !</span></div>
+          </div>
+        </div>
+
+        <!-- 5-Line WYSIWYG Form Inputs -->
+        <div style="display:flex;flex-direction:column;gap:0.85rem;">
+
+          <!-- Line 1: Project / Header -->
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem;">
+              <label style="font-size:0.75rem;font-weight:700;color:var(--text-200);">Line 1: Project / Header</label>
+              <span id="lenLine1" style="font-size:0.7rem;color:var(--text-300);">0/25 chars</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;margin-bottom:0.3rem;flex-wrap:wrap;background:rgba(255,255,255,0.02);padding:4px 6px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
+              <span style="font-size:0.68rem;color:var(--text-300);">🎨 Color:</span>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifHeaderEditor" data-color="#ff3b30" style="width:18px;height:18px;border-radius:50%;background:#ff3b30;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifHeaderEditor" data-color="#ffffff" style="width:18px;height:18px;border-radius:50%;background:#ffffff;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifHeaderEditor" data-color="#00e5ff" style="width:18px;height:18px;border-radius:50%;background:#00e5ff;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifHeaderEditor" data-color="#a3e635" style="width:18px;height:18px;border-radius:50%;background:#a3e635;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifHeaderEditor" data-color="#ffff00" style="width:18px;height:18px;border-radius:50%;background:#ffff00;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifHeaderEditor" data-color="#c084fc" style="width:18px;height:18px;border-radius:50%;background:#c084fc;border:2px solid #555;cursor:pointer;"></button>
+              <label style="display:inline-flex;align-items:center;cursor:pointer;" title="Custom Color">
+                <input type="color" class="wysiwyg-custom-color" data-target="notifHeaderEditor" value="#ff3b30" style="width:20px;height:20px;padding:0;border:none;border-radius:50%;background:transparent;cursor:pointer;" />
+              </label>
+            </div>
+            <div id="notifHeaderEditor" class="form-input" contenteditable="true" style="min-height:38px;height:auto;padding:0.45rem 0.65rem;color:#ff3b30;outline:none;line-height:1.4;white-space:pre-wrap;word-break:break-word;font-weight:700;font-size:0.85rem;border-radius:8px;">DP UID BYPASS</div>
+          </div>
+
+          <!-- Line 2: UID Display Line with Inserter Button -->
+          <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:0.75rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.35rem;">
+              <label style="font-size:0.75rem;font-weight:700;color:var(--text-200);">Line 2: UID Display Line</label>
+              <span id="lenUid" style="font-size:0.7rem;color:var(--text-300);">16/25 chars</span>
+            </div>
+            <div style="display:flex;gap:0.4rem;align-items:center;margin-bottom:0.4rem;flex-wrap:wrap;">
+              <button type="button" id="insertUidChipBtn" class="btn btn-dark btn-sm" style="display:inline-flex;align-items:center;gap:4px;background:rgba(0,229,255,0.12);color:var(--cyan);border:1px solid rgba(0,229,255,0.3);font-weight:600;padding:3px 8px;border-radius:6px;font-size:0.72rem;">
+                <span>➕</span> <span>Add UID Button</span>
+              </button>
+              <div style="display:inline-flex;align-items:center;gap:4px;margin-left:auto;">
+                <span style="font-size:0.68rem;color:var(--text-300);">🎨 Color:</span>
+                <button type="button" class="wysiwyg-color-btn" data-target="notifLine2Editor" data-color="#ffffff" style="width:16px;height:16px;border-radius:50%;background:#ffffff;border:2px solid #555;cursor:pointer;"></button>
+                <button type="button" class="wysiwyg-color-btn" data-target="notifLine2Editor" data-color="#00e5ff" style="width:16px;height:16px;border-radius:50%;background:#00e5ff;border:2px solid #555;cursor:pointer;"></button>
+                <button type="button" class="wysiwyg-color-btn" data-target="notifLine2Editor" data-color="#a3e635" style="width:16px;height:16px;border-radius:50%;background:#a3e635;border:2px solid #555;cursor:pointer;"></button>
+                <button type="button" class="wysiwyg-color-btn" data-target="notifLine2Editor" data-color="#ffff00" style="width:16px;height:16px;border-radius:50%;background:#ffff00;border:2px solid #555;cursor:pointer;"></button>
+                <button type="button" class="wysiwyg-color-btn" data-target="notifLine2Editor" data-color="#ff3b30" style="width:16px;height:16px;border-radius:50%;background:#ff3b30;border:2px solid #555;cursor:pointer;"></button>
+                <label style="display:inline-flex;align-items:center;cursor:pointer;" title="Custom Color">
+                  <input type="color" class="wysiwyg-custom-color" data-target="notifLine2Editor" value="#ffffff" style="width:18px;height:18px;padding:0;border:none;border-radius:50%;background:transparent;cursor:pointer;" />
+                </label>
+              </div>
+            </div>
+            <div id="notifLine2Editor" contenteditable="true" style="min-height:38px;padding:0.45rem 0.65rem;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;color:#fff;font-size:0.85rem;outline:none;line-height:1.5;display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
+              <span>UID:&nbsp;</span><span class="uid-tag-chip" contenteditable="false" style="display:inline-flex;align-items:center;background:linear-gradient(135deg, rgba(0,229,255,0.25), rgba(0,100,255,0.35));border:1px solid rgba(0,229,255,0.5);color:#00e5ff;font-weight:700;padding:1px 6px;border-radius:5px;font-size:0.75rem;user-select:none;margin:0 2px;">👤 UID</span>
+            </div>
+            <div style="font-size:0.72rem;color:var(--text-300);margin-top:0.3rem;">
+              Game will display: <code style="color:var(--cyan);background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:4px;"><span id="uidDisplayPreview">UID: eg.123456789</span></code>
+            </div>
+          </div>
+
+          <!-- Line 3: Notice / Status Message -->
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem;">
+              <label style="font-size:0.75rem;font-weight:700;color:var(--text-200);">Line 3: Notice / Status Message</label>
+              <span id="lenStatus" style="font-size:0.7rem;color:var(--text-300);">0/25 chars</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;margin-bottom:0.3rem;flex-wrap:wrap;background:rgba(255,255,255,0.02);padding:4px 6px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
+              <span style="font-size:0.68rem;color:var(--text-300);">🎨 Color:</span>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifStatusEditor" data-color="#ffffff" style="width:18px;height:18px;border-radius:50%;background:#ffffff;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifStatusEditor" data-color="#00e5ff" style="width:18px;height:18px;border-radius:50%;background:#00e5ff;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifStatusEditor" data-color="#a3e635" style="width:18px;height:18px;border-radius:50%;background:#a3e635;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifStatusEditor" data-color="#ffff00" style="width:18px;height:18px;border-radius:50%;background:#ffff00;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifStatusEditor" data-color="#ff3b30" style="width:18px;height:18px;border-radius:50%;background:#ff3b30;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifStatusEditor" data-color="#c084fc" style="width:18px;height:18px;border-radius:50%;background:#c084fc;border:2px solid #555;cursor:pointer;"></button>
+              <label style="display:inline-flex;align-items:center;cursor:pointer;" title="Custom Color">
+                <input type="color" class="wysiwyg-custom-color" data-target="notifStatusEditor" value="#ffffff" style="width:20px;height:20px;padding:0;border:none;border-radius:50%;background:transparent;cursor:pointer;" />
+              </label>
+            </div>
+            <div id="notifStatusEditor" class="form-input" contenteditable="true" style="min-height:38px;height:auto;padding:0.45rem 0.65rem;color:#ffffff;outline:none;line-height:1.4;white-space:pre-wrap;word-break:break-word;font-size:0.85rem;border-radius:8px;">Not in allowlist</div>
+          </div>
+
+          <!-- Line 4: Contact / Support -->
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem;">
+              <label style="font-size:0.75rem;font-weight:700;color:var(--text-200);">Line 4: Contact / Support</label>
+              <span id="lenContact" style="font-size:0.7rem;color:var(--text-300);">0/25 chars</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;margin-bottom:0.3rem;flex-wrap:wrap;background:rgba(255,255,255,0.02);padding:4px 6px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
+              <span style="font-size:0.68rem;color:var(--text-300);">🎨 Color:</span>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifContactEditor" data-color="#ffffff" style="width:18px;height:18px;border-radius:50%;background:#ffffff;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifContactEditor" data-color="#00e5ff" style="width:18px;height:18px;border-radius:50%;background:#00e5ff;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifContactEditor" data-color="#a3e635" style="width:18px;height:18px;border-radius:50%;background:#a3e635;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifContactEditor" data-color="#ffff00" style="width:18px;height:18px;border-radius:50%;background:#ffff00;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifContactEditor" data-color="#ff3b30" style="width:18px;height:18px;border-radius:50%;background:#ff3b30;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifContactEditor" data-color="#c084fc" style="width:18px;height:18px;border-radius:50%;background:#c084fc;border:2px solid #555;cursor:pointer;"></button>
+              <label style="display:inline-flex;align-items:center;cursor:pointer;" title="Custom Color">
+                <input type="color" class="wysiwyg-custom-color" data-target="notifContactEditor" value="#00e5ff" style="width:20px;height:20px;padding:0;border:none;border-radius:50%;background:transparent;cursor:pointer;" />
+              </label>
+            </div>
+            <div id="notifContactEditor" class="form-input" contenteditable="true" style="min-height:38px;height:auto;padding:0.45rem 0.65rem;color:#00e5ff;outline:none;line-height:1.4;white-space:pre-wrap;word-break:break-word;font-size:0.85rem;border-radius:8px;"><span style="color:#004cff">Contact : </span><span style="color:#c084fc">@1naddp</span> <span style="color:#004cff">ON </span><span style="color:#00e5ff">DISCORD !</span></div>
+          </div>
+
+          <!-- Line 5: Extra Note -->
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem;">
+              <label style="font-size:0.75rem;font-weight:700;color:var(--text-200);">Line 5: Extra Note <span style="color:var(--text-300);font-weight:normal;">(Optional)</span></label>
+              <span id="lenLine4" style="font-size:0.7rem;color:var(--text-300);">0/25 chars</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;margin-bottom:0.3rem;flex-wrap:wrap;background:rgba(255,255,255,0.02);padding:4px 6px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
+              <span style="font-size:0.68rem;color:var(--text-300);">🎨 Color:</span>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifLine4Editor" data-color="#ffffff" style="width:18px;height:18px;border-radius:50%;background:#ffffff;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifLine4Editor" data-color="#00e5ff" style="width:18px;height:18px;border-radius:50%;background:#00e5ff;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifLine4Editor" data-color="#a3e635" style="width:18px;height:18px;border-radius:50%;background:#a3e635;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifLine4Editor" data-color="#ffff00" style="width:18px;height:18px;border-radius:50%;background:#ffff00;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifLine4Editor" data-color="#ff3b30" style="width:18px;height:18px;border-radius:50%;background:#ff3b30;border:2px solid #555;cursor:pointer;"></button>
+              <button type="button" class="wysiwyg-color-btn" data-target="notifLine4Editor" data-color="#c084fc" style="width:18px;height:18px;border-radius:50%;background:#c084fc;border:2px solid #555;cursor:pointer;"></button>
+              <label style="display:inline-flex;align-items:center;cursor:pointer;" title="Custom Color">
+                <input type="color" class="wysiwyg-custom-color" data-target="notifLine4Editor" value="#ffff00" style="width:20px;height:20px;padding:0;border:none;border-radius:50%;background:transparent;cursor:pointer;" />
+              </label>
+            </div>
+            <div id="notifLine4Editor" class="form-input" contenteditable="true" style="min-height:38px;height:auto;padding:0.45rem 0.65rem;color:#ffff00;outline:none;line-height:1.4;white-space:pre-wrap;word-break:break-word;font-size:0.85rem;border-radius:8px;"><span style="color:#a6ff00">( ADD IT TO </span><span style="color:#ff3b30">• UID MANAGER </span><span style="color:#a6ff00">IF </span><span style="color:#ffff00">VIP </span><span style="color:#a6ff00">) !</span></div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VIEW 5: DOWNLOAD URL MANAGER -->
+    <section id="viewDownloadUrl" class="mobile-view-sec" style="display:none;">
+      <div class="card" style="border-radius:16px;padding:1.1rem;border:1px solid rgba(0,242,254,0.2);">
+        <h3 class="card-title" style="margin-bottom:0.3rem;">📦 Download URL Manager</h3>
+        <p class="card-subtitle" style="margin-bottom:1rem;font-size:0.75rem;">Set the ZIP link clients download — paste Google Drive share link</p>
+
+        <div style="background:var(--bg-1);border:1px solid var(--border);border-radius:10px;padding:0.85rem;margin-bottom:0.85rem;">
+          <label style="font-size:0.7rem;font-weight:700;color:var(--text-300);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:0.4rem;">ACTIVE DOWNLOAD URL</label>
+          <div id="currentDownloadUrl" style="font-size:0.75rem;color:var(--cyan);word-break:break-all;font-family:monospace;">Loading...</div>
+        </div>
+
+        <div class="form-group">
+          <label style="font-weight:600;font-size:0.75rem;">PASTE GOOGLE DRIVE LINK</label>
+          <input type="url" id="driveUrlInput" class="form-input" placeholder="https://drive.google.com/file/d/... or direct link" style="font-size:16px;min-height:42px;border-radius:8px;margin-bottom:0.5rem;" />
+          <button class="btn btn-primary btn-full" id="saveUrlBtn" style="min-height:44px;font-weight:700;border-radius:8px;">💾 Save Download URL</button>
+        </div>
+
+        <div style="margin-top:0.75rem;background:var(--bg-1);border:1px solid var(--border);border-radius:10px;padding:0.85rem;">
+          <label style="font-size:0.7rem;font-weight:700;color:var(--text-300);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:0.3rem;">CONVERTED DIRECT URL PREVIEW</label>
+          <div id="urlPreview" style="font-size:0.73rem;font-family:monospace;color:var(--text-300);word-break:break-all;">—</div>
+          <span id="urlSaveStatus" style="display:block;margin-top:0.5rem;font-size:0.78rem;"></span>
+        </div>
+
+        <div style="margin-top:0.85rem;background:var(--bg-1);border:1px solid var(--border);border-radius:10px;padding:0.85rem;">
+          <label style="font-size:0.7rem;font-weight:700;color:var(--text-300);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:0.4rem;">VERSION NOTE (OPTIONAL)</label>
+          <input type="text" id="versionNoteInput" class="form-input" placeholder="e.g. v5.1 — fixed engine crash" style="font-size:16px;min-height:42px;border-radius:8px;margin-bottom:0.5rem;" />
+          <button class="btn btn-dark btn-full" id="saveVersionBtn" style="min-height:40px;font-weight:600;border-radius:8px;">Save Version Note</button>
+          <span id="versionSaveStatus" style="display:block;margin-top:0.5rem;font-size:0.78rem;"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 6: PROTO POOL -->
+    <section id="viewProtoPool" class="mobile-view-sec" style="display:none;">
+      <div class="card" style="border-radius:16px;padding:1.1rem;border:1px solid rgba(0,242,254,0.2);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+          <h3 class="card-title" style="margin:0;font-size:1rem;">🛡 Proto Pool</h3>
+          <span id="protoPoolBadge" style="font-size:0.7rem;padding:2px 8px;border-radius:20px;background:var(--bg-2);border:1px solid var(--border);color:var(--text-300);">Loading...</span>
+        </div>
+        <p class="card-subtitle" style="margin-bottom:0.85rem;font-size:0.75rem;">Manage MOBILE_PROTO pool for client engine randomization</p>
+
+        <div class="form-group">
+          <label style="font-weight:600;font-size:0.75rem;">HEX PROTO STRING</label>
+          <textarea id="protoHexInput" rows="3" class="form-input" style="font-family:monospace;font-size:0.75rem;resize:vertical;border-radius:8px;margin-bottom:0.5rem;" placeholder="25f16c42b17c8239fcc..."></textarea>
+          <button class="btn btn-primary btn-full" id="uploadProtoBtn" style="min-height:44px;font-weight:700;border-radius:8px;">⬆ Upload Proto to Pool</button>
+          <span id="protoUploadStatus" style="display:block;margin-top:0.5rem;font-size:0.78rem;"></span>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1rem;margin-bottom:0.5rem;">
+          <div style="font-weight:700;font-size:0.82rem;color:var(--cyan);">ACTIVE PROTO STRING LIST:</div>
+          <button class="btn btn-dark btn-sm" id="refreshProtoBtn" style="font-size:0.72rem;padding:0.25rem 0.5rem;">↻ Refresh</button>
+        </div>
+        <div id="mobileProtoCardsList">
+          <div style="text-align:center;padding:1.5rem;color:var(--text-300);">Loading proto pool...</div>
+        </div>
+        <div style="display:none;"><tbody id="protoTableBody"></tbody></div>
+      </div>
+    </section>
+
+    <!-- VIEW 7: ADMIN NOTES & ANNOUNCEMENTS -->
+    <section id="viewAdminNotes" class="mobile-view-sec" style="display:none;">
+      <div class="card" style="border-radius:16px;padding:1.1rem;border:1px solid rgba(99,102,241,0.3);">
+        <h3 class="card-title" style="margin-bottom:0.3rem;">📝 Admin Notes &amp; Announcements</h3>
+        <p class="card-subtitle" style="margin-bottom:0.85rem;font-size:0.75rem;">In-app announcement notice saved to Firebase /admin_notes</p>
+
+        <div class="form-group">
+          <label style="font-weight:600;font-size:0.75rem;">ANNOUNCEMENT TITLE</label>
+          <input id="adminNotesTitle" class="form-input" style="font-size:16px;min-height:42px;border-radius:8px;font-weight:700;margin-bottom:0.75rem;" placeholder="Note title" />
+        </div>
+
+        <div class="form-group">
+          <label style="font-weight:600;font-size:0.75rem;">NOTE CONTENT (RICH TEXT)</label>
+          <div id="adminNotesEditor" class="admin-notes-editor" contenteditable="true" spellcheck="true" style="min-height:120px;background:var(--bg-1);border:1px solid var(--border);border-radius:8px;padding:0.75rem;font-size:0.85rem;color:var(--text-100);"></div>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-full" id="saveAdminNotesBtn" style="margin-top:1rem;min-height:46px;font-weight:700;border-radius:10px;">💾 Save Admin Notes</button>
+      </div>
+    </section>
+
+    <div style="text-align:center;margin-top:1.5rem;">
+      <button type="button" id="forceDesktopBtn" class="btn btn-dark btn-sm" style="font-size:0.72rem;padding:0.35rem 0.85rem;">💻 Switch to Desktop PC View</button>
+    </div>
+  </main>
+
+  <!-- STICKY BOTTOM NAV APP BAR -->
+  <nav class="mobile-bottom-nav">
+    <button class="mobile-nav-tab active" id="tabUsersBtn" data-target="viewUsers">
+      <span class="tab-icon">👤</span>
+      <span>Users</span>
+    </button>
+    <button class="mobile-nav-tab" id="tabAllowlistBtn" data-target="viewAllowlistBase">
+      <span class="tab-icon">🛡️</span>
+      <span>Allowlist</span>
+    </button>
+    <button class="mobile-nav-tab" id="tabNotifBtn" data-target="viewNotif">
+      <span class="tab-icon">📢</span>
+      <span>Alert</span>
+    </button>
+    <button class="mobile-nav-tab" id="tabDownloadBtn" data-target="viewDownloadUrl">
+      <span class="tab-icon">📦</span>
+      <span>ZIP URL</span>
+    </button>
+    <button class="mobile-nav-tab" id="tabProtoBtn" data-target="viewProtoPool">
+      <span class="tab-icon">🛡</span>
+      <span>Proto</span>
+    </button>
+    <button class="mobile-nav-tab" id="tabNotesBtn" data-target="viewAdminNotes">
+      <span class="tab-icon">📝</span>
+      <span>Notes</span>
+    </button>
+  </nav>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+  <script>
+    if (sessionStorage.getItem('loggedIn') !== 'admin') {
+      window.location.href = 'mobile_index.html';
+    }
+
+    App.initFirebase();
+
+    let _loadedUsers = [];
+    let activeFilter = 'all';
+
+    async function renderMobileUidCards() {
+      const container = document.getElementById('mobileUidCardsList');
+      const selectEl = document.getElementById('addUidUserSelect');
+      if (!container) return;
+
+      const users = await App.getAllUsers();
+      _loadedUsers = users;
+
+      const searchTerm = (document.getElementById('userSearchInput').value || '').toLowerCase().trim();
+
+      // Populate user select dropdown
+      if (selectEl) {
+        selectEl.innerHTML = users.map(u => `<option value="${u.username}">${u.username} (max ${u.maxUids || 2})</option>`).join('');
+      }
+
+      const filtered = users.filter(user => {
+        const uName = (user.username || '').toLowerCase();
+        let uids = user.uids || [];
+        if (!Array.isArray(uids)) uids = Object.values(uids);
+        const hasUidMatch = uids.some(id => String(id).toLowerCase().includes(searchTerm));
+
+        if (searchTerm && !uName.includes(searchTerm) && !hasUidMatch) return false;
+        if (activeFilter === 'active' && !user.active) return false;
+        if (activeFilter === 'disabled' && user.active) return false;
+
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="card" style="text-align:center;padding:1.5rem;color:var(--text-300);">No user accounts or UIDs found.</div>`;
+        loadStats();
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(user => {
+        let uids = user.uids || [];
+        if (!Array.isArray(uids)) uids = Object.values(uids);
+
+        const statusClass = user.active ? 'status-active' : 'status-disabled';
+        const pulseDotClass = user.active ? 'pulse-dot' : 'pulse-dot disabled';
+        const statusText = user.active ? `<span class="${pulseDotClass}"></span>Active` : `<span class="${pulseDotClass}"></span>Disabled`;
+
+        let uidsChips = uids.map(uid => `
+          <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(0,242,254,0.08);border:1px solid rgba(0,242,254,0.35);color:var(--cyan);border-radius:6px;padding:0.2rem 0.5rem;font-size:0.75rem;margin:2px;">
+            <span>${uid}</span>
+            <button type="button" class="remove-uid-btn" data-username="${user.username}" data-uid="${uid}" style="background:none;border:none;color:var(--red);cursor:pointer;font-weight:700;padding:0 2px;">✕</button>
+          </span>
+        `).join('');
+
+        if (uids.length === 0) {
+          uidsChips = `<span style="font-size:0.72rem;color:var(--text-400);">No UIDs bound yet</span>`;
+        }
+
+        html += `
+          <div class="mobile-card-item">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem;">
+              <div>
+                <div style="font-weight:700;font-size:1rem;color:#fff;">${user.username}</div>
+                <div style="font-size:0.72rem;color:var(--text-300);">Created: ${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}</div>
+              </div>
+              <div class="${statusClass}" style="display:flex;align-items:center;">${statusText}</div>
+            </div>
+
+            <div style="margin-top:0.5rem;padding:0.5rem 0.7rem;background:rgba(0,0,0,0.25);border-radius:8px;">
+              <div style="font-size:0.72rem;color:var(--text-300);margin-bottom:0.3rem;">Bound UIDs (${uids.length} / ${user.maxUids || 2}):</div>
+              <div>${uidsChips}</div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;margin-top:0.8rem;">
+              <button type="button" class="btn ${user.active ? 'btn-action-disable' : 'btn-action-enable'} btn-sm mobile-toggle-btn" data-username="${user.username}" style="padding:0.35rem;font-size:0.75rem;">
+                ${user.active ? '⏸ Disable' : '▶ Enable'}
+              </button>
+              <button type="button" class="btn btn-red btn-sm mobile-delete-btn" data-username="${user.username}" style="padding:0.35rem;font-size:0.75rem;">
+                🗑️ Delete
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      loadStats();
+
+      // Attach button listeners
+      container.querySelectorAll('.mobile-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const username = btn.dataset.username;
+          const newState = await App.toggleUserActive(username);
+          App.toast(`User "${username}" is now ${newState ? 'Active' : 'Disabled'}`, newState ? 'success' : 'error');
+          renderMobileUidCards();
+        });
+      });
+
+      container.querySelectorAll('.mobile-delete-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const username = btn.dataset.username;
+          if (confirm(`Permanently delete user "${username}"?`)) {
+            await App.deleteUser(username);
+            App.toast(`Deleted user "${username}"`, 'info');
+            renderMobileUidCards();
+          }
+        });
+      });
+
+      container.querySelectorAll('.remove-uid-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const username = btn.dataset.username;
+          const uid = btn.dataset.uid;
+          await App.removeUid(username, uid);
+          App.toast(`Removed UID ${uid}`, 'info');
+          renderMobileUidCards();
+        });
+      });
+    }
+
+    function loadStats() {
+      const users = _loadedUsers || [];
+      let totalUids = 0;
+      let activeUids = 0;
+      let activeUsers = 0;
+
+      users.forEach(u => {
+        let uids = u.uids || [];
+        if (!Array.isArray(uids)) uids = Object.values(uids);
+        totalUids += uids.length;
+        if (u.active) {
+          activeUsers++;
+          activeUids += uids.length;
+        }
+      });
+
+      document.getElementById('statTotalUsers').textContent = users.length;
+      document.getElementById('statActiveUsers').textContent = activeUsers;
+      document.getElementById('statTotalUids').textContent = totalUids;
+      document.getElementById('statActiveUids').textContent = activeUids;
+    }
+
+    // ── Render Independent Allowlist Base Cards (Matches Desktop admin.html) ──
+    async function renderMobileAllowlistCards() {
+      const container = document.getElementById('mobileAllowlistCardsList');
+      const badge = document.getElementById('allowlistBadge');
+      if (!container) return;
+
+      const items = await App.getAllowlist();
+      const now = new Date();
+
+      if (badge) badge.textContent = `${items.length} Allowed UIDs`;
+
+      if (!items || items.length === 0) {
+        container.innerHTML = `<div class="card" style="text-align:center;padding:1.5rem;color:var(--text-300);font-size:0.85rem;">No standalone allowed UIDs found.</div>`;
+        return;
+      }
+
+      let html = '';
+      items.forEach((item) => {
+        const uid = item.uid;
+        const isExpired = item.expiry && (new Date(item.expiry) < now);
+        const isStatusActive = (item.status === 'Active' || !item.status) && !isExpired;
+        const statusClass = isStatusActive ? 'status-active' : 'status-disabled';
+        const pulseDotClass = isStatusActive ? 'pulse-dot' : 'pulse-dot disabled';
+        const statusText = !isExpired ? `<span class="${pulseDotClass}"></span>${item.status || 'Active'}` : `<span class="${pulseDotClass}"></span>Expired`;
+
+        let timeText = 'Lifetime';
+        if (item.expiry) {
+          const diffMs = new Date(item.expiry) - now;
+          if (diffMs <= 0) timeText = '<span style="color:var(--red);font-weight:600;">Expired</span>';
+          else {
+            const days = Math.floor(diffMs / 86400000);
+            const hours = Math.floor((diffMs % 86400000) / 3600000);
+            timeText = `<span style="color:var(--cyan);font-weight:600;">${days > 0 ? `${days}d ${hours}h left` : `${hours}h left`}</span>`;
+          }
+        }
+
+        html += `
+          <div class="mobile-card-item" style="border:1px solid rgba(16,185,129,0.25);">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem;">
+              <div>
+                <div style="font-weight:700;font-size:1.05rem;color:var(--cyan);letter-spacing:0.04em;">${uid}</div>
+                <div style="font-size:0.75rem;color:var(--text-200);margin-top:2px;">Note: <strong>${item.name || 'Standalone UID'}</strong></div>
+              </div>
+              <div class="${statusClass}" style="display:flex;align-items:center;">${statusText}</div>
+            </div>
+
+            <div style="margin-top:0.4rem;padding:0.4rem 0.6rem;background:rgba(0,0,0,0.25);border-radius:8px;display:flex;align-items:center;justify-content:space-between;font-size:0.75rem;">
+              <span style="color:var(--text-300);">Duration Remaining:</span>
+              <div>${timeText}</div>
+            </div>
+
+            <div style="margin-top:0.75rem;text-align:right;">
+              <button type="button" class="btn btn-red btn-sm remove-allowlist-btn" data-uid="${uid}" style="padding:0.35rem 0.65rem;font-size:0.75rem;">
+                🗑️ Remove from Allowlist
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+
+      container.querySelectorAll('.remove-allowlist-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const uid = btn.dataset.uid;
+          if (confirm(`Remove UID "${uid}" from standalone allowlist?`)) {
+            await App.removeAllowlistUid(uid);
+            App.toast(`Removed UID "${uid}" from allowlist`, 'info');
+            renderMobileAllowlistCards();
+          }
+        });
+      });
+    }
+
+    // Add Standalone Allowlist UID submit
+    document.getElementById('addAllowlistBtn').addEventListener('click', async () => {
+      const uid = document.getElementById('allowlistUidInput').value.trim();
+      const name = document.getElementById('allowlistNameInput').value.trim() || 'Mobile Admin Entry';
+      const days = parseInt(document.getElementById('allowlistDaysSelect').value) || 0;
+
+      if (!uid) {
+        App.toast('Please enter a valid numeric UID!', 'error');
+        return;
+      }
+
+      const res = await App.addAllowlistUid(uid, name, days);
+      if (res.success) {
+        App.toast(`Added UID ${uid} to standalone allowlist!`, 'success');
+        document.getElementById('allowlistUidInput').value = '';
+        document.getElementById('allowlistNameInput').value = '';
+        renderMobileAllowlistCards();
+      } else {
+        App.toast(res.msg || 'Failed to add UID to allowlist', 'error');
+      }
+    });
+
+    // ── In-Game Notification WYSIWYG Customizer Engine (1:1 Desktop Parity) ──
+    const updateCharBadge = (badgeId, length, maxAllowed = 25) => {
+      const badge = document.getElementById(badgeId);
+      if (!badge) return;
+      badge.textContent = `${length}/${maxAllowed} chars`;
+      if (length > maxAllowed) {
+        badge.style.color = 'var(--red)';
+        badge.style.fontWeight = '700';
+      } else {
+        badge.style.color = 'var(--text-300)';
+        badge.style.fontWeight = 'normal';
+      }
+    };
+
+    const rgbToHex = (col) => {
+      if (!col) return '';
+      if (col.startsWith('#')) return col.toLowerCase();
+      const rgb = col.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+      if (!rgb) return '';
+      const hex = (x) => ('0' + parseInt(x).toString(16)).slice(-2);
+      return '#' + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
+    };
+
+    const htmlToFfTags = (editorEl, fallbackColor = '#ffffff') => {
+      if (!editorEl) return '';
+      let res = '';
+      let lastCol = '';
+
+      const walk = (node, activeColor) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const txt = node.textContent;
+          if (txt) {
+            const col = (activeColor || fallbackColor).replace('#', '').toLowerCase();
+            if (col !== lastCol) {
+              res += `[${col}]`;
+              lastCol = col;
+            }
+            res += txt;
+          }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          if (node.classList && node.classList.contains('uid-tag-chip')) {
+            const col = (activeColor || fallbackColor).replace('#', '').toLowerCase();
+            if (col !== lastCol) {
+              res += `[${col}]`;
+              lastCol = col;
+            }
+            res += '{uid}';
+            return;
+          }
+          let nodeColor = activeColor;
+          if (node.style && node.style.color) {
+            nodeColor = rgbToHex(node.style.color) || activeColor;
+          }
+          node.childNodes.forEach(child => walk(child, nodeColor));
+        }
+      };
+
+      walk(editorEl, fallbackColor);
+      return res.replace(/ /g, ' ').trim();
+    };
+
+    const applyColorToSelection = (editorId, colorHex) => {
+      const editor = document.getElementById(editorId);
+      if (!editor) return;
+      editor.focus();
+
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+
+      const range = sel.getRangeAt(0);
+      if (range.collapsed) {
+        editor.style.color = colorHex;
+        updateNotifPreview();
+        return;
+      }
+
+      const span = document.createElement('span');
+      span.style.color = colorHex;
+      try {
+        const frag = range.extractContents();
+        const cleanNode = (n) => {
+          if (n.nodeType === Node.ELEMENT_NODE && n.tagName === 'SPAN') {
+            n.removeAttribute('style');
+          }
+          n.childNodes.forEach(cleanNode);
+        };
+        cleanNode(frag);
+        span.appendChild(frag);
+        range.insertNode(span);
+        sel.removeAllRanges();
+      } catch (e) {
+        document.execCommand('foreColor', false, colorHex);
+      }
+      updateNotifPreview();
+    };
+
+    const renderColorTags = (text, defaultColor = '#ffffff') => {
+      if (!text) return '';
+      let escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const regex = /\[([0-9a-fA-F]{6})\]/g;
+      let match;
+      let lastIndex = 0;
+      let currentColor = defaultColor;
+      let html = '';
+
+      while ((match = regex.exec(escaped)) !== null) {
+        const textBefore = escaped.substring(lastIndex, match.index);
+        if (textBefore) {
+          html += `<span style="color:${currentColor}">${textBefore}</span>`;
+        }
+        currentColor = '#' + match[1];
+        lastIndex = regex.lastIndex;
+      }
+      const textAfter = escaped.substring(lastIndex);
+      if (textAfter) {
+        html += `<span style="color:${currentColor}">${textAfter}</span>`;
+      }
+      return html;
+    };
+
+    const setEditorFromFfString = (editorId, savedStr, defaultColor = '#ffffff') => {
+      const editor = document.getElementById(editorId);
+      if (!editor) return;
+      editor.innerHTML = '';
+      if (!savedStr) return;
+
+      const regex = /(\[[0-9a-fA-F]{6}\]|\{uid\})/g;
+      let lastIdx = 0;
+      let curCol = defaultColor;
+      let match;
+      while ((match = regex.exec(savedStr)) !== null) {
+        const textBefore = savedStr.substring(lastIdx, match.index);
+        if (textBefore) {
+          const span = document.createElement('span');
+          span.style.color = curCol;
+          span.textContent = textBefore;
+          editor.appendChild(span);
+        }
+        const token = match[0];
+        if (token === '{uid}') {
+          const chip = document.createElement('span');
+          chip.className = 'uid-tag-chip';
+          chip.contentEditable = 'false';
+          chip.style.cssText = 'display:inline-flex;align-items:center;background:linear-gradient(135deg, rgba(0,229,255,0.25), rgba(0,100,255,0.35));border:1px solid rgba(0,229,255,0.5);color:#00e5ff;font-weight:700;padding:1px 6px;border-radius:5px;font-size:0.75rem;user-select:none;margin:0 2px;cursor:default;';
+          chip.textContent = '👤 UID';
+          editor.appendChild(chip);
+        } else {
+          curCol = '#' + token.slice(1, -1).toLowerCase();
+        }
+        lastIdx = regex.lastIndex;
+      }
+      const textAfter = savedStr.substring(lastIdx);
+      if (textAfter) {
+        const span = document.createElement('span');
+        span.style.color = curCol;
+        span.textContent = textAfter;
+        editor.appendChild(span);
+      }
+    };
+
+    const updateNotifPreview = () => {
+      const headerEditor  = document.getElementById('notifHeaderEditor');
+      const headerFfText  = htmlToFfTags(headerEditor, rgbToHex(headerEditor?.style.color) || '#ff3b30');
+
+      const line2Editor   = document.getElementById('notifLine2Editor');
+      const line2FfText   = htmlToFfTags(line2Editor, rgbToHex(line2Editor?.style.color) || '#ffffff');
+      const line2Preview  = line2FfText.replace(/\{uid\}/g, '###');
+
+      const statusEditor  = document.getElementById('notifStatusEditor');
+      const statusFfText  = htmlToFfTags(statusEditor, rgbToHex(statusEditor?.style.color) || '#ffffff');
+
+      const contactEditor = document.getElementById('notifContactEditor');
+      const contactFfText = htmlToFfTags(contactEditor, rgbToHex(contactEditor?.style.color) || '#00e5ff');
+
+      const line4Editor   = document.getElementById('notifLine4Editor');
+      const line4FfText   = htmlToFfTags(line4Editor, rgbToHex(line4Editor?.style.color) || '#ffff00');
+
+      updateCharBadge('lenLine1', (headerEditor?.textContent || '').length, 25);
+      updateCharBadge('lenUid', (line2Editor?.textContent || '').replace('👤 UID', '17739362239').length, 25);
+      updateCharBadge('lenStatus', (statusEditor?.textContent || '').length, 25);
+      updateCharBadge('lenContact', (contactEditor?.textContent || '').length, 25);
+      updateCharBadge('lenLine4', (line4Editor?.textContent || '').length, 25);
+
+      const hint = document.getElementById('uidDisplayPreview');
+      if (hint) hint.textContent = (line2Editor?.textContent || '').replace('👤 UID', 'eg.123456789');
+
+      const pHdr  = document.getElementById('previewHeader');
+      const pUid  = document.getElementById('previewUid');
+      const pStat = document.getElementById('previewStatus');
+      const pCont = document.getElementById('previewContact');
+      const p4    = document.getElementById('previewLine4');
+
+      if (pHdr)  pHdr.innerHTML = renderColorTags(headerFfText, '#ff3b30');
+      if (pUid)  pUid.innerHTML = renderColorTags(line2Preview, '#ffffff');
+      if (pStat) pStat.innerHTML = renderColorTags(statusFfText, '#ffffff');
+      if (pCont) pCont.innerHTML = renderColorTags(contactFfText, '#00e5ff');
+      if (p4) {
+        if (line4Editor && line4Editor.textContent.trim()) {
+          p4.innerHTML = renderColorTags(line4FfText, '#ffff00');
+          p4.style.display = 'block';
+        } else {
+          p4.style.display = 'none';
+        }
+      }
+    };
+
+    // WYSIWYG Palette button events
+    document.querySelectorAll('.wysiwyg-color-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = btn.dataset.target;
+        const color = btn.dataset.color;
+        applyColorToSelection(targetId, color);
+      });
+    });
+
+    document.querySelectorAll('.wysiwyg-custom-color').forEach(picker => {
+      picker.addEventListener('input', (e) => {
+        const targetId = picker.dataset.target;
+        applyColorToSelection(targetId, e.target.value);
+      });
+    });
+
+    ['notifHeaderEditor', 'notifLine2Editor', 'notifStatusEditor', 'notifContactEditor', 'notifLine4Editor'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', updateNotifPreview);
+        el.addEventListener('keyup', updateNotifPreview);
+      }
+    });
+
+    const insertUidBtn = document.getElementById('insertUidChipBtn');
+    if (insertUidBtn) {
+      insertUidBtn.addEventListener('click', () => {
+        const editor = document.getElementById('notifLine2Editor');
+        if (!editor) return;
+        editor.focus();
+
+        const chip = document.createElement('span');
+        chip.className = 'uid-tag-chip';
+        chip.contentEditable = 'false';
+        chip.style.cssText = 'display:inline-flex;align-items:center;background:linear-gradient(135deg, rgba(0,229,255,0.25), rgba(0,100,255,0.35));border:1px solid rgba(0,229,255,0.5);color:#00e5ff;font-weight:700;padding:1px 6px;border-radius:5px;font-size:0.75rem;user-select:none;margin:0 2px;cursor:default;';
+        chip.textContent = '👤 UID';
+
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          if (editor.contains(range.commonAncestorContainer)) {
+            range.deleteContents();
+            range.insertNode(chip);
+            range.setStartAfter(chip);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          } else {
+            editor.appendChild(chip);
+          }
+        } else {
+          editor.appendChild(chip);
+        }
+        updateNotifPreview();
+      });
+    }
+
+    async function loadNotifConfig() {
+      const cfg = await App.getNotifConfig();
+      if (cfg) {
+        const hText = cfg.header_text || cfg.line1_text || cfg.title || 'DP UID BYPASS';
+        const hCol = cfg.header_color || '#ff3b30';
+        setEditorFromFfString('notifHeaderEditor', hText, hCol);
+        const hEl = document.getElementById('notifHeaderEditor');
+        if (hEl && hCol) hEl.style.color = hCol;
+
+        const uidText = cfg.uid_line_text || (cfg.uid_prefix ? `${cfg.uid_prefix}{uid}` : (cfg.line2 || 'UID: {uid}'));
+        const uidCol = cfg.uid_color || '#ffffff';
+        setEditorFromFfString('notifLine2Editor', uidText, uidCol);
+        const uEl = document.getElementById('notifLine2Editor');
+        if (uEl && uidCol) uEl.style.color = uidCol;
+
+        const sText = cfg.status_text || cfg.message || 'Not in allowlist';
+        const sCol = cfg.status_color || '#ffffff';
+        setEditorFromFfString('notifStatusEditor', sText, sCol);
+        const sEl = document.getElementById('notifStatusEditor');
+        if (sEl && sCol) sEl.style.color = sCol;
+
+        const cText = cfg.contact_text || cfg.line3_text || cfg.contact || '[004cff]Contact : [c084fc]@1naddp [004cff]ON [00e5ff]DISCORD !';
+        const cCol = cfg.contact_color || '#00e5ff';
+        setEditorFromFfString('notifContactEditor', cText, cCol);
+        const cEl = document.getElementById('notifContactEditor');
+        if (cEl && cCol) cEl.style.color = cCol;
+
+        const nText = (cfg.line4_text !== undefined && cfg.line4_text !== '') ? cfg.line4_text : (cfg.extraNote || '');
+        const nCol = cfg.line4_color || '#ffff00';
+        setEditorFromFfString('notifLine4Editor', nText, nCol);
+        const nEl = document.getElementById('notifLine4Editor');
+        if (nEl && nCol) nEl.style.color = nCol;
+
+        updateNotifPreview();
+      }
+    }
+
+    document.getElementById('saveNotifConfigBtn').addEventListener('click', async () => {
+      const formatEndToken = (str) => {
+        const t = (str || '').trim();
+        if (!t) return '';
+        return /[!?:;.,)\]}>]$/.test(t) ? t : t + '!';
+      };
+
+      const headerEditor  = document.getElementById('notifHeaderEditor');
+      const line2Editor   = document.getElementById('notifLine2Editor');
+      const statusEditor  = document.getElementById('notifStatusEditor');
+      const contactEditor = document.getElementById('notifContactEditor');
+      const line4Editor   = document.getElementById('notifLine4Editor');
+
+      const headerColor = rgbToHex(headerEditor?.style.color) || '#ff3b30';
+      const uidColor = rgbToHex(line2Editor?.style.color) || '#ffffff';
+      const statusColor = rgbToHex(statusEditor?.style.color) || '#ffffff';
+      const contactColor = rgbToHex(contactEditor?.style.color) || '#00e5ff';
+      const line4Color = rgbToHex(line4Editor?.style.color) || '#ffff00';
+
+      const headerText  = htmlToFfTags(headerEditor, headerColor);
+      const uidText     = htmlToFfTags(line2Editor, uidColor);
+      const statusText  = htmlToFfTags(statusEditor, statusColor);
+      const contactText = formatEndToken(htmlToFfTags(contactEditor, contactColor));
+      const line4Text   = line4Editor && line4Editor.textContent.trim() ? formatEndToken(htmlToFfTags(line4Editor, line4Color)) : '';
+
+      const payload = {
+        header_text: headerText,
+        header_color: headerColor,
+        uid_line_text: uidText,
+        uid_color: uidColor,
+        status_text: statusText,
+        status_color: statusColor,
+        contact_text: contactText,
+        contact_color: contactColor,
+        line4_text: line4Text,
+        line4_color: line4Color,
+        // Backward compatibility mirrors
+        title: headerText,
+        line2: uidText,
+        message: statusText,
+        contact: contactText,
+        extraNote: line4Text,
+        updatedAt: new Date().toISOString()
+      };
+
+      await App.saveNotifConfig(payload);
+      App.toast('In-game notification settings saved successfully!', 'success');
+    });
+
+    // Top-Right Hamburger Navigation Drawer Logic
+    const openMenuDrawerBtn = document.getElementById('openMenuDrawerBtn');
+    const closeMenuDrawerBtn = document.getElementById('closeMenuDrawerBtn');
+    const menuDrawerOverlay = document.getElementById('menuDrawerOverlay');
+    const drawerLogoutBtn = document.getElementById('drawerLogoutBtn');
+
+    if (openMenuDrawerBtn && menuDrawerOverlay) {
+      openMenuDrawerBtn.addEventListener('click', () => {
+        menuDrawerOverlay.classList.add('active');
+      });
+    }
+
+    if (closeMenuDrawerBtn && menuDrawerOverlay) {
+      closeMenuDrawerBtn.addEventListener('click', () => {
+        menuDrawerOverlay.classList.remove('active');
+      });
+    }
+
+    if (menuDrawerOverlay) {
+      menuDrawerOverlay.addEventListener('click', (e) => {
+        if (e.target === menuDrawerOverlay) {
+          menuDrawerOverlay.classList.remove('active');
+        }
+      });
+    }
+
+    if (drawerLogoutBtn) {
+      drawerLogoutBtn.addEventListener('click', () => {
+        sessionStorage.clear();
+        window.location.href = 'mobile_index.html';
+      });
+    }
+
+    // Bottom Navigation Tabs
+    document.querySelectorAll('.mobile-nav-tab[data-target]').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.mobile-nav-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        const targetId = tab.dataset.target;
+        document.querySelectorAll('.mobile-view-sec').forEach(sec => sec.style.display = 'none');
+        const targetSec = document.getElementById(targetId);
+        if (targetSec) targetSec.style.display = 'block';
+      });
+    });
+
+    // ── Download URL Manager Logic (Synced with admin.html /config.json) ──
+    const driveUrlInput = document.getElementById('driveUrlInput');
+    const saveUrlBtn = document.getElementById('saveUrlBtn');
+    const urlPreview = document.getElementById('urlPreview');
+    const currentDownloadUrl = document.getElementById('currentDownloadUrl');
+    const urlSaveStatus = document.getElementById('urlSaveStatus');
+    const versionNoteInput = document.getElementById('versionNoteInput');
+    const saveVersionBtn = document.getElementById('saveVersionBtn');
+    const versionSaveStatus = document.getElementById('versionSaveStatus');
+
+    if (driveUrlInput) {
+      driveUrlInput.addEventListener('input', () => {
+        const val = driveUrlInput.value.trim();
+        if (!val) { urlPreview.textContent = '—'; return; }
+        urlPreview.textContent = App.convertDriveUrl(val);
+      });
+    }
+
+    async function loadDownloadConfig() {
+      try {
+        const cfg = await App.getDownloadConfig() || {};
+        const url = cfg.url || cfg.download_url || '(not set)';
+        const ver = cfg.versionNote || cfg.version_note || '';
+        if (currentDownloadUrl) currentDownloadUrl.textContent = url;
+        if (versionNoteInput && ver) versionNoteInput.value = ver;
+      } catch(e) {
+        if (currentDownloadUrl) currentDownloadUrl.textContent = 'Error loading config';
+      }
+    }
+
+    if (saveUrlBtn) {
+      saveUrlBtn.addEventListener('click', async () => {
+        const raw = driveUrlInput.value.trim();
+        if (!raw) { App.toast('Please enter a valid link', 'error'); return; }
+        const direct = App.convertDriveUrl(raw);
+        saveUrlBtn.disabled = true;
+        urlSaveStatus.textContent = 'Saving...';
+        urlSaveStatus.style.color = 'var(--cyan)';
+        const success = await App.saveDownloadConfig({ download_url: direct, url: direct, rawUrl: raw });
+        saveUrlBtn.disabled = false;
+        if (success) {
+          urlSaveStatus.textContent = '✓ Saved direct URL successfully!';
+          urlSaveStatus.style.color = 'var(--green)';
+          currentDownloadUrl.textContent = direct;
+          driveUrlInput.value = '';
+          urlPreview.textContent = '—';
+          App.toast('Download URL saved!', 'success');
+        } else {
+          urlSaveStatus.textContent = '✕ Save failed.';
+          urlSaveStatus.style.color = 'var(--red)';
+        }
+      });
+    }
+
+    if (saveVersionBtn) {
+      saveVersionBtn.addEventListener('click', async () => {
+        const note = versionNoteInput.value.trim();
+        saveVersionBtn.disabled = true;
+        versionSaveStatus.textContent = 'Saving note...';
+        versionSaveStatus.style.color = 'var(--cyan)';
+        const success = await App.saveDownloadConfig({ version_note: note, versionNote: note });
+        saveVersionBtn.disabled = false;
+        if (success) {
+          versionSaveStatus.textContent = '✓ Note saved!';
+          versionSaveStatus.style.color = 'var(--green)';
+          App.toast('Version note saved!', 'success');
+        } else {
+          versionSaveStatus.textContent = '✕ Save failed.';
+          versionSaveStatus.style.color = 'var(--red)';
+        }
+      });
+    }
+
+    // ── Proto Pool Logic ──
+    async function renderMobileProtoPool() {
+      const container = document.getElementById('mobileProtoCardsList');
+      const badge = document.getElementById('protoPoolBadge');
+      if (!container) return;
+
+      const pool = await App.getProtoPool();
+      const entries = Object.entries(pool || {});
+      if (badge) badge.textContent = `${entries.length} Protos`;
+
+      if (entries.length === 0) {
+        container.innerHTML = `<div class="card" style="text-align:center;padding:1.5rem;color:var(--text-300);font-size:0.85rem;">No proto strings in pool.</div>`;
+        return;
+      }
+
+      let html = '';
+      entries.forEach(([id, p]) => {
+        const preview = p.hex ? p.hex.substring(0, 32) + '...' : (typeof p === 'string' ? p.substring(0, 32) + '...' : id);
+        const uploaded = p.createdAt ? new Date(p.createdAt).toLocaleString() : 'N/A';
+
+        html += `
+          <div class="mobile-card-item" style="border:1px solid rgba(0,242,254,0.25);">
+            <div style="font-weight:700;font-size:0.8rem;color:var(--cyan);font-family:monospace;word-break:break-all;margin-bottom:0.4rem;">${preview}</div>
+            <div style="font-size:0.72rem;color:var(--text-300);margin-bottom:0.5rem;">Uploaded: ${uploaded}</div>
+            <div style="text-align:right;">
+              <button type="button" class="btn btn-red btn-sm delete-proto-btn" data-id="${id}" style="padding:0.3rem 0.65rem;font-size:0.75rem;">🗑 Delete</button>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      container.querySelectorAll('.delete-proto-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          if (confirm('Delete this proto from pool?')) {
+            await App.deleteProto(id);
+            App.toast('Proto removed', 'info');
+            renderMobileProtoPool();
+          }
+        });
+      });
+    }
+
+    const uploadProtoBtn = document.getElementById('uploadProtoBtn');
+    const protoHexInput = document.getElementById('protoHexInput');
+    const protoUploadStatus = document.getElementById('protoUploadStatus');
+    const refreshProtoBtn = document.getElementById('refreshProtoBtn');
+
+    if (uploadProtoBtn) {
+      uploadProtoBtn.addEventListener('click', async () => {
+        const hex = protoHexInput.value.trim();
+        if (!hex) { App.toast('Paste a hex proto string', 'error'); return; }
+        uploadProtoBtn.disabled = true;
+        protoUploadStatus.textContent = 'Uploading...';
+        protoUploadStatus.style.color = 'var(--cyan)';
+        const res = await App.addProto(hex);
+        uploadProtoBtn.disabled = false;
+        if (res.success) {
+          protoUploadStatus.textContent = '✓ Uploaded!';
+          protoUploadStatus.style.color = 'var(--green)';
+          protoHexInput.value = '';
+          renderMobileProtoPool();
+          App.toast('Proto added to pool!', 'success');
+        } else {
+          protoUploadStatus.textContent = '✕ Upload failed';
+          protoUploadStatus.style.color = 'var(--red)';
+        }
+      });
+    }
+
+    if (refreshProtoBtn) {
+      refreshProtoBtn.addEventListener('click', renderMobileProtoPool);
+    }
+
+    // ── Admin Notes Logic (Synced with admin.html /admin_notes) ──
+    const adminNotesTitle = document.getElementById('adminNotesTitle');
+    const adminNotesEditor = document.getElementById('adminNotesEditor');
+    const saveAdminNotesBtn = document.getElementById('saveAdminNotesBtn');
+
+    async function loadAdminNotes() {
+      const data = await App.getAdminNotes();
+      if (data) {
+        if (adminNotesTitle && data.title) adminNotesTitle.value = data.title;
+        if (adminNotesEditor) {
+          const content = data.html || data.bodyHtml || '<h2>What belongs here?</h2><p>Document account changes, UID allowlist decisions, release notes, support details, and other operational context.</p>';
+          adminNotesEditor.innerHTML = content;
+        }
+      }
+    }
+
+    if (saveAdminNotesBtn) {
+      saveAdminNotesBtn.addEventListener('click', async () => {
+        const title = adminNotesTitle ? adminNotesTitle.value.trim() : '';
+        const bodyHtml = adminNotesEditor ? adminNotesEditor.innerHTML : '';
+        saveAdminNotesBtn.disabled = true;
+        const res = await App.saveAdminNotes(title, bodyHtml);
+        saveAdminNotesBtn.disabled = false;
+        if (res) {
+          App.toast('Admin notes saved successfully!', 'success');
+        } else {
+          App.toast('Failed to save admin notes', 'error');
+        }
+      });
+    }
+
+    document.getElementById('userFilterPills').addEventListener('click', (e) => {
+      if (!e.target.classList.contains('filter-pill')) return;
+      document.querySelectorAll('#userFilterPills .filter-pill').forEach(p => p.classList.remove('active'));
+      e.target.classList.add('active');
+      activeFilter = e.target.dataset.filter;
+      renderMobileUidCards();
+    });
+
+    document.getElementById('userSearchInput').addEventListener('input', renderMobileUidCards);
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      renderMobileUidCards();
+      renderMobileAllowlistCards();
+      loadNotifConfig();
+      loadDownloadConfig();
+      renderMobileProtoPool();
+      loadAdminNotes();
+    });
+
+    document.getElementById('forceDesktopBtn').addEventListener('click', () => {
+      sessionStorage.setItem('prefer_desktop_view', 'true');
+      window.location.href = 'admin.html';
+    });
+
+    renderMobileUidCards();
+    renderMobileAllowlistCards();
+    loadNotifConfig();
+    loadDownloadConfig();
+    renderMobileProtoPool();
+    loadAdminNotes();
+  </script>
+</body>
+</html>

@@ -7,31 +7,7 @@
   const canvas = document.getElementById('particleCanvas');
   if (!canvas) return;
 
-  // Background ambient canvas stays behind UI
   const ctx = canvas.getContext('2d');
-
-  // Click & Touch Ripple Burst Canvas
-  // Positioned as a non-blocking top overlay at z-index: 950 above the UI cards
-  // with pointer-events: none and touch-action: none so mobile clicks and typing pass through instantly!
-  let clickCanvas = document.getElementById('clickEffectCanvas');
-  if (!clickCanvas) {
-    clickCanvas = document.createElement('canvas');
-    clickCanvas.id = 'clickEffectCanvas';
-    document.body.appendChild(clickCanvas);
-  }
-  Object.assign(clickCanvas.style, {
-    position: 'fixed',
-    top: '0',
-    left: '0',
-    width: '100vw',
-    height: '100vh',
-    zIndex: '950',
-    pointerEvents: 'none',
-    touchAction: 'none'
-  });
-  clickCanvas.setAttribute('aria-hidden', 'true');
-  const clickCtx = clickCanvas.getContext('2d');
-
   let particles = [];
   let clickParticles = [];
   let width = 0;
@@ -47,18 +23,12 @@
   const YELLOW_RGB = '251, 191, 36';
   const ORANGE_RGB = '249, 115, 22';
   const MAGENTA_RGB = '217, 70, 239';
-  const GREEN_RGB = '52, 211, 153';
-  const EMERALD_RGB = '16, 185, 129';
-  const AMBER_RGB = '245, 158, 11';
-  const RED_RGB = '244, 63, 94';
 
   let mouse = { x: null, y: null, active: false };
 
   function resize() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
-    clickCanvas.width = width;
-    clickCanvas.height = height;
   }
 
   window.addEventListener('resize', resize);
@@ -74,41 +44,10 @@
     mouse.active = false;
   });
 
-  // Tap & Click Trigger - Non-blocking top overlay with intelligent Enable vs Disable action awareness.
-  // Debounces synthetic clicks on mobile so taps trigger only once.
-  let lastTouchTime = 0;
-
-  function getEffectTypeFromTarget(target) {
-    if (!target) return null;
-    const el = target.closest ? target.closest('.btn-action-enable, .btn-action-disable, .toggle-active-btn, .toggle-btn, .feature-card-toggle, [data-effect]') : null;
-    if (!el) return null;
-    if (el.dataset && el.dataset.effect) return el.dataset.effect;
-    if (el.classList.contains('btn-action-enable')) return 'enable';
-    if (el.classList.contains('btn-action-disable')) return 'disable';
-    if (el.classList.contains('toggle-active-btn') || el.classList.contains('toggle-btn')) {
-      const text = (el.textContent || '').trim().toLowerCase();
-      if (text.includes('enable')) return 'enable';
-      if (text.includes('disable')) return 'disable';
-    }
-    if (el.classList.contains('feature-card-toggle')) {
-      return el.classList.contains('checked') ? 'disable' : 'enable';
-    }
-    return null;
-  }
-
-  window.addEventListener('touchstart', (e) => {
-    if (e.touches && e.touches.length > 0) {
-      lastTouchTime = Date.now();
-      const touch = e.touches[0];
-      const type = getEffectTypeFromTarget(e.target);
-      createNeonClick(touch.clientX, touch.clientY, type);
-    }
-  }, { passive: true });
-
   window.addEventListener('click', (e) => {
-    if (Date.now() - lastTouchTime < 450) return;
-    const type = getEffectTypeFromTarget(e.target);
-    createNeonClick(e.clientX, e.clientY, type);
+    const interactive = e.target.closest('a, button, input, select, textarea, label, [role="button"], .exporter-tab');
+    if (interactive) return;
+    createNeonClick(e.clientX, e.clientY);
   }, { passive: true });
 
   // Background Particle - Slow & Elegant
@@ -122,15 +61,12 @@
       this.alpha = Math.random() * 0.4 + 0.15;
       this.color = [PRIMARY_RGB, CYAN_RGB, PURPLE_RGB][Math.floor(Math.random() * 3)];
       this.pulse = Math.random() * Math.PI * 2;
-      this.isTwinkle = Math.random() > 0.82;
-      this.twinkleRotation = Math.random() * Math.PI;
     }
 
     update() {
       this.x += this.vx;
       this.y += this.vy;
       this.pulse += 0.008;
-      this.twinkleRotation += 0.006;
 
       if (this.x < -10) this.x = width + 10;
       if (this.x > width + 10) this.x = -10;
@@ -163,55 +99,30 @@
       ctx.arc(this.x, this.y, this.radius * 0.3, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha * 0.5})`;
       ctx.fill();
-
-      // Constellation stars
-      if (this.isTwinkle) {
-        const arm = this.radius * (2.8 + glow);
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.twinkleRotation);
-        ctx.beginPath();
-        ctx.moveTo(0, -arm);
-        ctx.lineTo(this.radius * 0.3, -this.radius * 0.3);
-        ctx.lineTo(arm, 0);
-        ctx.lineTo(this.radius * 0.3, this.radius * 0.3);
-        ctx.lineTo(0, arm);
-        ctx.lineTo(-this.radius * 0.3, this.radius * 0.3);
-        ctx.lineTo(-arm, 0);
-        ctx.lineTo(-this.radius * 0.3, -this.radius * 0.3);
-        ctx.closePath();
-        ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha * glow * 0.72})`;
-        ctx.fill();
-        ctx.restore();
-      }
     }
   }
 
-  // Neon Click Particle - Rainbow or Action-themed Colors
+  // Neon Click Particle - Rainbow Colors
   class NeonClick {
-    constructor(x, y, palette) {
+    constructor(x, y) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = 1.5 + Math.random() * 2.5;
+      const speed = 1.5 + Math.random() * 2;
 
       this.x = x;
       this.y = y;
-      this.previousX = x;
-      this.previousY = y;
       this.vx = Math.cos(angle) * speed;
       this.vy = Math.sin(angle) * speed - 0.3;
       this.size = Math.random() * 2.4 + 1.35;
       this.life = 1;
-      this.decay = 0.014 + Math.random() * 0.004;
+      this.decay = 0.027 + Math.random() * 0.009;
       this.rotation = Math.random() * Math.PI;
       this.spin = (Math.random() - 0.5) * 0.12;
       this.isStar = Math.random() > 0.42;
-      const colors = (palette && palette.length) ? palette : [CYAN_RGB, PRIMARY_RGB, PURPLE_RGB, PINK_RGB, YELLOW_RGB, ORANGE_RGB, MAGENTA_RGB];
+      const colors = [PRIMARY_RGB, CYAN_RGB, PURPLE_RGB, PINK_RGB, YELLOW_RGB, ORANGE_RGB, MAGENTA_RGB];
       this.color = colors[Math.floor(Math.random() * colors.length)];
     }
 
     update() {
-      this.previousX = this.x;
-      this.previousY = this.y;
       this.x += this.vx;
       this.y += this.vy;
       this.vy += 0.1;
@@ -224,98 +135,64 @@
     draw() {
       const alpha = this.life;
 
-      // Trail
-      const trail = clickCtx.createLinearGradient(this.previousX, this.previousY, this.x, this.y);
-      trail.addColorStop(0, `rgba(${this.color}, 0)`);
-      trail.addColorStop(1, `rgba(${this.color}, ${alpha * 0.9})`);
-      clickCtx.beginPath();
-      clickCtx.moveTo(this.previousX - this.vx * 3.5, this.previousY - this.vy * 3.5);
-      clickCtx.lineTo(this.x, this.y);
-      clickCtx.strokeStyle = trail;
-      clickCtx.lineWidth = Math.max(0.7, this.size * 0.62);
-      clickCtx.stroke();
-
       // Soft colored halo
-      clickCtx.beginPath();
-      clickCtx.arc(this.x, this.y, this.size * 5, 0, Math.PI * 2);
-      clickCtx.fillStyle = `rgba(${this.color}, ${alpha * 0.35})`;
-      clickCtx.fill();
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size * 5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${this.color}, ${alpha * 0.18})`;
+      ctx.fill();
 
       // Bright neon core
-      clickCtx.beginPath();
-      clickCtx.arc(this.x, this.y, this.size * 1.5, 0, Math.PI * 2);
-      clickCtx.fillStyle = `rgba(${this.color}, ${alpha})`;
-      clickCtx.fill();
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size * 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${this.color}, ${alpha})`;
+      ctx.fill();
 
-      // Four-point twinkle
+      // Four-point twinkle, modeled after the supplied sparkle reference.
       if (this.isStar) {
         const arm = this.size * 2.35;
-        clickCtx.save();
-        clickCtx.translate(this.x, this.y);
-        clickCtx.rotate(this.rotation);
-        clickCtx.beginPath();
-        clickCtx.moveTo(0, -arm);
-        clickCtx.lineTo(this.size * 0.42, -this.size * 0.42);
-        clickCtx.lineTo(arm, 0);
-        clickCtx.lineTo(this.size * 0.42, this.size * 0.42);
-        clickCtx.lineTo(0, arm);
-        clickCtx.lineTo(-this.size * 0.42, this.size * 0.42);
-        clickCtx.lineTo(-arm, 0);
-        clickCtx.lineTo(-this.size * 0.42, -this.size * 0.42);
-        clickCtx.closePath();
-        clickCtx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.95})`;
-        clickCtx.fill();
-        clickCtx.restore();
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        ctx.beginPath();
+        ctx.moveTo(0, -arm);
+        ctx.lineTo(this.size * 0.42, -this.size * 0.42);
+        ctx.lineTo(arm, 0);
+        ctx.lineTo(this.size * 0.42, this.size * 0.42);
+        ctx.lineTo(0, arm);
+        ctx.lineTo(-this.size * 0.42, this.size * 0.42);
+        ctx.lineTo(-arm, 0);
+        ctx.lineTo(-this.size * 0.42, -this.size * 0.42);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.88})`;
+        ctx.fill();
+        ctx.restore();
       }
 
       // White impact point
-      clickCtx.beginPath();
-      clickCtx.arc(this.x, this.y, this.size * 0.6, 0, Math.PI * 2);
-      clickCtx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-      clickCtx.fill();
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size * 0.6, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.fill();
     }
   }
 
-  // Create neon click effect - Rainbow Colors & Expanding Water Ripples
-  // Enhanced with support for 'enable' (emerald-green) and 'disable' (amber-warning) themes
-  function createNeonClick(x, y, effectType) {
-    const incomingEffectCount = 31;
+  // Create neon click effect - Rainbow Colors
+  function createNeonClick(x, y) {
+    // Reserve room for the entire new burst before adding it. This keeps rapid
+    // clicks smooth instead of allowing several overlapping bursts to build up.
+    const incomingEffectCount = 23;
     const maximumExisting = MAX_CLICK_EFFECTS - incomingEffectCount;
     if (clickParticles.length > maximumExisting) {
       clickParticles.splice(0, clickParticles.length - maximumExisting);
     }
 
-    let sparkColors;
-    let ringColors;
-    let rayColors;
-    let bloomCore;
-    let bloomMid;
-
-    if (effectType === 'enable') {
-      sparkColors = [GREEN_RGB, EMERALD_RGB, CYAN_RGB, '110, 231, 183', '167, 243, 208'];
-      ringColors = [GREEN_RGB, CYAN_RGB, EMERALD_RGB];
-      rayColors = [GREEN_RGB, CYAN_RGB, EMERALD_RGB, '167, 243, 208'];
-      bloomCore = GREEN_RGB;
-      bloomMid = CYAN_RGB;
-    } else if (effectType === 'disable') {
-      sparkColors = [AMBER_RGB, YELLOW_RGB, ORANGE_RGB, RED_RGB, '253, 230, 138'];
-      ringColors = [AMBER_RGB, ORANGE_RGB, RED_RGB];
-      rayColors = [AMBER_RGB, YELLOW_RGB, ORANGE_RGB, RED_RGB];
-      bloomCore = AMBER_RGB;
-      bloomMid = RED_RGB;
-    } else {
-      sparkColors = [CYAN_RGB, PRIMARY_RGB, PURPLE_RGB, PINK_RGB, YELLOW_RGB, ORANGE_RGB, MAGENTA_RGB];
-      ringColors = [CYAN_RGB, PURPLE_RGB, PINK_RGB];
-      rayColors = [CYAN_RGB, PRIMARY_RGB, PURPLE_RGB, PINK_RGB, MAGENTA_RGB];
-      bloomCore = CYAN_RGB;
-      bloomMid = PURPLE_RGB;
-    }
-
+    // A compact burst feels richer than a huge amount of heavy particles.
     for (let i = 0; i < 20; i++) {
-      clickParticles.push(new NeonClick(x, y, sparkColors));
+      clickParticles.push(new NeonClick(x, y));
     }
 
-    // Expanding water-ripple rings with rich color shifts
+    // Expanding water-ripple rings with slight colour shifts.
+    const ringColors = [CYAN_RGB, PURPLE_RGB, PINK_RGB];
     for (let r = 0; r < 3; r++) {
       clickParticles.push({
         x: x,
@@ -331,7 +208,7 @@
             return true;
           }
           this.radius += 2.55;
-          this.life -= 0.02;
+          this.life -= 0.025;
           return this.life > 0;
         },
         draw: function() {
@@ -341,68 +218,30 @@
           const a = this.life;
 
           // Diffuse outside glow
-          clickCtx.beginPath();
-          clickCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-          clickCtx.strokeStyle = `rgba(${this.color}, ${a * 0.42})`;
-          clickCtx.lineWidth = 15;
-          clickCtx.stroke();
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(${this.color}, ${a * 0.24})`;
+          ctx.lineWidth = 12;
+          ctx.stroke();
 
           // Saturated water edge
-          clickCtx.beginPath();
-          clickCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-          clickCtx.strokeStyle = `rgba(${this.color}, ${a})`;
-          clickCtx.lineWidth = 3.2;
-          clickCtx.stroke();
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(${this.color}, ${a * 0.92})`;
+          ctx.lineWidth = 2.7;
+          ctx.stroke();
 
           // Fine white crest
-          clickCtx.beginPath();
-          clickCtx.arc(this.x, this.y, this.radius - 1, 0, Math.PI * 2);
-          clickCtx.strokeStyle = `rgba(255, 255, 255, ${a * 0.92})`;
-          clickCtx.lineWidth = 1.15;
-          clickCtx.stroke();
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius - 1, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(255, 255, 255, ${a * 0.78})`;
+          ctx.lineWidth = 0.9;
+          ctx.stroke();
         }
       });
     }
 
-    // Seven radial light rays create a crisp supernova moment behind the rings
-    for (let ray = 0; ray < 7; ray++) {
-      const angle = Math.random() * Math.PI * 2;
-      const length = 38 + Math.random() * 42;
-      const color = rayColors[ray % rayColors.length];
-      clickParticles.push({
-        x: x,
-        y: y,
-        angle: angle,
-        length: length,
-        color: color,
-        life: 1,
-        update: function() {
-          this.life -= 0.018;
-          return this.life > 0;
-        },
-        draw: function() {
-          const progress = 1 - this.life;
-          const start = this.length * Math.max(0, progress - 0.13);
-          const end = this.length * Math.min(1, progress + 0.2);
-          const x1 = this.x + Math.cos(this.angle) * start;
-          const y1 = this.y + Math.sin(this.angle) * start;
-          const x2 = this.x + Math.cos(this.angle) * end;
-          const y2 = this.y + Math.sin(this.angle) * end;
-          const gradient = clickCtx.createLinearGradient(x1, y1, x2, y2);
-          gradient.addColorStop(0, `rgba(255, 255, 255, ${this.life * 0.95})`);
-          gradient.addColorStop(0.42, `rgba(${this.color}, ${this.life * 0.88})`);
-          gradient.addColorStop(1, `rgba(${this.color}, 0)`);
-          clickCtx.beginPath();
-          clickCtx.moveTo(x1, y1);
-          clickCtx.lineTo(x2, y2);
-          clickCtx.strokeStyle = gradient;
-          clickCtx.lineWidth = 2.5;
-          clickCtx.stroke();
-        }
-      });
-    }
-
-    // Luminous impact bloom
+    // Luminous impact bloom, kept short so the page never flashes heavily.
     clickParticles.push({
       x: x,
       y: y,
@@ -412,16 +251,16 @@
         return this.life > 0;
       },
       draw: function() {
-        const radius = 68 * this.life;
-        const bloom = clickCtx.createRadialGradient(this.x, this.y, 0, this.x, this.y, radius);
+        const radius = 44 * this.life;
+        const bloom = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, radius);
         bloom.addColorStop(0, `rgba(255, 255, 255, ${this.life * 0.9})`);
-        bloom.addColorStop(0.18, `rgba(${bloomCore}, ${this.life * 0.65})`);
-        bloom.addColorStop(0.52, `rgba(${bloomMid}, ${this.life * 0.22})`);
+        bloom.addColorStop(0.18, `rgba(${CYAN_RGB}, ${this.life * 0.65})`);
+        bloom.addColorStop(0.52, `rgba(${PURPLE_RGB}, ${this.life * 0.22})`);
         bloom.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        clickCtx.beginPath();
-        clickCtx.arc(this.x, this.y, radius, 0, Math.PI * 2);
-        clickCtx.fillStyle = bloom;
-        clickCtx.fill();
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = bloom;
+        ctx.fill();
       }
     });
   }
@@ -442,10 +281,7 @@
           ctx.beginPath();
           ctx.moveTo(p1.x, p1.y);
           ctx.lineTo(p2.x, p2.y);
-          const line = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
-          line.addColorStop(0, `rgba(${p1.color}, ${alpha})`);
-          line.addColorStop(1, `rgba(${p2.color}, ${alpha * 0.68})`);
-          ctx.strokeStyle = line;
+          ctx.strokeStyle = `rgba(${PRIMARY_RGB}, ${alpha})`;
           ctx.lineWidth = 0.8;
           ctx.stroke();
         }
@@ -477,7 +313,6 @@
   // Animation loop
   function animate() {
     ctx.clearRect(0, 0, width, height);
-    clickCtx.clearRect(0, 0, width, height);
 
     particles.forEach(p => {
       p.update();
@@ -487,21 +322,10 @@
     drawConnections();
 
     clickParticles = clickParticles.filter(p => p.update());
-
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    clickCtx.save();
     clickParticles.forEach(p => p.draw());
-    clickCtx.restore();
-    ctx.restore();
 
     requestAnimationFrame(animate);
   }
-
-  // Global manual trigger helper
-  window.triggerNeonClick = function(x, y, type) {
-    createNeonClick(x, y, type);
-  };
 
   animate();
 })();

@@ -290,6 +290,8 @@ const App = (() => {
       trial_limit: isTrial ? trialLimit : maxUids,
       trial_days: trialDays,
       trial_expiry: trialExpiry,
+      expiry: trialExpiry,
+      account_expiry: trialExpiry,
       maxUids: isTrial ? trialLimit : maxUids,
       createdAt: new Date().toISOString(),
       uids: []
@@ -399,6 +401,19 @@ const App = (() => {
   };
 
   // ==========================================
+  // ADMIN NOTES (/admin_notes/)
+  // ==========================================
+  const getAdminNotes = async () => await fbGet('admin_notes');
+
+  const saveAdminNotes = async (title, html) => {
+    return await fbPut('admin_notes', {
+      title: String(title || '').trim() || 'Admin Notes',
+      html: String(html || ''),
+      updatedAt: new Date().toISOString()
+    });
+  };
+
+  // ==========================================
   // 2. DP PANEL USER MANAGEMENT (/dp_panel_users/)
   // ==========================================
   const getAllPanelUsers = async () => {
@@ -411,7 +426,7 @@ const App = (() => {
     return await fbGet(`dp_panel_users/${username}`);
   };
 
-  const createPanelUser = async (username, password, _unused, features, isTrial = false, durationHoursOrDays = 0, customExpiresAt = '') => {
+  const createPanelUser = async (username, password, _unused, features) => {
     const existing = await fbGet(`dp_panel_users/${username}`);
     if (existing) return { success: false, msg: 'Username already exists.' };
     if (username === 'admin') return { success: false, msg: 'Cannot use "admin" as username.' };
@@ -425,41 +440,17 @@ const App = (() => {
     const featureObj = {};
     featureList.forEach(f => { featureObj[f.key] = !!(features && features[f.key]); });
 
-    // Calculate expiry ISO
-    let expiresAt = '';
-    if (customExpiresAt) {
-      try {
-        expiresAt = new Date(customExpiresAt).toISOString();
-      } catch (e) {
-        expiresAt = '';
-      }
-    } else if (durationHoursOrDays > 0) {
-      const now = new Date();
-      now.setHours(now.getHours() + (parseInt(durationHoursOrDays) || 24));
-      expiresAt = now.toISOString();
-    }
-
     const userData = {
       username,
       password,
       displayName: username,
       secret,
       active: true,
-      is_trial: !!isTrial,
-      trial_hours: isTrial ? (parseInt(durationHoursOrDays) || 24) : 0,
-      expiresAt: expiresAt || '',
       createdAt: new Date().toISOString(),
       features: featureObj,
     };
 
     await fbPut(`dp_panel_users/${username}`, userData);
-    return { success: true };
-  };
-
-  const updatePanelUserExpiry = async (username, expiresAt, isTrial = false) => {
-    const updates = { expiresAt: expiresAt || '' };
-    if (typeof isTrial === 'boolean') updates.is_trial = isTrial;
-    await fbPatch(`dp_panel_users/${username}`, updates);
     return { success: true };
   };
 
@@ -529,21 +520,8 @@ const App = (() => {
 
   // --- Helpers ---
   const getTimeLeft = (isoString) => {
-    if (!isoString) {
-      return {
-        expired: false,
-        text: 'Lifetime',
-        toString() { return 'Lifetime'; }
-      };
-    }
     const diff = new Date(isoString) - new Date();
-    if (diff <= 0) {
-      return {
-        expired: true,
-        text: 'Expired',
-        toString() { return 'Expired'; }
-      };
-    }
+    if (diff <= 0) return 'Expired';
     const d = Math.floor(diff / 86400000);
     const h = Math.floor((diff % 86400000) / 3600000);
     const m = Math.floor((diff % 3600000) / 60000);
@@ -553,12 +531,11 @@ const App = (() => {
     if (h > 0 || d > 0) parts.push(`${h}h`);
     if (m > 0 || h > 0 || d > 0) parts.push(`${m}m`);
     parts.push(`${s}s`);
-    const str = parts.join(' ');
-    return {
-      expired: false,
-      text: str,
-      toString() { return str; }
-    };
+    return parts.join(' ');
+  };
+
+  const updatePanelUserExpiry = async (username, expiresAt) => {
+    await fbPatch(`dp_panel_users/${username}`, { expiresAt });
   };
 
   const updatePanelUserPassword = async (username, password) => {
@@ -566,7 +543,7 @@ const App = (() => {
   };
 
   const createSilentAimUser = async (username, password, durationHours, customExpiryStr, features) => {
-    const existing = await fbGet(`dp_regedit_users/${username}`);
+    const existing = await fbGet(`dp_panel_users/${username}`);
     if (existing) return { success: false, msg: 'Username already exists.' };
     if (username === 'admin') return { success: false, msg: 'Cannot use "admin" as username.' };
 
@@ -596,12 +573,12 @@ const App = (() => {
       features: featureObj,
     };
 
-    await fbPut(`dp_regedit_users/${username}`, userData);
+    await fbPut(`dp_panel_users/${username}`, userData);
     return { success: true };
   };
 
   const getSilentAimStats = async () => {
-    const users = await fbGet('dp_regedit_users');
+    const users = await fbGet('dp_panel_users');
     if (!users) return { totalUsers: 0, activeUsers: 0, expiredUsers: 0, disabledUsers: 0 };
 
     let totalUsers = 0, activeUsers = 0, expiredUsers = 0, disabledUsers = 0;
@@ -645,6 +622,17 @@ const App = (() => {
     addAllowlistUid,
     removeAllowlistUid,
     toggleAllowlistUid,
+    // Admin notes
+    getAdminNotes: () => fbGet('admin_notes'),
+    saveAdminNotes: (title, html) => fbPut('admin_notes', {
+      title: String(title || '').trim() || 'Admin Notes',
+      html: String(html || ''),
+      updatedAt: new Date().toISOString()
+    }),
+    // Download URL Config (Synced to /config.json for desktop admin.html & mobile launcher parity)
+    getDownloadConfig: () => fbGet('config'),
+    saveDownloadConfig: (cfg) => fbPatch('config', { ...cfg, updatedAt: new Date().toISOString() }),
+    convertDriveUrl: (url) => gdriveToDirectUrl(url),
     // Panel users
     getAllPanelUsers,
     getPanelUser,
@@ -700,29 +688,20 @@ async function deleteProto(key) {
   return res.ok;
 }
 
-// ── Mobile Device Auto-Detection & Responsiveness Helper ──
-(function initMobileDetection() {
-  function checkMobile() {
-    const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const isSmallScreen = window.innerWidth <= 768 || window.matchMedia('(max-width: 768px)').matches;
-    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-    const isMobile = isMobileUA || (isSmallScreen && isTouch);
-
-    document.documentElement.classList.toggle('is-mobile-device', isMobile);
-    document.documentElement.classList.toggle('is-touch-device', isTouch);
-    document.body.classList.toggle('is-mobile-view', window.innerWidth <= 840);
+function gdriveToDirectUrl(url) {
+  if (!url) return '';
+  if (url.includes('drive.usercontent.google.com')) return url;
+  const patterns = [
+    /\/file\/d\/([a-zA-Z0-9_-]+)/,
+    /[?&]id=([a-zA-Z0-9_-]+)/,
+    /\/d\/([a-zA-Z0-9_-]+)/,
+  ];
+  for (const pat of patterns) {
+    const m = url.match(pat);
+    if (m) {
+      return `https://drive.usercontent.google.com/download?id=${m[1]}&export=download&authuser=0&confirm=t`;
+    }
   }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', checkMobile);
-  } else {
-    checkMobile();
-  }
-
-  window.addEventListener('resize', checkMobile);
-  window.addEventListener('orientationchange', () => {
-    setTimeout(checkMobile, 150);
-  });
-})();
-
+  return url;
+}
 
