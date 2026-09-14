@@ -380,6 +380,47 @@ a:hover { text-decoration: underline; }
   transform: translateY(-1px) scale(0.98);
 }
 
+/* ═══════════ ACTION TOGGLE BUTTONS (ENABLE vs DISABLE) ═══════════ */
+.btn-action-enable {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(5, 150, 105, 0.08)) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(52, 211, 153, 0.45) !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.btn-action-enable:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.28), rgba(5, 150, 105, 0.2)) !important;
+  color: #a7f3d0 !important;
+  border-color: #34d399 !important;
+  box-shadow: 0 0 18px rgba(52, 211, 153, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+  transform: translateY(-2px) scale(1.02);
+}
+.btn-action-enable:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-action-disable {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.08)) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(251, 191, 36, 0.42) !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.btn-action-disable:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.28), rgba(217, 119, 6, 0.22)) !important;
+  color: #fef08a !important;
+  border-color: #fbbf24 !important;
+  box-shadow: 0 0 18px rgba(251, 191, 36, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+  transform: translateY(-2px) scale(1.02);
+}
+.btn-action-disable:active {
+  transform: translateY(0) scale(0.98);
+}
+
 /* ═══════════ INPUTS ═══════════ */
 .form-group { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
 
@@ -536,11 +577,12 @@ select.form-input, select.form-input option {
 
 .badge-active { background: var(--green-dim); color: var(--green); box-shadow: 0 0 8px rgba(52, 211, 153, 0.2); }
 .badge-expired { background: var(--orange-dim); color: var(--orange); box-shadow: 0 0 8px rgba(251, 191, 36, 0.2); }
+.badge-disabled { background: rgba(244, 63, 94, 0.15) !important; color: #fb7185 !important; border: 1px solid rgba(244, 63, 94, 0.35) !important; box-shadow: 0 0 8px rgba(244, 63, 94, 0.2) !important; }
 .badge-inactive { background: var(--bg-2); color: var(--text-300); }
 
-.status-active { color: var(--green); font-weight: 600; }
-.status-disabled { color: var(--red); font-weight: 600; }
-.status-expired { color: var(--orange); font-weight: 600; }
+.status-active { color: #34d399 !important; font-weight: 600; text-shadow: 0 0 10px rgba(52, 211, 153, 0.35); }
+.status-disabled { color: #f43f5e !important; font-weight: 600; text-shadow: 0 0 10px rgba(244, 63, 94, 0.3); }
+.status-expired { color: #fbbf24 !important; font-weight: 600; text-shadow: 0 0 10px rgba(251, 191, 36, 0.3); }
 
 /* ═══════════ TOGGLE SWITCH ═══════════ */
 .toggle-wrap { display: flex; align-items: center; gap: 0.6rem; }
@@ -759,9 +801,11 @@ select.form-input, select.form-input option {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  pointer-events: none !important;
 }
 
 .toast {
+  pointer-events: auto !important;
   padding: 0.85rem 1.3rem;
   border-radius: 12px;
   font-size: 0.85rem;
@@ -1628,9 +1672,11 @@ textarea.code-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px 
 }
 
 #clickEffectCanvas {
-  z-index: 0 !important; /* Behind translucent cards & UI boxes so effects glow through from behind without blocking */
+  z-index: 950 !important; /* Top overlay on top of cards & panels, exactly as preferred */
   pointer-events: none !important;
   touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
 }
 
 .navbar,
@@ -2212,14 +2258,17 @@ textarea.code-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px 
 
   /* Toast notification positioning for mobile */
   .toast-container {
+    top: auto !important;
     left: 10px !important;
     right: 10px !important;
     bottom: 12px !important;
     max-width: calc(100vw - 20px) !important;
+    pointer-events: none !important;
   }
   .toast {
     width: 100% !important;
     font-size: 0.82rem !important;
+    pointer-events: auto !important;
   }
 
   /* Search bar full width on mobile */

@@ -7,17 +7,31 @@
   const canvas = document.getElementById('particleCanvas');
   if (!canvas) return;
 
+  // Background ambient canvas stays behind UI
   const ctx = canvas.getContext('2d');
-  // The background remains behind the interface. A second transparent canvas
-  // puts the short click burst above it without ever intercepting a click.
-  const clickCanvas = document.createElement('canvas');
-  clickCanvas.id = 'clickEffectCanvas';
+
+  // Click & Touch Ripple Burst Canvas
+  // Positioned as a non-blocking top overlay at z-index: 950 above the UI cards
+  // with pointer-events: none and touch-action: none so mobile clicks and typing pass through instantly!
+  let clickCanvas = document.getElementById('clickEffectCanvas');
+  if (!clickCanvas) {
+    clickCanvas = document.createElement('canvas');
+    clickCanvas.id = 'clickEffectCanvas';
+    document.body.appendChild(clickCanvas);
+  }
   Object.assign(clickCanvas.style, {
-    position: 'fixed', inset: '0', width: '100vw', height: '100vh',
-    zIndex: '950', pointerEvents: 'none'
+    position: 'fixed',
+    top: '0',
+    left: '0',
+    width: '100vw',
+    height: '100vh',
+    zIndex: '950',
+    pointerEvents: 'none',
+    touchAction: 'none'
   });
-  document.body.appendChild(clickCanvas);
+  clickCanvas.setAttribute('aria-hidden', 'true');
   const clickCtx = clickCanvas.getContext('2d');
+
   let particles = [];
   let clickParticles = [];
   let width = 0;
@@ -33,6 +47,10 @@
   const YELLOW_RGB = '251, 191, 36';
   const ORANGE_RGB = '249, 115, 22';
   const MAGENTA_RGB = '217, 70, 239';
+  const GREEN_RGB = '52, 211, 153';
+  const EMERALD_RGB = '16, 185, 129';
+  const AMBER_RGB = '245, 158, 11';
+  const RED_RGB = '244, 63, 94';
 
   let mouse = { x: null, y: null, active: false };
 
@@ -56,10 +74,41 @@
     mouse.active = false;
   });
 
+  // Tap & Click Trigger - Non-blocking top overlay with intelligent Enable vs Disable action awareness.
+  // Debounces synthetic clicks on mobile so taps trigger only once.
+  let lastTouchTime = 0;
+
+  function getEffectTypeFromTarget(target) {
+    if (!target) return null;
+    const el = target.closest ? target.closest('.btn-action-enable, .btn-action-disable, .toggle-active-btn, .toggle-btn, .feature-card-toggle, [data-effect]') : null;
+    if (!el) return null;
+    if (el.dataset && el.dataset.effect) return el.dataset.effect;
+    if (el.classList.contains('btn-action-enable')) return 'enable';
+    if (el.classList.contains('btn-action-disable')) return 'disable';
+    if (el.classList.contains('toggle-active-btn') || el.classList.contains('toggle-btn')) {
+      const text = (el.textContent || '').trim().toLowerCase();
+      if (text.includes('enable')) return 'enable';
+      if (text.includes('disable')) return 'disable';
+    }
+    if (el.classList.contains('feature-card-toggle')) {
+      return el.classList.contains('checked') ? 'disable' : 'enable';
+    }
+    return null;
+  }
+
+  window.addEventListener('touchstart', (e) => {
+    if (e.touches && e.touches.length > 0) {
+      lastTouchTime = Date.now();
+      const touch = e.touches[0];
+      const type = getEffectTypeFromTarget(e.target);
+      createNeonClick(touch.clientX, touch.clientY, type);
+    }
+  }, { passive: true });
+
   window.addEventListener('click', (e) => {
-    const interactive = e.target.closest('a, button, input, select, textarea, label, [role="button"], .exporter-tab');
-    if (interactive) return;
-    createNeonClick(e.clientX, e.clientY);
+    if (Date.now() - lastTouchTime < 450) return;
+    const type = getEffectTypeFromTarget(e.target);
+    createNeonClick(e.clientX, e.clientY, type);
   }, { passive: true });
 
   // Background Particle - Slow & Elegant
@@ -115,8 +164,7 @@
       ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha * 0.5})`;
       ctx.fill();
 
-      // A small number of particles become slow constellation stars. They add
-      // depth without increasing the total particle count or animation cost.
+      // Constellation stars
       if (this.isTwinkle) {
         const arm = this.radius * (2.8 + glow);
         ctx.save();
@@ -139,11 +187,11 @@
     }
   }
 
-  // Neon Click Particle - Rainbow Colors
+  // Neon Click Particle - Rainbow or Action-themed Colors
   class NeonClick {
-    constructor(x, y) {
+    constructor(x, y, palette) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = 1.5 + Math.random() * 2;
+      const speed = 1.5 + Math.random() * 2.5;
 
       this.x = x;
       this.y = y;
@@ -157,7 +205,7 @@
       this.rotation = Math.random() * Math.PI;
       this.spin = (Math.random() - 0.5) * 0.12;
       this.isStar = Math.random() > 0.42;
-      const colors = [CYAN_RGB, PRIMARY_RGB, PURPLE_RGB, PINK_RGB, MAGENTA_RGB];
+      const colors = (palette && palette.length) ? palette : [CYAN_RGB, PRIMARY_RGB, PURPLE_RGB, PINK_RGB, YELLOW_RGB, ORANGE_RGB, MAGENTA_RGB];
       this.color = colors[Math.floor(Math.random() * colors.length)];
     }
 
@@ -176,7 +224,7 @@
     draw() {
       const alpha = this.life;
 
-      // A short colored trail gives every spark a sense of direction.
+      // Trail
       const trail = clickCtx.createLinearGradient(this.previousX, this.previousY, this.x, this.y);
       trail.addColorStop(0, `rgba(${this.color}, 0)`);
       trail.addColorStop(1, `rgba(${this.color}, ${alpha * 0.9})`);
@@ -190,7 +238,7 @@
       // Soft colored halo
       clickCtx.beginPath();
       clickCtx.arc(this.x, this.y, this.size * 5, 0, Math.PI * 2);
-      clickCtx.fillStyle = `rgba(${this.color}, ${alpha * 0.28})`;
+      clickCtx.fillStyle = `rgba(${this.color}, ${alpha * 0.35})`;
       clickCtx.fill();
 
       // Bright neon core
@@ -199,7 +247,7 @@
       clickCtx.fillStyle = `rgba(${this.color}, ${alpha})`;
       clickCtx.fill();
 
-      // Four-point twinkle, modeled after the supplied sparkle reference.
+      // Four-point twinkle
       if (this.isStar) {
         const arm = this.size * 2.35;
         clickCtx.save();
@@ -228,23 +276,46 @@
     }
   }
 
-  // Create neon click effect - Rainbow Colors
-  function createNeonClick(x, y) {
-    // Reserve room for the entire new burst before adding it. This keeps rapid
-    // clicks smooth instead of allowing several overlapping bursts to build up.
+  // Create neon click effect - Rainbow Colors & Expanding Water Ripples
+  // Enhanced with support for 'enable' (emerald-green) and 'disable' (amber-warning) themes
+  function createNeonClick(x, y, effectType) {
     const incomingEffectCount = 31;
     const maximumExisting = MAX_CLICK_EFFECTS - incomingEffectCount;
     if (clickParticles.length > maximumExisting) {
       clickParticles.splice(0, clickParticles.length - maximumExisting);
     }
 
-    // A dense but capped burst feels rich without risking a frame drop.
-    for (let i = 0; i < 20; i++) {
-      clickParticles.push(new NeonClick(x, y));
+    let sparkColors;
+    let ringColors;
+    let rayColors;
+    let bloomCore;
+    let bloomMid;
+
+    if (effectType === 'enable') {
+      sparkColors = [GREEN_RGB, EMERALD_RGB, CYAN_RGB, '110, 231, 183', '167, 243, 208'];
+      ringColors = [GREEN_RGB, CYAN_RGB, EMERALD_RGB];
+      rayColors = [GREEN_RGB, CYAN_RGB, EMERALD_RGB, '167, 243, 208'];
+      bloomCore = GREEN_RGB;
+      bloomMid = CYAN_RGB;
+    } else if (effectType === 'disable') {
+      sparkColors = [AMBER_RGB, YELLOW_RGB, ORANGE_RGB, RED_RGB, '253, 230, 138'];
+      ringColors = [AMBER_RGB, ORANGE_RGB, RED_RGB];
+      rayColors = [AMBER_RGB, YELLOW_RGB, ORANGE_RGB, RED_RGB];
+      bloomCore = AMBER_RGB;
+      bloomMid = RED_RGB;
+    } else {
+      sparkColors = [CYAN_RGB, PRIMARY_RGB, PURPLE_RGB, PINK_RGB, YELLOW_RGB, ORANGE_RGB, MAGENTA_RGB];
+      ringColors = [CYAN_RGB, PURPLE_RGB, PINK_RGB];
+      rayColors = [CYAN_RGB, PRIMARY_RGB, PURPLE_RGB, PINK_RGB, MAGENTA_RGB];
+      bloomCore = CYAN_RGB;
+      bloomMid = PURPLE_RGB;
     }
 
-    // Expanding water-ripple rings with slight colour shifts.
-    const ringColors = [CYAN_RGB, PURPLE_RGB, PINK_RGB];
+    for (let i = 0; i < 20; i++) {
+      clickParticles.push(new NeonClick(x, y, sparkColors));
+    }
+
+    // Expanding water-ripple rings with rich color shifts
     for (let r = 0; r < 3; r++) {
       clickParticles.push({
         x: x,
@@ -259,8 +330,8 @@
             this.delay -= 0.02;
             return true;
           }
-            this.radius += 2.15;
-            this.life -= 0.016;
+          this.radius += 2.55;
+          this.life -= 0.02;
           return this.life > 0;
         },
         draw: function() {
@@ -293,8 +364,7 @@
       });
     }
 
-    // Seven radial light rays create a crisp supernova moment behind the rings.
-    const rayColors = [CYAN_RGB, PRIMARY_RGB, PURPLE_RGB, PINK_RGB, MAGENTA_RGB];
+    // Seven radial light rays create a crisp supernova moment behind the rings
     for (let ray = 0; ray < 7; ray++) {
       const angle = Math.random() * Math.PI * 2;
       const length = 38 + Math.random() * 42;
@@ -332,9 +402,7 @@
       });
     }
 
-    // Luminous impact bloom, kept short so the page never flashes heavily.
-    // Drawn on clickCtx (not the background canvas) so it is cleared and
-    // blended consistently with the rest of the click effect each frame.
+    // Luminous impact bloom
     clickParticles.push({
       x: x,
       y: y,
@@ -347,8 +415,8 @@
         const radius = 68 * this.life;
         const bloom = clickCtx.createRadialGradient(this.x, this.y, 0, this.x, this.y, radius);
         bloom.addColorStop(0, `rgba(255, 255, 255, ${this.life * 0.9})`);
-        bloom.addColorStop(0.18, `rgba(${CYAN_RGB}, ${this.life * 0.65})`);
-        bloom.addColorStop(0.52, `rgba(${PURPLE_RGB}, ${this.life * 0.22})`);
+        bloom.addColorStop(0.18, `rgba(${bloomCore}, ${this.life * 0.65})`);
+        bloom.addColorStop(0.52, `rgba(${bloomMid}, ${this.life * 0.22})`);
         bloom.addColorStop(1, 'rgba(0, 0, 0, 0)');
         clickCtx.beginPath();
         clickCtx.arc(this.x, this.y, radius, 0, Math.PI * 2);
@@ -409,10 +477,6 @@
   // Animation loop
   function animate() {
     ctx.clearRect(0, 0, width, height);
-    // FIX: the click-effect canvas was never cleared, so every spark, ring,
-    // ray and bloom stayed painted on screen forever even after being
-    // removed from the particles array — this is what made clicks look
-    // like they "never ended".
     clickCtx.clearRect(0, 0, width, height);
 
     particles.forEach(p => {
@@ -424,19 +488,20 @@
 
     clickParticles = clickParticles.filter(p => p.update());
 
-    // FIX: the additive "lighter" blend mode was only ever applied to ctx,
-    // but nearly all click-effect drawing happens on clickCtx. Apply it
-    // there too so sparks/rings/rays glow and blend together correctly.
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     clickCtx.save();
-    clickCtx.globalCompositeOperation = 'lighter';
     clickParticles.forEach(p => p.draw());
     clickCtx.restore();
     ctx.restore();
 
     requestAnimationFrame(animate);
   }
+
+  // Global manual trigger helper
+  window.triggerNeonClick = function(x, y, type) {
+    createNeonClick(x, y, type);
+  };
 
   animate();
 })();

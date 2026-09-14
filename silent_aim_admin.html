@@ -268,7 +268,7 @@
           <td>
             <div class="action-btn-group">
               <button class="btn btn-dark btn-sm extend-btn" data-user="${user.username}" title="Extend Expiry Time">⏱ Time</button>
-              <button class="btn btn-dark btn-sm toggle-btn" data-user="${user.username}">${user.active ? 'Disable' : 'Enable'}</button>
+              <button class="btn ${user.active ? 'btn-action-disable' : 'btn-action-enable'} btn-sm toggle-btn" data-user="${user.username}" data-effect="${user.active ? 'disable' : 'enable'}">${user.active ? '⏸ Disable' : '▶ Enable'}</button>
               <button class="btn btn-dark btn-sm pass-btn" data-user="${user.username}">Pass</button>
               <button class="btn btn-red btn-sm delete-btn" data-user="${user.username}">Del</button>
             </div>

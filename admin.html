@@ -605,7 +605,7 @@
           </td>
           <td>${created}</td>
           <td class="user-controls">
-            <button class="btn btn-dark btn-sm toggle-active-btn" data-username="${user.username}">${user.active ? 'Disable' : 'Enable'}</button>
+            <button class="btn ${user.active ? 'btn-action-disable' : 'btn-action-enable'} btn-sm toggle-active-btn" data-username="${user.username}" data-effect="${user.active ? 'disable' : 'enable'}">${user.active ? '⏸ Disable' : '▶ Enable'}</button>
             <button class="btn btn-red btn-sm delete-user-btn" data-username="${user.username}">Delete</button>
           </td>
         `;
